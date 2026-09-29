@@ -1,0 +1,40 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: beefficient-postgres
+    environment:
+      POSTGRES_USER: beefficient
+      POSTGRES_PASSWORD: dev_password
+      POSTGRES_DB: beefficient_dev
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U beefficient"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Uncomment when backend service is ready
+  # backend:
+  #   build:
+  #     context: .
+  #     dockerfile: docker/backend.Dockerfile
+  #   container_name: beefficient-backend
+  #   environment:
+  #     DATABASE_URL: postgresql://beefficient:dev_password@postgres:5432/beefficient_dev
+  #     NODE_ENV: development
+  #   ports:
+  #     - "3001:3001"
+  #   depends_on:
+  #     postgres:
+  #       condition: service_healthy
+  #   volumes:
+  #     - ./backend:/app/backend
+  #   command: pnpm dev
+
+volumes:
+  postgres_data:
