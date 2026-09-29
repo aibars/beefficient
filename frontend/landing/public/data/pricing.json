@@ -1,0 +1,43 @@
+[
+  {
+    "id": "free",
+    "name": "Gratuito",
+    "price": 0,
+    "description": "Perfecto para empezar",
+    "features": [
+      "Acceso a precios del día",
+      "Noticias del sector",
+      "Acceso limitado a calculadoras",
+      "1 establecimiento"
+    ]
+  },
+  {
+    "id": "pro",
+    "name": "Profesional",
+    "price": 49,
+    "description": "Para productores activos",
+    "features": [
+      "Todo del plan gratuito",
+      "Acceso completo a herramientas",
+      "Series históricas de precios",
+      "Chat técnico con IA",
+      "5 establecimientos",
+      "Soporte por email"
+    ],
+    "highlighted": true
+  },
+  {
+    "id": "enterprise",
+    "name": "Empresa",
+    "price": 199,
+    "description": "Para empresas ganaderas",
+    "features": [
+      "Todo del plan profesional",
+      "Establecimientos ilimitados",
+      "API access",
+      "Reportes personalizados",
+      "Soporte prioritario",
+      "Consultoría técnica"
+    ]
+  }
+]

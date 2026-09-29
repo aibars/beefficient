@@ -1,0 +1,32 @@
+[
+  {
+    "id": "1",
+    "question": "¿Cuál es la diferencia entre los planes?",
+    "answer": "El plan gratuito te permite acceder a precios y noticias del día. El plan profesional agrega herramientas de cálculo completas, históricos de precios y chat técnico con IA. El plan empresa incluye establecimientos ilimitados y soporte prioritario."
+  },
+  {
+    "id": "2",
+    "question": "¿Puedo cambiar de plan en cualquier momento?",
+    "answer": "Sí, puedes upgradear o downградear tu plan en cualquier momento. Los cambios se aplicarán al próximo ciclo de facturación."
+  },
+  {
+    "id": "3",
+    "question": "¿La información de precios es en tiempo real?",
+    "answer": "Los precios se actualizan diariamente con información del Mercado Nacional de Hacienda y fuentes verificadas. No es información en tiempo real de bolsa."
+  },
+  {
+    "id": "4",
+    "question": "¿Funciona en móvil?",
+    "answer": "Sí, Beefficient está disponible como app nativa para iOS y Android, y también como versión web responsive."
+  },
+  {
+    "id": "5",
+    "question": "¿Mis datos están seguros?",
+    "answer": "Utilizamos encriptación de nivel empresarial (SSL/TLS) y almacenamos los datos en servidores seguros en Argentina, cumpliendo con regulaciones de privacidad."
+  },
+  {
+    "id": "6",
+    "question": "¿Hay período de prueba gratuita?",
+    "answer": "Sí, todos los planes pagos incluyen 30 días de prueba gratuita sin necesidad de tarjeta de crédito."
+  }
+]

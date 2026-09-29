@@ -1,0 +1,38 @@
+[
+  {
+    "id": "market",
+    "icon": "📊",
+    "title": "Mercado y Precios",
+    "description": "Acceso a precios del día, series históricas y comparativas con tendencias internacionales"
+  },
+  {
+    "id": "news",
+    "icon": "📰",
+    "title": "Noticias e Informes",
+    "description": "Novedades del sector ganadero traducidas al castellano desde fuentes confiables"
+  },
+  {
+    "id": "library",
+    "icon": "📚",
+    "title": "Biblioteca Técnica",
+    "description": "Papers, manuales y protocolos buscables filtrados por etapa productiva"
+  },
+  {
+    "id": "tools",
+    "icon": "🧮",
+    "title": "Herramientas de Cálculo",
+    "description": "Calculadoras de carga animal, formulador de dietas y análisis de costos"
+  },
+  {
+    "id": "ai-chat",
+    "icon": "🤖",
+    "title": "Chat Técnico con IA",
+    "description": "Consultas de nutrición y manejo respondidas sobre tu biblioteca técnica"
+  },
+  {
+    "id": "platform",
+    "icon": "🔧",
+    "title": "Plataforma Completa",
+    "description": "Tablero personalizable, suscripción flexible y acceso en web y móvil"
+  }
+]
