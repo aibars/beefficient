@@ -5,7 +5,7 @@
   "description": "Design tokens for Beefficient — colors, typography, spacing, shadows, borders, transitions",
   "main": "./dist/index.js",
   "scripts": {
-    "build": "style-dictionary build",
+    "build": "style-dictionary build -c style-dictionary.config.js",
     "watch": "style-dictionary build --watch",
     "test": "node __tests__/tokens.test.js"
   },
