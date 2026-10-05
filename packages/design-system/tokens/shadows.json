@@ -1,0 +1,19 @@
+{
+  "shadow": {
+    "sm": {
+      "value": "0 2px 4px rgba(0,0,0,0.1)",
+      "type": "shadow",
+      "description": "Small shadow — subtle elevation"
+    },
+    "md": {
+      "value": "0 10px 25px rgba(0,0,0,0.15)",
+      "type": "shadow",
+      "description": "Medium shadow — cards, dropdowns"
+    },
+    "lg": {
+      "value": "0 20px 60px rgba(0,0,0,0.3)",
+      "type": "shadow",
+      "description": "Large shadow — main containers, modals (from prototype)"
+    }
+  }
+}

@@ -1,0 +1,102 @@
+{
+  "color": {
+    "primary": {
+      "value": "#667eea",
+      "type": "color",
+      "description": "Primary brand color — blue-purple used for headers, gradients, CTAs"
+    },
+    "secondary": {
+      "value": "#764ba2",
+      "type": "color",
+      "description": "Secondary brand color — purple used for gradients"
+    },
+    "accent": {
+      "cyan": {
+        "value": "#00f2fe",
+        "type": "color",
+        "description": "Cyan accent"
+      },
+      "cyan-light": {
+        "value": "#30b0fe",
+        "type": "color",
+        "description": "Light cyan accent"
+      },
+      "lime": {
+        "value": "#43e97b",
+        "type": "color",
+        "description": "Lime green accent"
+      },
+      "pink": {
+        "value": "#fa709a",
+        "type": "color",
+        "description": "Pink accent"
+      },
+      "magenta": {
+        "value": "#f093fb",
+        "type": "color",
+        "description": "Magenta accent"
+      },
+      "yellow": {
+        "value": "#fee140",
+        "type": "color",
+        "description": "Yellow accent"
+      },
+      "teal": {
+        "value": "#a8edea",
+        "type": "color",
+        "description": "Teal accent"
+      }
+    },
+    "neutral": {
+      "light": {
+        "value": "#f5f7fa",
+        "type": "color",
+        "description": "Very light background — used for stat cards, subtle backgrounds"
+      },
+      "lighter": {
+        "value": "#f9f9f9",
+        "type": "color",
+        "description": "Almost-white background"
+      },
+      "lightest": {
+        "value": "#c3cfe2",
+        "type": "color",
+        "description": "Light gray — used in gradients"
+      },
+      "border": {
+        "value": "#e0e0e0",
+        "type": "color",
+        "description": "Border and divider color"
+      }
+    },
+    "text": {
+      "muted": {
+        "value": "#999",
+        "type": "color",
+        "description": "Muted text — secondary information"
+      },
+      "dark": {
+        "value": "#333",
+        "type": "color",
+        "description": "Dark text — labels, body"
+      }
+    },
+    "overlay": {
+      "dark": {
+        "value": "rgba(0,0,0,0.8)",
+        "type": "color",
+        "description": "Dark overlay (tooltips, modals)"
+      },
+      "semi-transparent": {
+        "value": "rgba(0,0,0,0.3)",
+        "type": "color",
+        "description": "Semi-transparent dark overlay"
+      },
+      "light": {
+        "value": "rgba(0,0,0,0.1)",
+        "type": "color",
+        "description": "Light dark overlay (hover states)"
+      }
+    }
+  }
+}

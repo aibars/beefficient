@@ -1,0 +1,40 @@
+{
+  "border": {
+    "radius": {
+      "sm": {
+        "value": "6px",
+        "type": "dimension",
+        "description": "Small radius — form inputs, buttons"
+      },
+      "md": {
+        "value": "8px",
+        "type": "dimension",
+        "description": "Medium radius — cards, containers"
+      },
+      "lg": {
+        "value": "12px",
+        "type": "dimension",
+        "description": "Large radius — main container (from prototype)"
+      }
+    },
+    "width": {
+      "thin": {
+        "value": "1px",
+        "type": "dimension",
+        "description": "Thin border"
+      },
+      "medium": {
+        "value": "2px",
+        "type": "dimension",
+        "description": "Medium border — tables, containers"
+      }
+    },
+    "color": {
+      "default": {
+        "value": "rgba(0,0,0,0.1)",
+        "type": "color",
+        "description": "Default border color"
+      }
+    }
+  }
+}

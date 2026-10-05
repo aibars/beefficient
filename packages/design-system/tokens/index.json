@@ -1,0 +1,11 @@
+{
+  "note": "This file is a reference combining all token domains. It is not used by Style Dictionary — each domain file is processed independently.",
+  "domains": [
+    "colors.json — Color palette (primary, secondary, accents, neutrals, text, overlays)",
+    "typography.json — Fonts (family, sizes, weights, line-heights)",
+    "spacing.json — Spacing scale (xs to xxl)",
+    "shadows.json — Shadow levels (sm, md, lg)",
+    "borders.json — Border radii and widths",
+    "transitions.json — Timing functions and durations"
+  ]
+}

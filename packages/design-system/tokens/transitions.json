@@ -1,0 +1,28 @@
+{
+  "transition": {
+    "duration": {
+      "fast": {
+        "value": "0.15s",
+        "type": "time",
+        "description": "Fast transition — UI feedback"
+      },
+      "base": {
+        "value": "0.3s",
+        "type": "time",
+        "description": "Standard transition (from prototype)"
+      },
+      "slow": {
+        "value": "0.5s",
+        "type": "time",
+        "description": "Slow transition — animations"
+      }
+    },
+    "easing": {
+      "ease-in-out": {
+        "value": "cubic-bezier(0.4, 0, 0.2, 1)",
+        "type": "string",
+        "description": "Standard easing function"
+      }
+    }
+  }
+}
