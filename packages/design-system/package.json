@@ -1,0 +1,20 @@
+{
+  "name": "@beefficient/tokens",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Design tokens for Beefficient — colors, typography, spacing, shadows, borders, transitions",
+  "main": "./dist/index.js",
+  "scripts": {
+    "build": "style-dictionary build",
+    "watch": "style-dictionary build --watch",
+    "test": "node __tests__/tokens.test.js"
+  },
+  "dependencies": {
+    "style-dictionary": "^3.9.0"
+  },
+  "exports": {
+    ".": "./dist/index.js",
+    "./css": "./dist/variables.css",
+    "./json": "./dist/tokens.json"
+  }
+}
