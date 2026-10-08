@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication, ValidationPipe } from '@nestjs/common';
-import * as request from 'supertest';
+import request from 'supertest';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { UsersService } from 'src/users/users.service';
@@ -43,7 +43,7 @@ describe('AuthController (E2E)', () => {
   beforeAll(async () => {
     const mockConfigService = {
       get: jest.fn((key: string) => {
-        const configMap = {
+        const configMap: Record<string, any> = {
           'NODE_ENV': 'test',
           'auth.jwtAccessSecret': 'test-secret',
           'auth.jwtRefreshSecret': 'test-refresh-secret',
@@ -183,7 +183,7 @@ describe('AuthController (E2E)', () => {
         .expect(201);
 
       expect(res.headers['set-cookie']).toBeDefined();
-      const cookies = res.headers['set-cookie'] as string[];
+      const cookies = (res.headers['set-cookie'] || []) as unknown as string[];
       expect(cookies.some((c) => c.includes('refreshToken'))).toBe(true);
     });
   });
@@ -249,7 +249,7 @@ describe('AuthController (E2E)', () => {
         .expect(200);
 
       expect(res.headers['set-cookie']).toBeDefined();
-      const cookies = res.headers['set-cookie'] as string[];
+      const cookies = (res.headers['set-cookie'] || []) as unknown as string[];
       expect(cookies.some((c) => c.includes('refreshToken'))).toBe(true);
     });
   });
@@ -347,7 +347,7 @@ describe('AuthController (E2E)', () => {
         .expect(200);
 
       expect(res.headers['set-cookie']).toBeDefined();
-      const cookies = res.headers['set-cookie'] as string[];
+      const cookies = (res.headers['set-cookie'] || []) as unknown as string[];
       expect(cookies.some((c) => c.includes('refreshToken'))).toBe(true);
     });
 
