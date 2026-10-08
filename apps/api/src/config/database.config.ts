@@ -1,5 +1,31 @@
+import { ConfigService } from '@nestjs/config';
 import { TypeOrmModuleOptions } from '@nestjs/typeorm';
 
+export class DatabaseConfig {
+  static getOrmConfig(configService: ConfigService): TypeOrmModuleOptions {
+    const nodeEnv = configService.get<string>('NODE_ENV', 'development');
+
+    return {
+      type: 'postgres',
+      host: configService.get<string>('DATABASE_HOST', 'localhost'),
+      port: configService.get<number>('DATABASE_PORT', 5432),
+      username: configService.get<string>('DATABASE_USER', 'postgres'),
+      password: configService.get<string>('DATABASE_PASSWORD', 'postgres'),
+      database: configService.get<string>('DATABASE_NAME', 'beefficient'),
+      entities: ['src/**/*.entity.ts'],
+      migrations: ['database/migrations/*.ts'],
+      migrationsRun: true,
+      synchronize: false,
+      logging: nodeEnv === 'development',
+      ssl: nodeEnv === 'production',
+    };
+  }
+}
+
+/**
+ * Deprecated: Use DatabaseConfig.getOrmConfig(configService) instead.
+ * Kept for backwards compatibility.
+ */
 export const getDatabaseConfig = (): TypeOrmModuleOptions => ({
   type: 'postgres',
   host: process.env.DATABASE_HOST || 'localhost',

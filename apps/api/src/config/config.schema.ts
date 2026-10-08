@@ -5,7 +5,9 @@ export const configSchema = Joi.object({
     .valid('development', 'production')
     .required(),
   PORT: Joi.number()
-    .default(3000),
+    .default(3001),
+  CORS_ORIGINS: Joi.string()
+    .default('http://localhost:3000,http://localhost:3001'),
   DATABASE_HOST: Joi.string()
     .required(),
   DATABASE_PORT: Joi.number()
