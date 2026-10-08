@@ -36,4 +36,20 @@ export class UsersRepository extends Repository<User> {
   async updateLastLogin(id: string): Promise<void> {
     await this.update(id, { lastLoginAt: new Date() });
   }
+
+  async updateGoogleId(id: string, googleId: string): Promise<void> {
+    await this.update(id, { googleId });
+  }
+
+  async getRefreshTokenVersion(id: string): Promise<number> {
+    const user = await this.findById(id);
+    return user?.refreshTokenVersion || 1;
+  }
+
+  async incrementRefreshTokenVersion(id: string): Promise<number> {
+    const user = await this.findById(id);
+    const newVersion = (user?.refreshTokenVersion || 1) + 1;
+    await this.update(id, { refreshTokenVersion: newVersion });
+    return newVersion;
+  }
 }

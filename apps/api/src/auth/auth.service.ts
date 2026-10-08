@@ -176,4 +176,17 @@ export class AuthService {
       refreshToken,
     };
   }
+
+  async buildAuthResponse(user: User): Promise<AuthResponseDto> {
+    const tokens = await this.generateTokens(user.id);
+    return {
+      accessToken: tokens.accessToken,
+      refreshToken: tokens.refreshToken,
+      user: {
+        id: user.id,
+        email: user.email,
+        createdAt: user.createdAt,
+      },
+    };
+  }
 }

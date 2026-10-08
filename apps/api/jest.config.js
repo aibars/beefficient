@@ -16,4 +16,5 @@ module.exports = {
   transformIgnorePatterns: [
     'node_modules/(?!(@nestjs/jwt|@nestjs/config)/)',
   ],
+  setupFilesAfterEnv: ['<rootDir>/../jest.setup.js'],
 };

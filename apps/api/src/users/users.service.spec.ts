@@ -16,6 +16,7 @@ describe('UsersService', () => {
     createdAt: new Date('2026-10-08'),
     updatedAt: new Date('2026-10-08'),
     lastLoginAt: undefined,
+    refreshTokenVersion: 1,
   };
 
   const mockGoogleUser: User = {
@@ -26,6 +27,7 @@ describe('UsersService', () => {
     createdAt: new Date('2026-10-08'),
     updatedAt: new Date('2026-10-08'),
     lastLoginAt: new Date('2026-10-08'),
+    refreshTokenVersion: 1,
   };
 
   beforeEach(async () => {

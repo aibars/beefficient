@@ -14,6 +14,7 @@ describe('JwtAuthGuard', () => {
     createdAt: new Date('2026-10-08'),
     updatedAt: new Date('2026-10-08'),
     lastLoginAt: undefined,
+    refreshTokenVersion: 1,
   };
 
   beforeEach(async () => {

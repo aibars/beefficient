@@ -31,4 +31,7 @@ export class User {
 
   @Column({ type: 'timestamp', nullable: true })
   lastLoginAt?: Date;
+
+  @Column({ type: 'integer', default: 1 })
+  refreshTokenVersion: number;
 }

@@ -33,4 +33,16 @@ export class UsersService {
   async updateLastLogin(id: string): Promise<void> {
     return this.usersRepository.updateLastLogin(id);
   }
+
+  async updateGoogleId(id: string, googleId: string): Promise<void> {
+    return this.usersRepository.updateGoogleId(id, googleId);
+  }
+
+  async getRefreshTokenVersion(id: string): Promise<number> {
+    return this.usersRepository.getRefreshTokenVersion(id);
+  }
+
+  async incrementRefreshTokenVersion(id: string): Promise<number> {
+    return this.usersRepository.incrementRefreshTokenVersion(id);
+  }
 }
