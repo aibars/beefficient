@@ -1,7 +1,7 @@
 # @beefficient/tokens
 
 Tokens de diseño de Beefficient, alineados con el prototipo de Gastón
-`Beefficient_29.7.26` (autoridad visual, ver `PRODUCT.md`): fondo crema, terracota y
+`Beefficient_29.7.26` (autoridad visual, ver [`PRODUCT.md`](https://github.com/aibars/beefficient-workspace/blob/main/PRODUCT.md) del workspace): fondo crema, terracota y
 oliva, Caprasimo para títulos y cifras, Figtree para texto, radios de 8/16/28 y sombras
 cálidas suaves. Un solo tema claro.
 
@@ -16,7 +16,7 @@ cálidas suaves. Un solo tema claro.
 
 Los tokens que no salen del prototipo sino del wireframe móvil lo dicen en su descripción.
 
-## Salidas (`npm run build`)
+## Salidas (`pnpm build`)
 
 | Import | Archivo | Forma |
 |---|---|---|
@@ -31,8 +31,8 @@ React Native 0.76+.
 ## Desarrollo
 
 ```bash
-npm run build -w @beefficient/tokens
-npm test -w @beefficient/tokens     # build + verificación contra el prototipo
+pnpm --filter @beefficient/tokens build
+pnpm --filter @beefficient/tokens test   # build + verificación contra el prototipo
 ```
 
-`dist/` no se commitea: Storybook lo genera antes de arrancar (`prestorybook`).
+`dist/` no se commitea: Turborepo lo genera antes de las tareas que dependen de él (`^build`).

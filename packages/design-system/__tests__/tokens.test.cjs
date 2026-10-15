@@ -1,5 +1,5 @@
 // Verifica que las salidas generadas respeten los tokens del prototipo
-// Beefficient_29.7.26 (autoridad visual, ver PRODUCT.md).
+// Beefficient_29.7.26 (autoridad visual, ver PRODUCT.md del workspace).
 const fs = require('fs');
 const path = require('path');
 

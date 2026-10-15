@@ -697,6 +697,6 @@ NEW_RELIC_LICENSE_KEY=<optional-newrelic-key>
 
 ## See Also
 
-- [Authentication API Documentation](docs/AUTH.md)
+- [Authentication API Documentation](https://github.com/aibars/beefficient-workspace/blob/main/docs/AUTH.md) (workspace)
 - [Implementation Plan](docs/superpowers/plans/2026-10-08-bfc-auth1-implementation.md)
 - [NestJS Deployment Guide](https://docs.nestjs.com/deployment)

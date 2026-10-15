@@ -9,13 +9,13 @@ con Storybook web sobre react-native-web. Son los mismos componentes que va a us
 `apps/mobile`, no una copia para la web.
 
 El punto de partida es el wireframe navegable de **BFC-M1**, la pantalla central del MVP
-(`docs/fuentes/wireframes-mobile-2026-10-15.html`): reemplaza una fila de la Planilla de
+([`docs/fuentes/wireframes-mobile-2026-10-15.html`](https://github.com/aibars/beefficient-workspace/blob/main/docs/fuentes/wireframes-mobile-2026-10-15.html) en el workspace): reemplaza una fila de la Planilla de
 Pastoreo CREA Utracán. El productor elige lote, rodeo, cabezas y fechas, y ve el cálculo
 mientras carga, sin señal.
 
 ## Autoridad visual
 
-Manda el prototipo de Gastón, `Beefficient_29.7.26.html` (ver `PRODUCT.md`, «Brand
+Manda el prototipo de Gastón, `Beefficient_29.7.26.html` (ver [`PRODUCT.md`](https://github.com/aibars/beefficient-workspace/blob/main/PRODUCT.md) del workspace, «Brand
 Commitments»). Los tokens salen de `@beefficient/tokens`, realineado con ese prototipo:
 crema, terracota y oliva, Caprasimo para títulos y cifras, Figtree para texto, radios de
 8/16/28 y un solo tema claro. Ver **Fundamentos › Tokens**.
@@ -51,8 +51,8 @@ Las pantallas no calculan nada por su cuenta: llaman a las funciones de
 ## Comandos
 
 ```bash
-npm run storybook          # desarrollo en http://localhost:6006
-npm run build-storybook    # build estático en apps/storybook/storybook-static
-npm test -w @beefficient/domain
-npm test -w @beefficient/tokens
+pnpm storybook                                   # desarrollo en http://localhost:6006
+pnpm --filter @beefficient/storybook build       # build estático en apps/storybook/storybook-static
+pnpm --filter @beefficient/domain test
+pnpm --filter @beefficient/tokens test
 ```
