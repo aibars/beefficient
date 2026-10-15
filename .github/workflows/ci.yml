@@ -2,26 +2,12 @@ name: CI
 
 on:
   push:
-    branches: [main, develop]
+    branches: [main]
   pull_request:
-    branches: [main, develop]
+    branches: [main]
 
 jobs:
-  lint:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v2
-        with:
-          version: 8
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: pnpm
-      - run: pnpm install
-      - run: pnpm lint
-
-  test:
+  check:
     runs-on: ubuntu-latest
     services:
       postgres:
@@ -37,30 +23,28 @@ jobs:
           --health-retries 5
         ports:
           - 5432:5432
+    env:
+      # apps/api: valida la configuración al arrancar (src/config/config.schema.ts).
+      NODE_ENV: test
+      DATABASE_HOST: localhost
+      DATABASE_PORT: 5432
+      DATABASE_USER: beefficient
+      DATABASE_PASSWORD: test_password
+      DATABASE_NAME: beefficient_test
+      JWT_ACCESS_SECRET: ci-access-secret-ci-access-secret-ci
+      JWT_REFRESH_SECRET: ci-refresh-secret-ci-refresh-secret
+      GOOGLE_CLIENT_ID: ci
+      GOOGLE_CLIENT_SECRET: ci
+      GOOGLE_CALLBACK_URL: http://localhost:3000/auth/google/callback
     steps:
       - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v2
-        with:
-          version: 8
+      - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 24
           cache: pnpm
-      - run: pnpm install
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm typecheck
       - run: pnpm test
-        env:
-          DATABASE_URL: postgresql://beefficient:test_password@localhost:5432/beefficient_test
-
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v2
-        with:
-          version: 8
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: pnpm
-      - run: pnpm install
+      # Incluye el build de Storybook (apps/storybook).
       - run: pnpm build
