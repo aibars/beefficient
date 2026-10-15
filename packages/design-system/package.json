@@ -1,0 +1,27 @@
+{
+  "name": "@beefficient/tokens",
+  "version": "2.0.0",
+  "private": true,
+  "description": "Tokens de diseño de Beefficient, alineados con el prototipo de Gastón (29/7/26)",
+  "main": "./dist/index.js",
+  "scripts": {
+    "build": "node build.cjs",
+    "test": "node build.cjs && node __tests__/tokens.test.cjs"
+  },
+  "dependencies": {
+    "style-dictionary": "^3.9.0"
+  },
+  "exports": {
+    ".": "./dist/index.js",
+    "./native": {
+      "types": "./dist/native.d.ts",
+      "default": "./dist/native.js"
+    },
+    "./css": "./dist/variables.css",
+    "./json": "./dist/tokens.json"
+  },
+  "type": "module",
+  "files": [
+    "dist"
+  ]
+}

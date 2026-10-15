@@ -1,0 +1,47 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Documentación/Cálculo de pastoreo" />
+
+# Cálculo de pastoreo
+
+Lo que calcula la pantalla **Nuevo pastoreo** y cada fila de la **Planilla**. Implementado en
+`packages/domain/src/pastoreo.ts` (`calcularPastoreo`), con tests en `pastoreo.test.ts` que
+reproducen el caso del wireframe.
+
+| Resultado | Fórmula |
+|---|---|
+| Días | Salida − entrada (la salida no se cuenta) |
+| EV por cabeza | Factor EV de la categoría × (peso vivo / 400)^0,75 |
+| EV totales | EV por cabeza × cabezas |
+| Raciones | EV totales × días |
+| Raciones/ha | Raciones ÷ hectáreas del lote |
+| Carga | EV totales ÷ hectáreas del lote |
+| Consumo de MS | Peso vivo × %PV en MS × cabezas |
+| Oferta necesaria | Consumo ÷ eficiencia de cosecha (50 %) |
+| Oferta en el período | Oferta × días |
+
+**Caso de control** (datos de ejemplo): Lote 7 · El Bajo (42 ha), Vacas preñadas A (420 kg,
+factor 0,92, 2,0 %PV), 120 cabezas, del 1/4 al 15/4 → 14 días, 114,5 EV, **1.603 raciones**,
+38,2 raciones/ha, 2,73 EV/ha, 1.008 kg MS/día, 2.016 kg MS/día de oferta y 28.224 kg MS en
+el período.
+
+## Aclaraciones que no van en la pantalla
+
+- Un pastoreo es una fila de la planilla: qué rodeo entra a qué lote y por cuántos días.
+- La fecha de salida no se cuenta: del 1/4 al 15/4 son 14 días.
+- El EV sale de la tabla de Cocimano; el consumo, del %PV de referencia (BCNRM 2016).
+- La oferta necesaria asume 50 % de eficiencia de cosecha (`EFICIENCIA_COSECHA`).
+- Los datos se guardan en el teléfono y se sincronizan al volver la señal (ADR 0007).
+- Si la salida no es posterior a la entrada, no hay cálculo: los tiles muestran «—», la
+  barra inferior pide revisar las fechas y Guardar queda deshabilitado.
+- «El rodeo sigue en otro lote» (`buscarSuperposicion`): hay un pastoreo del mismo rodeo en
+  otro lote que todavía no terminó en la fecha de entrada. Puede entrar el mismo día que
+  sale del otro lote.
+
+## Fuera de este alcance
+
+La tabla Cocimano completa por mes de ciclo, el EV escrito a mano, «continuar en el lote
+siguiente» y el resumen por lote (BFC-M4).
+
+Los factores EV y los %PV de los rodeos de ejemplo son **valores de ejemplo** a validar con
+Gastón Alfaro y Federico Podversich.

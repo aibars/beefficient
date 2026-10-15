@@ -1,0 +1,13 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Documentación/Login" />
+
+# Login
+
+- El usuario es el email, como en el backend (BFC-AUTH1).
+- Por ahora el único proveedor externo es Google.
+- Con email o contraseña incorrectos el error es genérico («Email o contraseña
+  incorrectos.»), sin decir cuál de los dos falló. Lo devuelve el backend y la pantalla lo
+  recibe por la prop `error`.
+- El formato del email se valida en el teléfono antes de enviar («Ingresá un email válido.»).
+- «Mostrar» / «Ocultar» cambia la visibilidad de la contraseña.

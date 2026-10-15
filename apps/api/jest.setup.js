@@ -1,0 +1,14 @@
+// Set test environment variables
+process.env.NODE_ENV = process.env.NODE_ENV || 'test';
+process.env.DATABASE_HOST = process.env.DATABASE_HOST || 'localhost';
+process.env.DATABASE_PORT = process.env.DATABASE_PORT || '5432';
+process.env.DATABASE_USER = process.env.DATABASE_USER || 'postgres';
+process.env.DATABASE_PASSWORD = process.env.DATABASE_PASSWORD || 'postgres';
+process.env.DATABASE_NAME = process.env.DATABASE_NAME || 'beefficient_test';
+process.env.JWT_ACCESS_SECRET = process.env.JWT_ACCESS_SECRET || 'test-jwt-access-secret-key-1234567890';
+process.env.JWT_ACCESS_EXPIRATION = process.env.JWT_ACCESS_EXPIRATION || '900';
+process.env.JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET || 'test-jwt-refresh-secret-key-1234567890';
+process.env.JWT_REFRESH_EXPIRATION = process.env.JWT_REFRESH_EXPIRATION || '604800';
+process.env.GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || 'test-google-client-id';
+process.env.GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET || 'test-google-client-secret';
+process.env.GOOGLE_CALLBACK_URL = process.env.GOOGLE_CALLBACK_URL || 'http://localhost:3001/auth/google/callback';
