@@ -13,8 +13,8 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@beefficient/domain": "*",
-    "@beefficient/tokens": "*"
+    "@beefficient/domain": "workspace:*",
+    "@beefficient/tokens": "workspace:*"
   },
   "peerDependencies": {
     "@react-native-community/datetimepicker": ">=9",

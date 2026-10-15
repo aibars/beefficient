@@ -1,5 +1,4 @@
 import { createRequire } from 'node:module';
-import { fileURLToPath } from 'node:url';
 import type { StorybookConfig } from '@storybook/react-native-web-vite';
 import remarkGfm from 'remark-gfm';
 
@@ -8,7 +7,7 @@ const require = createRequire(import.meta.url);
 // react-native → react-native-web + un TurboModuleRegistry vacío (ver el shim).
 // Va como plugin `pre` y como plugin de esbuild para ganarle al alias del
 // framework tanto en el código fuente como en el pre-bundle de dependencias.
-const RN_SHIM = fileURLToPath(new URL('./react-native-web-shim.js', import.meta.url));
+const RN_SHIM = require.resolve('./react-native-web-shim.js');
 
 const config: StorybookConfig = {
   stories: ['../docs/**/*.mdx', '../../../packages/ui/src/**/*.stories.@(ts|tsx)'],

@@ -2,7 +2,6 @@
 node_modules/
 yarn.lock
 package-lock.json
-pnpm-lock.yaml
 
 # Environment variables
 .env
@@ -56,3 +55,8 @@ node_modules/
 *.jks
 *.p8
 *.p12
+
+# Turborepo, Storybook y cobertura
+.turbo/
+storybook-static/
+coverage/
