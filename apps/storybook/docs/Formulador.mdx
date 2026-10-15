@@ -1,0 +1,50 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+import { FORM_BASE, CLIMA, formatearNumero as nf } from '@beefficient/domain';
+import { Tabla } from './Tabla';
+
+<Meta title="Documentación/Formulador" />
+
+# Formulador de dietas
+
+Replica el formulador del prototipo 29/7 y suma la opción de elegir un rodeo del campo:
+toma su etapa y su peso, y muestra el total para todas las cabezas. Implementado en
+`packages/domain/src/formulador.ts`.
+
+| Resultado | Fórmula |
+|---|---|
+| Consumo de MS | Peso vivo × %PV de la etapa × factor de ambiente |
+| Energía | Consumo de MS × Mcal EM/kg MS de la etapa |
+| Proteína, Ca, P | Consumo de MS × % de la etapa (Ca y P en g/día) |
+| Ración | Reparto fijo por etapa sobre el consumo de MS |
+| Total del rodeo | Cada requerimiento × cabezas del rodeo |
+
+## Coeficientes (`FORM_BASE`)
+
+Copiados tal cual del prototipo. **A validar** con Gastón Alfaro y Federico Podversich.
+
+<Tabla
+  head={['Etapa', 'GDP (kg/día)', 'MS (%PV)', 'EM (Mcal/kg MS)', 'PB (%)', 'Ca (%)', 'P (%)']}
+  rows={Object.values(FORM_BASE).map((b) => [b.label, nf(b.gdp, 3), nf(b.msPct, 2), nf(b.em, 2), nf(b.pb, 1), nf(b.ca, 2), nf(b.p, 2)])}
+/>
+
+Factor de ambiente: {Object.values(CLIMA).map((c) => `${c.label} ${nf(c.factor, 2)}`).join(' · ')}.
+
+<Tabla
+  head={['Etapa', 'Ración sugerida (% de la MS)']}
+  rows={Object.values(FORM_BASE).map((b) => [b.label, b.racion.map((i) => `${i.ingrediente} ${i.porcentaje}`).join(' · ')])}
+/>
+
+## Aclaraciones que no van en la pantalla
+
+- Sin rodeo, los requerimientos son por animal.
+- Con un rodeo, la etapa se propone según la categoría (vacas → Vaca de cría; el resto →
+  Recría) y el peso vivo es el promedio del rodeo. Las dos cosas se pueden cambiar.
+- Los valores son orientativos (base NRC) y no sustituyen la formulación de un nutricionista.
+- La ración es orientativa, sobre base de materia seca.
+- El formulador funciona sin señal: las tablas de referencia viven en el teléfono.
+- El prototipo llama «Engorde a corral» a la etapa que el wireframe acortó a «Engorde». Se
+  respeta el prototipo.
+
+## Fuera de este alcance
+
+La ración a partir de alimentos propios y sus precios (BFC-CALC4).

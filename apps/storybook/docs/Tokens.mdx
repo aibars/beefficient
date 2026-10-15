@@ -1,0 +1,91 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+import { tokens } from '@beefficient/tokens/native';
+import { Tabla } from './Tabla';
+
+<Meta title="Fundamentos/Tokens" />
+
+export const Swatch = ({ name, value }) => (
+  <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '6px 0' }}>
+    <div style={{ width: 44, height: 44, borderRadius: 12, background: value, boxShadow: 'inset 0 0 0 1px rgba(32,30,29,.12)' }} />
+    <div>
+      <div style={{ fontWeight: 600 }}>{name}</div>
+      <code>{value}</code>
+    </div>
+  </div>
+);
+
+export const Scale = ({ name, scale }) => (
+  <div style={{ marginBottom: 20 }}>
+    <div style={{ fontWeight: 600, marginBottom: 6 }}>{name}</div>
+    <div style={{ display: 'flex', borderRadius: 12, overflow: 'hidden' }}>
+      {Object.entries(scale).map(([k, v]) => (
+        <div key={k} style={{ flex: 1, background: v, padding: '28px 6px 6px', fontSize: 11, color: ['100', '200', '300', '400', 'base'].includes(k) && k !== 'base' ? '#201e1d' : '#fff' }}>
+          {k}
+          <br />
+          {v}
+        </div>
+      ))}
+    </div>
+  </div>
+);
+
+# Tokens
+
+Fuente: `packages/design-system/tokens/*.json`, tomados del prototipo
+`Beefficient_29.7.26`. Style Dictionary genera:
+
+| Salida | Uso |
+|---|---|
+| `@beefficient/tokens/native` | Objeto anidado para React Native: `tokens.color.accent.base`, números sin unidad. Lo usa `@beefficient/ui`. |
+| `@beefficient/tokens` | Exports ES6 en camelCase: `colorAccentBase`. |
+| `@beefficient/tokens/css` | Variables CSS: `var(--color-accent-base)`. |
+| `@beefficient/tokens/json` | JSON plano en kebab-case. |
+
+Algunos tokens no están en el prototipo y salen del wireframe: `tile`, `input`,
+`text.error`, los radios `control` (12), `tile` (22) y `sheet` (24), y la serie de colores de
+lote. Están marcados así en la descripción de cada token.
+
+## Superficies y texto
+
+<Swatch name="bg" value={tokens.color.bg} />
+<Swatch name="surface" value={tokens.color.surface} />
+<Swatch name="card" value={tokens.color.card} />
+<Swatch name="tile" value={tokens.color.tile} />
+<Swatch name="input" value={tokens.color.input} />
+<Swatch name="text.base" value={tokens.color.text.base} />
+<Swatch name="text.muted" value={tokens.color.text.muted} />
+<Swatch name="text.soft" value={tokens.color.text.soft} />
+
+## Escalas
+
+<Scale name="accent (terracota)" scale={tokens.color.accent} />
+<Scale name="olive (oliva, accent-2 del prototipo)" scale={tokens.color.olive} />
+<Scale name="neutral" scale={tokens.color.neutral} />
+<Scale name="series (lotes)" scale={tokens.color.series} />
+
+## Tipografía
+
+<div style={{ fontFamily: 'Caprasimo', fontSize: 38, lineHeight: 1.1 }}>1.603 raciones</div>
+<p>Caprasimo, para títulos y cifras.</p>
+<div style={{ fontFamily: 'Figtree', fontSize: 15 }}>Vacas preñadas A · 120 cab. · 1/4 → 15/4 (14 d)</div>
+<p>Figtree 400–700, para texto, labels y controles.</p>
+
+<Tabla head={['Token', 'px']} rows={Object.entries(tokens.font.size).map(([k, v]) => [<code>font.size.{k}</code>, v])} />
+
+## Radios y sombras
+
+<div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', margin: '16px 0' }}>
+  {Object.entries(tokens.radius).filter(([k]) => k !== 'pill').map(([k, v]) => (
+    <div key={k} style={{ width: 96, height: 72, background: tokens.color.card, borderRadius: v, boxShadow: tokens.shadow.md, display: 'grid', placeItems: 'center', fontSize: 12 }}>
+      {k} · {v}
+    </div>
+  ))}
+</div>
+
+<div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', margin: '16px 0 32px' }}>
+  {Object.entries(tokens.shadow).map(([k, v]) => (
+    <div key={k} style={{ width: 120, height: 72, background: tokens.color.card, borderRadius: 16, boxShadow: v, display: 'grid', placeItems: 'center', fontSize: 12 }}>
+      shadow.{k}
+    </div>
+  ))}
+</div>

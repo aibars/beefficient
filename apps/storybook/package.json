@@ -1,0 +1,31 @@
+{
+  "name": "@beefficient/storybook",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Storybook web (react-native-web) de los componentes y pantallas móviles",
+  "type": "module",
+  "scripts": {
+    "prestorybook": "npm run build -w @beefficient/tokens",
+    "storybook": "storybook dev -p 6006",
+    "prebuild-storybook": "npm run build -w @beefficient/tokens",
+    "build-storybook": "storybook build -o storybook-static"
+  },
+  "dependencies": {
+    "@beefficient/domain": "*",
+    "@beefficient/tokens": "*",
+    "@beefficient/ui": "*",
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
+    "react-native": "0.88.0",
+    "react-native-svg": "15.16.0",
+    "react-native-web": "~0.21.4"
+  },
+  "devDependencies": {
+    "@storybook/addon-docs": "10.6.2",
+    "@storybook/react-native-web-vite": "10.6.2",
+    "remark-gfm": "^4.0.1",
+    "storybook": "10.6.2",
+    "typescript": "^5.0.0",
+    "vite": "^7.0.0"
+  }
+}

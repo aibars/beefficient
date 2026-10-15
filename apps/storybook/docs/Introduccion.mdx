@@ -1,0 +1,58 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Introducción" />
+
+# Beefficient móvil
+
+Componentes y pantallas de la app móvil (React Native + Expo, ADR 0001), documentados
+con Storybook web sobre react-native-web. Son los mismos componentes que va a usar
+`apps/mobile`, no una copia para la web.
+
+El punto de partida es el wireframe navegable de **BFC-M1**, la pantalla central del MVP
+(`docs/fuentes/wireframes-mobile-2026-10-15.html`): reemplaza una fila de la Planilla de
+Pastoreo CREA Utracán. El productor elige lote, rodeo, cabezas y fechas, y ve el cálculo
+mientras carga, sin señal.
+
+## Autoridad visual
+
+Manda el prototipo de Gastón, `Beefficient_29.7.26.html` (ver `PRODUCT.md`, «Brand
+Commitments»). Los tokens salen de `@beefficient/tokens`, realineado con ese prototipo:
+crema, terracota y oliva, Caprasimo para títulos y cifras, Figtree para texto, radios de
+8/16/28 y un solo tema claro. Ver **Fundamentos › Tokens**.
+
+## Qué hay
+
+| Sección | Contenido |
+|---|---|
+| Fundamentos | Tokens, íconos y marca. |
+| Componentes | Piezas base, cada una con sus estados (default, elegido, deshabilitado, error, vacío). |
+| Pantallas | Login, Nuevo pastoreo, Planilla y Formulador con datos de ejemplo, más un **Recorrido** navegable como el wireframe. |
+| Documentación | Fórmulas, aclaraciones y decisiones de diseño que no van dentro de las pantallas. |
+
+## Datos de ejemplo
+
+Todos los datos de las pantallas son **de ejemplo** (establecimiento «La Esperanza»,
+lotes, rodeos y pastoreos inventados) y salen de `@beefficient/domain` (`ejemplo.ts`).
+Los coeficientes de nutrición (factores EV, %PV en MS, `FORM_BASE`) son orientativos y los
+validan **Gastón Alfaro** y **Federico Podversich**.
+
+## Dónde vive cada cosa
+
+```
+packages/design-system   @beefficient/tokens   tokens (Style Dictionary)
+packages/domain          @beefficient/domain   cálculos en TypeScript puro (Vitest)
+packages/ui              @beefficient/ui       componentes, pantallas y sus stories
+apps/storybook           este Storybook (config + MDX)
+```
+
+Las pantallas no calculan nada por su cuenta: llaman a las funciones de
+`@beefficient/domain`, que son las mismas que va a usar la app.
+
+## Comandos
+
+```bash
+npm run storybook          # desarrollo en http://localhost:6006
+npm run build-storybook    # build estático en apps/storybook/storybook-static
+npm test -w @beefficient/domain
+npm test -w @beefficient/tokens
+```
