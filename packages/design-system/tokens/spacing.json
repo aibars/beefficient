@@ -1,34 +1,32 @@
 {
   "spacing": {
-    "xs": {
+    "1": {
+      "value": "4px",
+      "type": "dimension"
+    },
+    "2": {
       "value": "8px",
-      "type": "dimension",
-      "description": "Extra small spacing"
+      "type": "dimension"
     },
-    "sm": {
-      "value": "10px",
-      "type": "dimension",
-      "description": "Small spacing — form inputs, small gaps"
+    "3": {
+      "value": "12px",
+      "type": "dimension"
     },
-    "md": {
-      "value": "15px",
-      "type": "dimension",
-      "description": "Medium spacing — default padding, gaps"
+    "4": {
+      "value": "16px",
+      "type": "dimension"
     },
-    "lg": {
+    "5": {
       "value": "20px",
-      "type": "dimension",
-      "description": "Large spacing — cards, containers"
+      "type": "dimension"
     },
-    "xl": {
-      "value": "30px",
-      "type": "dimension",
-      "description": "Extra large spacing — sections"
+    "6": {
+      "value": "24px",
+      "type": "dimension"
     },
-    "xxl": {
-      "value": "40px",
-      "type": "dimension",
-      "description": "2x extra large spacing — major sections"
+    "8": {
+      "value": "32px",
+      "type": "dimension"
     }
   }
 }

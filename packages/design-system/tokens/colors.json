@@ -1,101 +1,213 @@
 {
   "color": {
-    "primary": {
-      "value": "#667eea",
+    "bg": {
+      "value": "#f5ead8",
       "type": "color",
-      "description": "Primary brand color — blue-purple used for headers, gradients, CTAs"
+      "description": "Fondo de la app (crema)"
     },
-    "secondary": {
-      "value": "#764ba2",
+    "surface": {
+      "value": "#ebddc5",
       "type": "color",
-      "description": "Secondary brand color — purple used for gradients"
+      "description": "Superficie hundida"
+    },
+    "card": {
+      "value": "#f9f4ed",
+      "type": "color",
+      "description": "Cards, tiles y barras (neutral-100 del prototipo)"
+    },
+    "tile": {
+      "value": "#f2e6d3",
+      "type": "color",
+      "description": "Tile destacado, sin sombra (wireframe)"
+    },
+    "input": {
+      "value": "#ebdcc4",
+      "type": "color",
+      "description": "Fondo de inputs y selects (wireframe)"
+    },
+    "text": {
+      "base": {
+        "value": "#201e1d",
+        "type": "color",
+        "description": "Texto principal"
+      },
+      "muted": {
+        "value": "#645c50",
+        "type": "color",
+        "description": "Texto secundario (neutral-700)"
+      },
+      "soft": {
+        "value": "#82796a",
+        "type": "color",
+        "description": "Texto terciario y ayudas (neutral-600)"
+      },
+      "on-accent": {
+        "value": "#ffffff",
+        "type": "color",
+        "description": "Texto sobre terracota u oliva"
+      },
+      "error": {
+        "value": "#6b2a0c",
+        "type": "color",
+        "description": "Texto de avisos de error (wireframe)"
+      }
+    },
+    "divider": {
+      "value": "rgba(32, 30, 29, 0.16)",
+      "type": "color",
+      "description": "Separadores y bordes de pastillas"
+    },
+    "border": {
+      "input": {
+        "value": "rgba(32, 30, 29, 0.12)",
+        "type": "color",
+        "description": "Borde de inputs"
+      }
     },
     "accent": {
-      "cyan": {
-        "value": "#00f2fe",
-        "type": "color",
-        "description": "Cyan accent"
+      "100": {
+        "value": "#fff2eb",
+        "type": "color"
       },
-      "cyan-light": {
-        "value": "#30b0fe",
-        "type": "color",
-        "description": "Light cyan accent"
+      "200": {
+        "value": "#ffe1d0",
+        "type": "color"
       },
-      "lime": {
-        "value": "#43e97b",
-        "type": "color",
-        "description": "Lime green accent"
+      "300": {
+        "value": "#ffc6a5",
+        "type": "color"
       },
-      "pink": {
-        "value": "#fa709a",
-        "type": "color",
-        "description": "Pink accent"
+      "400": {
+        "value": "#f6a06b",
+        "type": "color"
       },
-      "magenta": {
-        "value": "#f093fb",
-        "type": "color",
-        "description": "Magenta accent"
+      "500": {
+        "value": "#d67f48",
+        "type": "color"
       },
-      "yellow": {
-        "value": "#fee140",
-        "type": "color",
-        "description": "Yellow accent"
+      "600": {
+        "value": "#b2622d",
+        "type": "color"
       },
-      "teal": {
-        "value": "#a8edea",
+      "700": {
+        "value": "#8c491a",
+        "type": "color"
+      },
+      "800": {
+        "value": "#643312",
+        "type": "color"
+      },
+      "900": {
+        "value": "#402310",
+        "type": "color"
+      },
+      "base": {
+        "value": "#c67139",
         "type": "color",
-        "description": "Teal accent"
+        "description": "Terracota: acento principal, CTAs"
+      }
+    },
+    "olive": {
+      "100": {
+        "value": "#f0fae1",
+        "type": "color"
+      },
+      "200": {
+        "value": "#e1eecc",
+        "type": "color"
+      },
+      "300": {
+        "value": "#ccdbb2",
+        "type": "color"
+      },
+      "400": {
+        "value": "#aebf92",
+        "type": "color"
+      },
+      "500": {
+        "value": "#8fa073",
+        "type": "color"
+      },
+      "600": {
+        "value": "#728157",
+        "type": "color"
+      },
+      "700": {
+        "value": "#56633f",
+        "type": "color"
+      },
+      "800": {
+        "value": "#3d472b",
+        "type": "color"
+      },
+      "900": {
+        "value": "#272e1b",
+        "type": "color"
+      },
+      "base": {
+        "value": "#7a8a5e",
+        "type": "color",
+        "description": "Oliva (accent-2 del prototipo): selección y valores"
       }
     },
     "neutral": {
-      "light": {
-        "value": "#f5f7fa",
-        "type": "color",
-        "description": "Very light background — used for stat cards, subtle backgrounds"
+      "100": {
+        "value": "#f9f4ed",
+        "type": "color"
       },
-      "lighter": {
-        "value": "#f9f9f9",
-        "type": "color",
-        "description": "Almost-white background"
+      "200": {
+        "value": "#eee7db",
+        "type": "color"
       },
-      "lightest": {
-        "value": "#c3cfe2",
-        "type": "color",
-        "description": "Light gray — used in gradients"
+      "300": {
+        "value": "#dcd3c4",
+        "type": "color"
       },
-      "border": {
-        "value": "#e0e0e0",
-        "type": "color",
-        "description": "Border and divider color"
+      "400": {
+        "value": "#c0b6a5",
+        "type": "color"
+      },
+      "500": {
+        "value": "#a19786",
+        "type": "color"
+      },
+      "600": {
+        "value": "#82796a",
+        "type": "color"
+      },
+      "700": {
+        "value": "#645c50",
+        "type": "color"
+      },
+      "800": {
+        "value": "#474238",
+        "type": "color"
+      },
+      "900": {
+        "value": "#2e2b25",
+        "type": "color"
       }
     },
-    "text": {
-      "muted": {
-        "value": "#999",
+    "series": {
+      "1": {
+        "value": "#5b8fb9",
         "type": "color",
-        "description": "Muted text — secondary information"
+        "description": "Serie categórica 1 (lotes, gráficos)"
       },
-      "dark": {
-        "value": "#333",
+      "2": {
+        "value": "#7a8a5e",
         "type": "color",
-        "description": "Dark text — labels, body"
-      }
-    },
-    "overlay": {
-      "dark": {
-        "value": "rgba(0,0,0,0.8)",
-        "type": "color",
-        "description": "Dark overlay (tooltips, modals)"
+        "description": "Serie 2"
       },
-      "semi-transparent": {
-        "value": "rgba(0,0,0,0.3)",
+      "3": {
+        "value": "#c67139",
         "type": "color",
-        "description": "Semi-transparent dark overlay"
+        "description": "Serie 3"
       },
-      "light": {
-        "value": "rgba(0,0,0,0.1)",
+      "4": {
+        "value": "#b0648a",
         "type": "color",
-        "description": "Light dark overlay (hover states)"
+        "description": "Serie 4"
       }
     }
   }

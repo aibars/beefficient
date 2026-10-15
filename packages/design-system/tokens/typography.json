@@ -1,66 +1,105 @@
 {
   "font": {
     "family": {
-      "base": {
-        "value": "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+      "heading": {
+        "value": "Caprasimo",
         "type": "fontFamily",
-        "description": "System font stack for all text"
-      }
-    },
-    "size": {
-      "sm": {
-        "value": "0.9",
-        "type": "dimension",
-        "description": "Small text — secondary labels, hints"
+        "description": "Títulos y cifras"
       },
-      "base": {
-        "value": "1",
-        "type": "dimension",
-        "description": "Base text size — body, form inputs"
-      },
-      "md": {
-        "value": "1.1",
-        "type": "dimension",
-        "description": "Medium text — section labels"
-      },
-      "lg": {
-        "value": "1.8",
-        "type": "dimension",
-        "description": "Large text — subsection headings"
-      },
-      "xl": {
-        "value": "2.5",
-        "type": "dimension",
-        "description": "Extra large — main page headings"
+      "body": {
+        "value": "Figtree",
+        "type": "fontFamily",
+        "description": "Texto"
       }
     },
     "weight": {
       "regular": {
         "value": "400",
-        "type": "fontWeight",
-        "description": "Regular weight — body text"
+        "type": "fontWeight"
+      },
+      "medium": {
+        "value": "500",
+        "type": "fontWeight"
       },
       "semibold": {
         "value": "600",
-        "type": "fontWeight",
-        "description": "Semibold — labels, emphasis"
+        "type": "fontWeight"
       },
       "bold": {
         "value": "700",
-        "type": "fontWeight",
-        "description": "Bold — headings, strong emphasis"
+        "type": "fontWeight"
+      }
+    },
+    "size": {
+      "2xs": {
+        "value": "11px",
+        "type": "dimension",
+        "description": "Stamps, unidades chicas"
+      },
+      "xs": {
+        "value": "12px",
+        "type": "dimension",
+        "description": "Ayudas, extremos de slider"
+      },
+      "sm": {
+        "value": "12.5px",
+        "type": "dimension",
+        "description": "Metadatos y subtítulos"
+      },
+      "md": {
+        "value": "13.5px",
+        "type": "dimension",
+        "description": "Labels"
+      },
+      "base": {
+        "value": "15px",
+        "type": "dimension",
+        "description": "Texto y controles"
+      },
+      "lg": {
+        "value": "16px",
+        "type": "dimension",
+        "description": "CTA principal"
+      },
+      "title-sm": {
+        "value": "18px",
+        "type": "dimension",
+        "description": "Títulos de grupo y resumen"
+      },
+      "title": {
+        "value": "21px",
+        "type": "dimension",
+        "description": "Títulos de barra y card"
+      },
+      "figure-md": {
+        "value": "23px",
+        "type": "dimension",
+        "description": "Valor del slider"
+      },
+      "figure": {
+        "value": "28px",
+        "type": "dimension",
+        "description": "Cifra de tile"
+      },
+      "display": {
+        "value": "38px",
+        "type": "dimension",
+        "description": "Cifra destacada"
+      },
+      "brand": {
+        "value": "42px",
+        "type": "dimension",
+        "description": "Marca en login"
       }
     },
     "line-height": {
       "tight": {
-        "value": "1.2",
-        "type": "number",
-        "description": "Tight line height — headings"
+        "value": "1.15",
+        "type": "number"
       },
-      "normal": {
+      "base": {
         "value": "1.5",
-        "type": "number",
-        "description": "Normal line height — body text"
+        "type": "number"
       }
     }
   }

@@ -1,40 +1,45 @@
 {
-  "border": {
-    "radius": {
-      "sm": {
-        "value": "6px",
-        "type": "dimension",
-        "description": "Small radius — form inputs, buttons"
-      },
-      "md": {
-        "value": "8px",
-        "type": "dimension",
-        "description": "Medium radius — cards, containers"
-      },
-      "lg": {
-        "value": "12px",
-        "type": "dimension",
-        "description": "Large radius — main container (from prototype)"
-      }
+  "radius": {
+    "sm": {
+      "value": "8px",
+      "type": "dimension",
+      "description": "Prototipo"
     },
-    "width": {
-      "thin": {
-        "value": "1px",
-        "type": "dimension",
-        "description": "Thin border"
-      },
-      "medium": {
-        "value": "2px",
-        "type": "dimension",
-        "description": "Medium border — tables, containers"
-      }
+    "control": {
+      "value": "12px",
+      "type": "dimension",
+      "description": "Botón cuadrado de la barra superior (wireframe)"
     },
-    "color": {
-      "default": {
-        "value": "rgba(0,0,0,0.1)",
-        "type": "color",
-        "description": "Default border color"
-      }
+    "md": {
+      "value": "16px",
+      "type": "dimension",
+      "description": "Prototipo: avisos"
+    },
+    "tile": {
+      "value": "22px",
+      "type": "dimension",
+      "description": "Tiles y listas (wireframe)"
+    },
+    "sheet": {
+      "value": "24px",
+      "type": "dimension",
+      "description": "Barras inferiores (wireframe)"
+    },
+    "lg": {
+      "value": "28px",
+      "type": "dimension",
+      "description": "Prototipo: cards"
+    },
+    "pill": {
+      "value": "999px",
+      "type": "dimension",
+      "description": "Pastillas y botones"
+    }
+  },
+  "border-width": {
+    "hairline": {
+      "value": "1px",
+      "type": "dimension"
     }
   }
 }

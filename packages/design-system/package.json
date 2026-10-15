@@ -1,20 +1,27 @@
 {
   "name": "@beefficient/tokens",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "private": true,
-  "description": "Design tokens for Beefficient — colors, typography, spacing, shadows, borders, transitions",
+  "description": "Tokens de diseño de Beefficient, alineados con el prototipo de Gastón (29/7/26)",
   "main": "./dist/index.js",
   "scripts": {
-    "build": "style-dictionary build -c style-dictionary.config.js",
-    "watch": "style-dictionary build --watch",
-    "test": "node __tests__/tokens.test.js"
+    "build": "node build.cjs",
+    "test": "node build.cjs && node __tests__/tokens.test.cjs"
   },
   "dependencies": {
     "style-dictionary": "^3.9.0"
   },
   "exports": {
     ".": "./dist/index.js",
+    "./native": {
+      "types": "./dist/native.d.ts",
+      "default": "./dist/native.js"
+    },
     "./css": "./dist/variables.css",
     "./json": "./dist/tokens.json"
-  }
+  },
+  "type": "module",
+  "files": [
+    "dist"
+  ]
 }

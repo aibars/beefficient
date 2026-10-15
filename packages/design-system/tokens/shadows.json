@@ -1,19 +1,48 @@
 {
   "shadow": {
     "sm": {
-      "value": "0 2px 4px rgba(0,0,0,0.1)",
+      "value": {
+        "x": 0,
+        "y": 1,
+        "blur": 2,
+        "color": "#2e2b25",
+        "opacity": 0.14
+      },
       "type": "shadow",
-      "description": "Small shadow — subtle elevation"
+      "description": "Pastillas, botón cuadrado"
     },
     "md": {
-      "value": "0 10px 25px rgba(0,0,0,0.15)",
+      "value": {
+        "x": 0,
+        "y": 3,
+        "blur": 10,
+        "color": "#2e2b25",
+        "opacity": 0.16
+      },
       "type": "shadow",
-      "description": "Medium shadow — cards, dropdowns"
+      "description": "Cards y tiles"
     },
     "lg": {
-      "value": "0 20px 60px rgba(0,0,0,0.3)",
+      "value": {
+        "x": 0,
+        "y": 12,
+        "blur": 32,
+        "color": "#2e2b25",
+        "opacity": 0.22
+      },
       "type": "shadow",
-      "description": "Large shadow — main containers, modals (from prototype)"
+      "description": "FAB, teléfono"
+    },
+    "bar": {
+      "value": {
+        "x": 0,
+        "y": -6,
+        "blur": 20,
+        "color": "#2e2b25",
+        "opacity": 0.12
+      },
+      "type": "shadow",
+      "description": "Barras inferiores"
     }
   }
 }
