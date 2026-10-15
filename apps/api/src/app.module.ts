@@ -9,6 +9,8 @@ import { DatabaseConfig } from './config/database.config';
 import { AppController } from './app.controller';
 import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
+import { FarmsModule } from './farms/farms.module';
+import { DevicesModule } from './devices/devices.module';
 
 @Module({
   controllers: [AppController],
@@ -44,6 +46,8 @@ import { AuthModule } from './auth/auth.module';
     // Feature modules
     UsersModule,
     AuthModule,
+    FarmsModule,
+    DevicesModule,
   ],
 })
 export class AppModule {}

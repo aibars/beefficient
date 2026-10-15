@@ -9,6 +9,9 @@ import {
   Res,
   Req,
   UnauthorizedException,
+  Get,
+  Patch,
+  Param,
 } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
 import { Response, Request } from 'express';
@@ -21,6 +24,9 @@ import { LocalAuthGuard } from './guards/local-auth.guard';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { CurrentUser } from './decorators/current-user.decorator';
 import { User } from 'src/users/users.entity';
+import { FarmsService } from 'src/farms/farms.service';
+import { CreateFarmDto } from 'src/farms/dto/create-farm.dto';
+import { JoinFarmDto } from 'src/farms/dto/join-farm.dto';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 
@@ -29,6 +35,7 @@ export class AuthController {
   constructor(
     private authService: AuthService,
     private usersService: UsersService,
+    private farmsService: FarmsService,
     private jwtService: JwtService,
     private configService: ConfigService,
   ) {}
@@ -215,5 +222,55 @@ export class AuthController {
         'OAuth verification failed: ' + errorMessage,
       );
     }
+  }
+
+  @Post('farm/create')
+  @HttpCode(201)
+  @UseGuards(JwtAuthGuard)
+  async createFarm(
+    @Body() createFarmDto: CreateFarmDto,
+    @CurrentUser() user: User,
+  ) {
+    return this.farmsService.createFarm(
+      createFarmDto.farm_name,
+      createFarmDto.provincia,
+      user.id,
+    );
+  }
+
+  @Post('farm/join')
+  @HttpCode(201)
+  @UseGuards(JwtAuthGuard)
+  async joinFarm(
+    @Body() joinFarmDto: JoinFarmDto,
+    @CurrentUser() user: User,
+  ) {
+    return this.farmsService.joinFarm(joinFarmDto.join_code, user.id);
+  }
+
+  @Get('farms')
+  @UseGuards(JwtAuthGuard)
+  async listFarms(@CurrentUser() user: User) {
+    const farms = await this.farmsService.listFarmsByUserId(user.id);
+    return { farms };
+  }
+
+  @Patch('farm/:farm_id/active')
+  @UseGuards(JwtAuthGuard)
+  async setActiveFarm(
+    @Param('farm_id') farmId: string,
+    @CurrentUser() user: User,
+  ) {
+    return this.farmsService.setActiveFarm(farmId, user.id);
+  }
+
+  @Post('farm/:farm_id/join-code')
+  @HttpCode(201)
+  @UseGuards(JwtAuthGuard)
+  async generateJoinCode(
+    @Param('farm_id') farmId: string,
+    @CurrentUser() user: User,
+  ) {
+    return this.farmsService.generateJoinCode(farmId, user.id);
   }
 }
