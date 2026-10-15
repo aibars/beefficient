@@ -17,21 +17,27 @@ export class User {
   @Column({ type: 'varchar', length: 255, unique: true })
   email: string;
 
-  @Column({ type: 'varchar', length: 60, nullable: true })
+  @Column({ name: 'password_hash', type: 'varchar', length: 60, nullable: true })
   passwordHash?: string;
 
-  @Column({ type: 'varchar', length: 255, unique: true, nullable: true })
+  @Column({
+    name: 'google_id',
+    type: 'varchar',
+    length: 255,
+    unique: true,
+    nullable: true,
+  })
   googleId?: string;
 
-  @CreateDateColumn()
+  @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 
-  @UpdateDateColumn()
+  @UpdateDateColumn({ name: 'updated_at' })
   updatedAt: Date;
 
-  @Column({ type: 'timestamp', nullable: true })
+  @Column({ name: 'last_login_at', type: 'timestamp', nullable: true })
   lastLoginAt?: Date;
 
-  @Column({ type: 'integer', default: 1 })
+  @Column({ name: 'refresh_token_version', type: 'integer', default: 1 })
   refreshTokenVersion: number;
 }

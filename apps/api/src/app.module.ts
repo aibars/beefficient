@@ -5,6 +5,7 @@ import { ThrottlerModule } from '@nestjs/throttler';
 
 import { configSchema } from './config/config.schema';
 import { DatabaseConfig } from './config/database.config';
+import { authConfig } from './config/auth.config';
 
 import { AppController } from './app.controller';
 import { UsersModule } from './users/users.module';
@@ -20,6 +21,8 @@ import { DevicesModule } from './devices/devices.module';
       isGlobal: true,
       validationSchema: configSchema,
       expandVariables: true,
+      // Exposes `auth.*` keys (jwtAccessSecret, etc.) consumed by AuthModule.
+      load: [() => ({ auth: authConfig() })],
     }),
 
     // Database connection

@@ -51,7 +51,7 @@ export class CreateRefreshBlacklistTable20261008000002 implements MigrationInter
 
   public async down(queryRunner: QueryRunner): Promise<void> {
     const table = await queryRunner.getTable('refresh_token_blacklist');
-    const foreignKey = table.foreignKeys.find(
+    const foreignKey = table?.foreignKeys.find(
       (fk) => fk.columnNames.indexOf('user_id') !== -1,
     );
     if (foreignKey) {
