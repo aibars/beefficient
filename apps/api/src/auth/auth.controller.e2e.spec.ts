@@ -7,6 +7,9 @@ import { UsersService } from 'src/users/users.service';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { User } from 'src/users/users.entity';
+import { FarmsService } from 'src/farms/farms.service';
+import { AppModule } from 'src/app.module';
+import { randomUUID } from 'crypto';
 
 describe('AuthController (E2E)', () => {
   let app: INestApplication;
@@ -114,6 +117,11 @@ describe('AuthController (E2E)', () => {
         {
           provide: ConfigService,
           useValue: mockConfigSvc,
+        },
+        {
+          // Farm endpoints are covered against the real DB in 'Farm Management (E2E)'.
+          provide: FarmsService,
+          useValue: {},
         },
       ],
     }).compile();
@@ -255,6 +263,241 @@ describe('AuthController (E2E)', () => {
       const result = await authService.buildAuthResponse(mockUser);
       expect(result.accessToken).toBeDefined();
       expect(result.refreshToken).toBeDefined();
+    });
+  });
+});
+
+describe('Farm Management (E2E)', () => {
+  jest.setTimeout(30000);
+
+  let app: INestApplication;
+  let adminToken: string;
+  let techToken: string;
+  let farmId: string;
+  let joinCode: string;
+
+  // Unique per run so the suite can be re-run against the same database.
+  const runId = randomUUID().slice(0, 8);
+
+  const signup = async (email: string): Promise<string> => {
+    const response = await request(app.getHttpServer())
+      .post('/auth/signup')
+      .send({ email, password: 'SecurePass123' });
+    expect(response.status).toBe(201);
+    return response.body.accessToken;
+  };
+
+  beforeAll(async () => {
+    const moduleFixture: TestingModule = await Test.createTestingModule({
+      imports: [AppModule],
+    }).compile();
+
+    app = moduleFixture.createNestApplication();
+    app.useGlobalPipes(new ValidationPipe({ whitelist: true }));
+    await app.init();
+
+    adminToken = await signup(`admin-${runId}@farm.com`);
+    techToken = await signup(`tech-${runId}@farm.com`);
+  });
+
+  afterAll(async () => {
+    await app.close();
+  });
+
+  describe('POST /auth/farm/create', () => {
+    it('should create farm and assign admin role', async () => {
+      const response = await request(app.getHttpServer())
+        .post('/auth/farm/create')
+        .set('Authorization', `Bearer ${adminToken}`)
+        .send({ farm_name: 'Mi Campo', provincia: 'Buenos Aires' });
+
+      expect(response.status).toBe(201);
+      expect(response.body).toMatchObject({
+        farm_id: expect.any(String),
+        farm_name: 'Mi Campo',
+        provincia: 'Buenos Aires',
+        role: 'admin',
+        active: true,
+        join_code: expect.stringMatching(/^[A-Za-z0-9]{8,12}$/),
+      });
+
+      farmId = response.body.farm_id;
+      joinCode = response.body.join_code;
+    });
+
+    it('should reject missing fields with 400', async () => {
+      const response = await request(app.getHttpServer())
+        .post('/auth/farm/create')
+        .set('Authorization', `Bearer ${adminToken}`)
+        .send({ farm_name: 'Sin Provincia' });
+
+      expect(response.status).toBe(400);
+    });
+
+    it('should reject unauthenticated requests with 401', async () => {
+      const response = await request(app.getHttpServer())
+        .post('/auth/farm/create')
+        .send({ farm_name: 'Mi Campo', provincia: 'Buenos Aires' });
+
+      expect(response.status).toBe(401);
+    });
+  });
+
+  describe('POST /auth/farm/join', () => {
+    it('should join with a valid code as tecnico (inactive)', async () => {
+      const response = await request(app.getHttpServer())
+        .post('/auth/farm/join')
+        .set('Authorization', `Bearer ${techToken}`)
+        .send({ join_code: joinCode });
+
+      expect(response.status).toBe(201);
+      expect(response.body).toEqual({
+        farm_id: farmId,
+        farm_name: 'Mi Campo',
+        provincia: 'Buenos Aires',
+        role: 'tecnico',
+        active: false,
+      });
+    });
+
+    it('should reject an unknown code with 400', async () => {
+      const response = await request(app.getHttpServer())
+        .post('/auth/farm/join')
+        .set('Authorization', `Bearer ${techToken}`)
+        .send({ join_code: 'ZZZZZZZZ' });
+
+      expect(response.status).toBe(400);
+    });
+
+    it('should reject an already-used code with 400', async () => {
+      // FarmsService maps every validateAndMarkUsed failure (unknown or used) to 400.
+      const response = await request(app.getHttpServer())
+        .post('/auth/farm/join')
+        .set('Authorization', `Bearer ${techToken}`)
+        .send({ join_code: joinCode });
+
+      expect(response.status).toBe(400);
+    });
+
+    it('should reject joining a farm the user already belongs to with 409', async () => {
+      const fresh = await request(app.getHttpServer())
+        .post(`/auth/farm/${farmId}/join-code`)
+        .set('Authorization', `Bearer ${adminToken}`);
+      expect(fresh.status).toBe(201);
+
+      const response = await request(app.getHttpServer())
+        .post('/auth/farm/join')
+        .set('Authorization', `Bearer ${techToken}`)
+        .send({ join_code: fresh.body.join_code });
+
+      expect(response.status).toBe(409);
+    });
+  });
+
+  describe('GET /auth/farms', () => {
+    it('should list the farm as active admin for the admin', async () => {
+      const response = await request(app.getHttpServer())
+        .get('/auth/farms')
+        .set('Authorization', `Bearer ${adminToken}`);
+
+      expect(response.status).toBe(200);
+      expect(response.body.farms).toEqual([
+        {
+          farm_id: farmId,
+          farm_name: 'Mi Campo',
+          provincia: 'Buenos Aires',
+          role: 'admin',
+          active: true,
+        },
+      ]);
+    });
+
+    it('should list the farm as inactive tecnico for the tech', async () => {
+      const response = await request(app.getHttpServer())
+        .get('/auth/farms')
+        .set('Authorization', `Bearer ${techToken}`);
+
+      expect(response.status).toBe(200);
+      expect(response.body.farms).toEqual([
+        {
+          farm_id: farmId,
+          farm_name: 'Mi Campo',
+          provincia: 'Buenos Aires',
+          role: 'tecnico',
+          active: false,
+        },
+      ]);
+    });
+  });
+
+  describe('PATCH /auth/farm/:farm_id/active', () => {
+    it('should let the tech activate the joined farm', async () => {
+      const response = await request(app.getHttpServer())
+        .patch(`/auth/farm/${farmId}/active`)
+        .set('Authorization', `Bearer ${techToken}`);
+
+      expect(response.status).toBe(200);
+      expect(response.body).toEqual({ farm_id: farmId, active: true });
+    });
+
+    it('should keep only one active farm per user', async () => {
+      // Tech creates their own farm, which becomes active.
+      const own = await request(app.getHttpServer())
+        .post('/auth/farm/create')
+        .set('Authorization', `Bearer ${techToken}`)
+        .send({ farm_name: 'Campo Propio', provincia: 'Córdoba' });
+      expect(own.status).toBe(201);
+
+      let list = await request(app.getHttpServer())
+        .get('/auth/farms')
+        .set('Authorization', `Bearer ${techToken}`);
+      let active = list.body.farms.filter((f: any) => f.active);
+      expect(list.body.farms).toHaveLength(2);
+      expect(active).toHaveLength(1);
+      expect(active[0].farm_id).toBe(own.body.farm_id);
+
+      // Re-activating the joined farm deactivates the own farm.
+      const patch = await request(app.getHttpServer())
+        .patch(`/auth/farm/${farmId}/active`)
+        .set('Authorization', `Bearer ${techToken}`);
+      expect(patch.status).toBe(200);
+
+      list = await request(app.getHttpServer())
+        .get('/auth/farms')
+        .set('Authorization', `Bearer ${techToken}`);
+      active = list.body.farms.filter((f: any) => f.active);
+      expect(active).toHaveLength(1);
+      expect(active[0].farm_id).toBe(farmId);
+    });
+
+    it('should forbid activating a farm the user does not belong to', async () => {
+      const outsiderToken = await signup(`outsider-${runId}@farm.com`);
+
+      const response = await request(app.getHttpServer())
+        .patch(`/auth/farm/${farmId}/active`)
+        .set('Authorization', `Bearer ${outsiderToken}`);
+
+      expect(response.status).toBe(403);
+    });
+  });
+
+  describe('POST /auth/farm/:farm_id/join-code', () => {
+    it('should let the admin generate a new, different code', async () => {
+      const response = await request(app.getHttpServer())
+        .post(`/auth/farm/${farmId}/join-code`)
+        .set('Authorization', `Bearer ${adminToken}`);
+
+      expect(response.status).toBe(201);
+      expect(response.body.join_code).toMatch(/^[A-Za-z0-9]{8,12}$/);
+      expect(response.body.join_code).not.toBe(joinCode);
+    });
+
+    it('should forbid a tecnico from generating a code with 403', async () => {
+      const response = await request(app.getHttpServer())
+        .post(`/auth/farm/${farmId}/join-code`)
+        .set('Authorization', `Bearer ${techToken}`);
+
+      expect(response.status).toBe(403);
     });
   });
 });
