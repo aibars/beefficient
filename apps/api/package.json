@@ -3,6 +3,10 @@
   "version": "0.1.0",
   "description": "Beefficient backend API",
   "main": "dist/main.js",
+  "workspaces": [
+    "packages/*",
+    "apps/storybook"
+  ],
   "scripts": {
     "start": "nest start",
     "start:dev": "nest start --watch",
@@ -13,7 +17,9 @@
     "typeorm": "typeorm",
     "typeorm:migration:show": "typeorm migration:show",
     "typeorm:migration:run": "typeorm migration:run",
-    "typeorm:migration:generate": "typeorm migration:generate"
+    "typeorm:migration:generate": "typeorm migration:generate",
+    "storybook": "npm run storybook -w @beefficient/storybook",
+    "build-storybook": "npm run build-storybook -w @beefficient/storybook"
   },
   "dependencies": {
     "@nestjs/common": "^10.0.0",
