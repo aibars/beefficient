@@ -4,13 +4,26 @@ import React from 'react';
 import { Dialog } from '@/components/Dialog';
 import { KPIGrid } from '@/components/KPIGrid';
 import { WeatherWidget } from '@/components/Weather';
-import { mockHomeData } from '@/lib/mockData';
+import { AsyncState } from '@/components/AsyncState';
+import { useAsync } from '@/hooks/useAsync';
+import { getKPIs } from '@/services/kpis.service';
+import type { Weather } from '@/lib/types';
 import { useState, useEffect } from 'react';
+
+const HOME_COPY = {
+  greeting: '¡Buen día!',
+  intro: 'Bienvenido a tu panel de control de pastoreo.',
+  note: 'Actualizaciones disponibles en los últimos registros de tus rodeos.',
+};
+
+// TODO: no weather endpoint in the API yet; static placeholder until one exists.
+const PLACEHOLDER_WEATHER: Weather = { city: 'Utracán, La Pampa', temp: 28, condition: 'Soleado' };
 
 export default function Home() {
   const [showRoleDialog, setShowRoleDialog] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [role, setRole] = useState<'productor' | 'tecnico' | null>(null);
+  const kpis = useAsync(() => getKPIs(), []);
 
   useEffect(() => {
     setMounted(true);
@@ -58,19 +71,20 @@ export default function Home() {
       {role && (
         <div className="home-page">
           <section className="home-hero">
-            <h1>{mockHomeData.greeting}</h1>
-            <p>{mockHomeData.intro}</p>
-            <p className="home-note">{mockHomeData.note}</p>
+            <h1>{HOME_COPY.greeting}</h1>
+            <p>{HOME_COPY.intro}</p>
+            <p className="home-note">{HOME_COPY.note}</p>
           </section>
 
           <section className="home-weather">
             <h2>Clima</h2>
-            <WeatherWidget data={mockHomeData.weather} />
+            <WeatherWidget data={PLACEHOLDER_WEATHER} />
           </section>
 
           <section className="home-kpis">
             <h2>Valores & relaciones</h2>
-            <KPIGrid kpis={mockHomeData.kpis} />
+            <AsyncState loading={kpis.loading} error={kpis.error} onRetry={kpis.retry} />
+            {kpis.data && <KPIGrid kpis={kpis.data} />}
           </section>
 
           <section className="home-links">

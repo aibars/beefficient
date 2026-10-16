@@ -1,3 +1,7 @@
+/**
+ * @deprecated Mock data is no longer used by any page; pages call the API
+ * services in `src/services`. Kept temporarily for reference.
+ */
 import { Producer, Technician, Price, KPI, Weather, HomeData } from './types';
 
 export const mockProducers: Producer[] = [
