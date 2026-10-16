@@ -1,19 +1,24 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useRole } from '@/hooks/useRole';
 
 interface NavProps {
   onRoleSelect?: (role: 'productor' | 'tecnico') => void;
 }
 
 export function Nav({ onRoleSelect }: NavProps) {
-  const { role, setRole } = useRole();
+  const [role, setRoleState] = useState<'productor' | 'tecnico' | null>(null);
   const [showRoleMenu, setShowRoleMenu] = useState(false);
 
+  useEffect(() => {
+    const savedRole = localStorage.getItem('beefficient-role') as 'productor' | 'tecnico' | null;
+    setRoleState(savedRole);
+  }, []);
+
   const handleRoleChange = (newRole: 'productor' | 'tecnico') => {
-    setRole(newRole);
+    localStorage.setItem('beefficient-role', newRole);
+    setRoleState(newRole);
     setShowRoleMenu(false);
     if (onRoleSelect) onRoleSelect(newRole);
   };

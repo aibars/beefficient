@@ -1,7 +1,6 @@
 'use client';
 
 import React from 'react';
-import { useRole } from '@/hooks/useRole';
 import { Dialog } from '@/components/Dialog';
 import { KPIGrid } from '@/components/KPIGrid';
 import { WeatherWidget } from '@/components/Weather';
@@ -9,16 +8,25 @@ import { mockHomeData } from '@/lib/mockData';
 import { useState, useEffect } from 'react';
 
 export default function Home() {
-  const { role, setRole } = useRole();
   const [showRoleDialog, setShowRoleDialog] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [role, setRole] = useState<'productor' | 'tecnico' | null>(null);
 
   useEffect(() => {
     setMounted(true);
-    if (!role) {
+    const savedRole = localStorage.getItem('beefficient-role') as 'productor' | 'tecnico' | null;
+    if (savedRole) {
+      setRole(savedRole);
+    } else {
       setShowRoleDialog(true);
     }
-  }, [role]);
+  }, []);
+
+  const handleRoleSelect = (newRole: 'productor' | 'tecnico') => {
+    localStorage.setItem('beefficient-role', newRole);
+    setRole(newRole);
+    setShowRoleDialog(false);
+  };
 
   if (!mounted) {
     return null;
@@ -34,19 +42,13 @@ export default function Home() {
         <div className="role-selection">
           <button
             className="role-button"
-            onClick={() => {
-              setRole('productor');
-              setShowRoleDialog(false);
-            }}
+            onClick={() => handleRoleSelect('productor')}
           >
             Soy productor
           </button>
           <button
             className="role-button"
-            onClick={() => {
-              setRole('tecnico');
-              setShowRoleDialog(false);
-            }}
+            onClick={() => handleRoleSelect('tecnico')}
           >
             Soy técnico
           </button>
