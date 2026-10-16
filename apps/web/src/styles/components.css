@@ -442,3 +442,171 @@
     width: 100%;
   }
 }
+
+/* Page Common */
+.page-productores h1,
+.page-tecnicos h1,
+.page-precios h1 {
+  margin-bottom: var(--space-4);
+}
+
+.page-controls {
+  display: flex;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+
+.search-input {
+  flex: 1;
+  padding: var(--space-3);
+  border: 1px solid var(--color-divider);
+  border-radius: var(--radius-sm);
+  font-family: var(--font-body);
+  font-size: 14px;
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 2px rgba(198, 113, 57, 0.1);
+}
+
+.status-badge {
+  display: inline-block;
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.status-badge[data-status='active'] {
+  background: rgba(122, 138, 94, 0.2);
+  color: #7a8a5e;
+}
+
+.status-badge[data-status='inactive'] {
+  background: rgba(32, 30, 29, 0.1);
+  color: rgba(32, 30, 29, 0.6);
+}
+
+.table-empty {
+  text-align: center;
+  padding: var(--space-6) var(--space-4);
+  color: rgba(32, 30, 29, 0.6);
+}
+
+.results-info {
+  margin-top: var(--space-4);
+  font-size: 14px;
+  color: rgba(32, 30, 29, 0.6);
+}
+
+/* Técnicos Page */
+.technician-details {
+  margin-top: var(--space-6);
+}
+
+.tech-detail-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-4);
+  margin-top: var(--space-4);
+}
+
+@media (min-width: 768px) {
+  .tech-detail-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.tech-card {
+  padding: var(--space-4);
+  background: var(--color-surface);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+}
+
+.tech-card h3 {
+  margin: 0 0 var(--space-1) 0;
+  color: var(--color-accent);
+}
+
+.tech-spec {
+  margin: 0 0 var(--space-3) 0;
+  font-size: 14px;
+  color: rgba(32, 30, 29, 0.7);
+  font-weight: 500;
+}
+
+.producer-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.producer-item {
+  padding: var(--space-2);
+  background: var(--color-background);
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+}
+
+/* Precios Page */
+.precios-subtitle {
+  font-size: 14px;
+  color: rgba(32, 30, 29, 0.6);
+  margin-bottom: var(--space-6);
+}
+
+.precios-section {
+  margin-bottom: var(--space-6);
+}
+
+.precios-section h2 {
+  margin-bottom: var(--space-3);
+  border-bottom: 2px solid var(--color-divider);
+  padding-bottom: var(--space-2);
+}
+
+.price-commodity {
+  font-weight: 600;
+}
+
+.price-value {
+  text-align: right;
+  font-family: 'Monaco', monospace;
+  font-weight: 600;
+}
+
+.price-change {
+  text-align: right;
+  font-weight: 600;
+  padding: var(--space-2);
+  border-radius: var(--radius-sm);
+}
+
+.price-change[data-positive='true'] {
+  background: rgba(122, 138, 94, 0.15);
+  color: #7a8a5e;
+}
+
+.price-change[data-positive='false'] {
+  background: rgba(182, 74, 58, 0.15);
+  color: #b64a3a;
+}
+
+.price-source {
+  font-size: 13px;
+  color: rgba(32, 30, 29, 0.6);
+}
+
+.precios-footer {
+  margin-top: var(--space-6);
+  padding: var(--space-4);
+  background: var(--color-surface);
+  border-radius: var(--radius-md);
+  text-align: center;
+  font-size: 13px;
+  color: rgba(32, 30, 29, 0.6);
+}
