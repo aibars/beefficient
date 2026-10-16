@@ -739,3 +739,15 @@
   justify-content: center;
   margin-top: 1rem;
 }
+
+/* Login */
+.login-backdrop {
+  background: var(--color-background);
+  z-index: 200;
+}
+
+.login-error {
+  margin: 0;
+  color: #a33a1f;
+  font-size: 14px;
+}

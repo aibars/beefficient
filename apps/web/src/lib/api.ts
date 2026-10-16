@@ -4,6 +4,9 @@ export const API_URL = (
   process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'
 ).replace(/\/+$/, '');
 
+/** Fired on window when the API rejects the token (expired/invalid). */
+export const UNAUTHORIZED_EVENT = 'beefficient:unauthorized';
+
 export class ApiError extends Error {
   readonly status: number;
 
@@ -58,6 +61,9 @@ export async function apiFetch<T = unknown>(
 
   if (res.status === 401) {
     clearToken();
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new Event(UNAUTHORIZED_EVENT));
+    }
     throw new ApiError(401, 'Sesión expirada. Iniciá sesión nuevamente.');
   }
   if (!res.ok) {
