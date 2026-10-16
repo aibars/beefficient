@@ -25,7 +25,7 @@ export function LoginDialog({ onSuccess }: LoginDialogProps) {
       onSuccess();
     } catch (err) {
       setError(
-        err instanceof ApiError ? err.message : 'No se puede conectar al servidor',
+        err instanceof ApiError ? err.message : 'Ocurrió un error inesperado. Intentá de nuevo.',
       );
     } finally {
       setSubmitting(false);

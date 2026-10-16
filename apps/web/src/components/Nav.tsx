@@ -69,7 +69,7 @@ export function Nav({ onRoleSelect }: NavProps) {
           ⚙️
         </button>
 
-        <button className="nav-role-button" onClick={logout} aria-label="Cerrar sesión">
+        <button className="nav-logout" onClick={logout} aria-label="Cerrar sesión">
           Salir
         </button>
 
