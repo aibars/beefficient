@@ -13,6 +13,7 @@ import { AuthModule } from './auth/auth.module';
 import { FarmsModule } from './farms/farms.module';
 import { DevicesModule } from './devices/devices.module';
 import { ProducersModule } from './producers/producers.module';
+import { TechniciansModule } from './technicians/technicians.module';
 
 @Module({
   controllers: [AppController],
@@ -53,6 +54,7 @@ import { ProducersModule } from './producers/producers.module';
     FarmsModule,
     DevicesModule,
     ProducersModule,
+    TechniciansModule,
   ],
 })
 export class AppModule {}
