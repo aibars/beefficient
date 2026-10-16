@@ -61,7 +61,9 @@ export async function apiFetch<T = unknown>(
 
   if (res.status === 401) {
     clearToken();
-    if (typeof window !== 'undefined') {
+    // Only a rejected token is a session expiry; an unauthenticated request
+    // must not fire the event (it would loop with remounting pages).
+    if (token && typeof window !== 'undefined') {
       window.dispatchEvent(new Event(UNAUTHORIZED_EVENT));
     }
     throw new ApiError(401, 'Sesión expirada. Iniciá sesión nuevamente.');

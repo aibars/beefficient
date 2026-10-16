@@ -27,10 +27,8 @@ export function RoleProvider({ children }: { children: React.ReactNode }) {
       setRoleState(savedRole);
     }
     setAuthenticated(authService.isAuthenticated());
-    const onUnauthorized = () => {
-      setAuthenticated(false);
-      setAuthKey((k) => k + 1);
-    };
+    // No remount here: login bumps authKey, and remounting on 401 would loop.
+    const onUnauthorized = () => setAuthenticated(false);
     window.addEventListener(UNAUTHORIZED_EVENT, onUnauthorized);
     setMounted(true);
     return () => window.removeEventListener(UNAUTHORIZED_EVENT, onUnauthorized);
