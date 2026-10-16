@@ -1,0 +1,106 @@
+{
+  "font": {
+    "family": {
+      "heading": {
+        "value": "Caprasimo",
+        "type": "fontFamily",
+        "description": "Títulos y cifras"
+      },
+      "body": {
+        "value": "Figtree",
+        "type": "fontFamily",
+        "description": "Texto"
+      }
+    },
+    "weight": {
+      "regular": {
+        "value": "400",
+        "type": "fontWeight"
+      },
+      "medium": {
+        "value": "500",
+        "type": "fontWeight"
+      },
+      "semibold": {
+        "value": "600",
+        "type": "fontWeight"
+      },
+      "bold": {
+        "value": "700",
+        "type": "fontWeight"
+      }
+    },
+    "size": {
+      "2xs": {
+        "value": "11px",
+        "type": "dimension",
+        "description": "Stamps, unidades chicas"
+      },
+      "xs": {
+        "value": "12px",
+        "type": "dimension",
+        "description": "Ayudas, extremos de slider"
+      },
+      "sm": {
+        "value": "12.5px",
+        "type": "dimension",
+        "description": "Metadatos y subtítulos"
+      },
+      "md": {
+        "value": "13.5px",
+        "type": "dimension",
+        "description": "Labels"
+      },
+      "base": {
+        "value": "15px",
+        "type": "dimension",
+        "description": "Texto y controles"
+      },
+      "lg": {
+        "value": "16px",
+        "type": "dimension",
+        "description": "CTA principal"
+      },
+      "title-sm": {
+        "value": "18px",
+        "type": "dimension",
+        "description": "Títulos de grupo y resumen"
+      },
+      "title": {
+        "value": "21px",
+        "type": "dimension",
+        "description": "Títulos de barra y card"
+      },
+      "figure-md": {
+        "value": "23px",
+        "type": "dimension",
+        "description": "Valor del slider"
+      },
+      "figure": {
+        "value": "28px",
+        "type": "dimension",
+        "description": "Cifra de tile"
+      },
+      "display": {
+        "value": "38px",
+        "type": "dimension",
+        "description": "Cifra destacada"
+      },
+      "brand": {
+        "value": "42px",
+        "type": "dimension",
+        "description": "Marca en login"
+      }
+    },
+    "line-height": {
+      "tight": {
+        "value": "1.15",
+        "type": "number"
+      },
+      "base": {
+        "value": "1.5",
+        "type": "number"
+      }
+    }
+  }
+}

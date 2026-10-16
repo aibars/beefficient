@@ -1,19 +1,15 @@
-FROM node:20-alpine
+FROM node:24-alpine
 
 WORKDIR /app
 
-# Install pnpm
-RUN npm install -g pnpm
+RUN corepack enable
 
-# Copy root package.json and lock file
-COPY package.json pnpm-lock.yaml ./
+# Manifiestos del workspace y lockfile
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml turbo.json ./
+COPY apps/web ./apps/web
 
-# Copy frontend files
-COPY frontend ./frontend
-
-# Install dependencies
-RUN pnpm install --frozen-lockfile
+RUN pnpm install --frozen-lockfile --filter @beefficient/web...
 
 EXPOSE 3000
 
-CMD ["pnpm", "--filter", "frontend-web", "dev"]
+CMD ["pnpm", "--filter", "@beefficient/web", "dev"]

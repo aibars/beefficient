@@ -1,0 +1,45 @@
+{
+  "radius": {
+    "sm": {
+      "value": "8px",
+      "type": "dimension",
+      "description": "Prototipo"
+    },
+    "control": {
+      "value": "12px",
+      "type": "dimension",
+      "description": "Botón cuadrado de la barra superior (wireframe)"
+    },
+    "md": {
+      "value": "16px",
+      "type": "dimension",
+      "description": "Prototipo: avisos"
+    },
+    "tile": {
+      "value": "22px",
+      "type": "dimension",
+      "description": "Tiles y listas (wireframe)"
+    },
+    "sheet": {
+      "value": "24px",
+      "type": "dimension",
+      "description": "Barras inferiores (wireframe)"
+    },
+    "lg": {
+      "value": "28px",
+      "type": "dimension",
+      "description": "Prototipo: cards"
+    },
+    "pill": {
+      "value": "999px",
+      "type": "dimension",
+      "description": "Pastillas y botones"
+    }
+  },
+  "border-width": {
+    "hairline": {
+      "value": "1px",
+      "type": "dimension"
+    }
+  }
+}

@@ -1,0 +1,42 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Documentación/Decisiones de diseño" />
+
+# Decisiones de diseño
+
+## Del wireframe
+
+- Mismo patrón que el Formulador del prototipo: una card de parámetros y, debajo, los
+  resultados en tiles.
+- La barra inferior repite raciones y carga para que el resultado esté siempre a la vista
+  mientras se edita.
+- Lotes como pastillas con su color, que se mantiene en todos los gráficos como en la
+  planilla (`colorDeSerie`).
+- Si el rodeo todavía está en otro lote, la pantalla avisa y ofrece corregir la fecha con un
+  toque.
+- Cada fila de la planilla muestra si está pendiente o sincronizada. La recién guardada se
+  resalta.
+- Las pantallas solo llevan labels y datos funcionales. Las explicaciones viven acá, en la
+  documentación, no dentro de la UI.
+
+## De la implementación
+
+- **Storybook web con react-native-web.** Se comparte por link y corre en CI. No es el render
+  nativo: fuentes, sombras y pickers pueden verse distintos en iOS/Android. Cuando exista
+  `apps/mobile` se suma Storybook on-device con las mismas stories.
+- **`packages/ui`** no está en la ADR 0003. Se agregó para que `apps/mobile` y Storybook
+  compartan componentes y stories.
+- **Input de fecha.** En web es el `<input type="date">` del navegador (`DateField.web.tsx`);
+  en nativo, `@react-native-community/datetimepicker` (`DateField.tsx`), **pendiente de probar
+  en dispositivo**.
+- **Select.** No hay select nativo en React Native: es una pastilla que abre una hoja con las
+  opciones, igual en las dos plataformas.
+- **Slider propio.** Hecho con el responder de React Native para respetar el estilo del
+  wireframe (riel con borde y relleno oliva) sin depender de un módulo nativo.
+- **Fuentes en nativo.** En web se usan por nombre y peso. En nativo cada peso es una
+  fuente: la app tiene que cargar `Figtree_400Regular` … `Figtree_700Bold` y
+  `Caprasimo_400Regular` con `@expo-google-fonts`.
+- **Sombras** con `boxShadow`, que React Native soporta desde 0.76 con la nueva
+  arquitectura (por defecto en Expo SDK 58).
+- **Objetivos táctiles** de 48 px como mínimo: se usa con guantes y bajo el sol.
+- El marco de teléfono y la leyenda «Datos de ejemplo» son de Storybook, no de la app.
