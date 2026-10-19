@@ -4,20 +4,21 @@ import { TypeOrmModuleOptions } from '@nestjs/typeorm';
 export class DatabaseConfig {
   static getOrmConfig(configService: ConfigService): TypeOrmModuleOptions {
     const nodeEnv = configService.get<string>('NODE_ENV', 'development');
+    const isDevelopment = nodeEnv === 'development';
 
     return {
       type: 'postgres',
       host: configService.get<string>('DATABASE_HOST', 'localhost'),
       port: configService.get<number>('DATABASE_PORT', 5432),
       username: configService.get<string>('DATABASE_USER', 'postgres'),
-      password: configService.get<string>('DATABASE_PASSWORD', 'postgres'),
+      password: configService.get<string>('DATABASE_PASSWORD', '123'),
       database: configService.get<string>('DATABASE_NAME', 'beefficient'),
-      entities: ['src/**/*.entity.ts'],
-      migrations: ['database/migrations/*.ts'],
-      migrationsRun: true,
-      synchronize: false,
-      logging: nodeEnv === 'development',
-      ssl: nodeEnv === 'production',
+      entities: ['dist/**/*.entity.js'],
+      migrations: ['dist/database/migrations/*.js'],
+      migrationsRun: false,
+      synchronize: isDevelopment,
+      logging: isDevelopment,
+      ssl: !isDevelopment,
     };
   }
 }
@@ -26,17 +27,20 @@ export class DatabaseConfig {
  * Deprecated: Use DatabaseConfig.getOrmConfig(configService) instead.
  * Kept for backwards compatibility.
  */
-export const getDatabaseConfig = (): TypeOrmModuleOptions => ({
-  type: 'postgres',
-  host: process.env.DATABASE_HOST || 'localhost',
-  port: parseInt(process.env.DATABASE_PORT || '5432', 10),
-  username: process.env.DATABASE_USER || 'postgres',
-  password: process.env.DATABASE_PASSWORD || 'postgres',
-  database: process.env.DATABASE_NAME || 'beefficient',
-  entities: ['src/**/*.entity.ts'],
-  migrations: ['database/migrations/*.ts'],
-  migrationsRun: true,
-  synchronize: false,
-  logging: process.env.NODE_ENV === 'development',
-  ssl: process.env.NODE_ENV === 'production',
-});
+export const getDatabaseConfig = (): TypeOrmModuleOptions => {
+  const isDevelopment = process.env.NODE_ENV === 'development';
+  return {
+    type: 'postgres',
+    host: process.env.DATABASE_HOST || 'localhost',
+    port: parseInt(process.env.DATABASE_PORT || '5432', 10),
+    username: process.env.DATABASE_USER || 'postgres',
+    password: process.env.DATABASE_PASSWORD || 'postgres',
+    database: process.env.DATABASE_NAME || 'beefficient',
+    entities: ['dist/**/*.entity.js'],
+    migrations: ['dist/database/migrations/*.js'],
+    migrationsRun: false,
+    synchronize: isDevelopment,
+    logging: isDevelopment,
+    ssl: !isDevelopment,
+  };
+};
