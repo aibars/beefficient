@@ -8,7 +8,7 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 import { User } from '../users/users.entity';
-import { Farm } from './farms.entity';
+import { Establishment } from '../establishments/establishments.entity';
 
 @Entity('user_farm')
 export class UserFarm {
@@ -28,9 +28,9 @@ export class UserFarm {
   @JoinColumn({ name: 'user_id' })
   user: User;
 
-  @ManyToOne(() => Farm, { onDelete: 'CASCADE' })
+  @ManyToOne(() => Establishment, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'farm_id' })
-  farm: Farm;
+  farm: Establishment;
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;

@@ -15,6 +15,7 @@ describe('Database Migrations (Integration)', () => {
   let app: INestApplication;
   let dataSource: DataSource;
   let userId: string;
+  let companyId: string;
   let farmId: string;
 
   const expectViolation = async (
@@ -53,14 +54,18 @@ describe('Database Migrations (Integration)', () => {
       `INSERT INTO users (email) VALUES ($1) RETURNING id`,
       [`migrations-${runId}@test.com`],
     );
+    [{ id: companyId }] = await dataSource.query(
+      `INSERT INTO companies (owner_id) VALUES ($1) RETURNING id`,
+      [userId],
+    );
     [{ id: farmId }] = await dataSource.query(
-      `INSERT INTO farms (name, provincia, owner_id) VALUES ($1, $2, $3) RETURNING id`,
-      ['Campo Migraciones', 'Santa Fe', userId],
+      `INSERT INTO establishments (name, provincia, company_id) VALUES ($1, $2, $3) RETURNING id`,
+      ['Campo Migraciones', 'Santa Fe', companyId],
     );
   });
 
   afterAll(async () => {
-    // Cascades to farms, user_farm, farm_join_codes, user_device_tokens.
+    // Cascades to companies, establishments, user_farm, farm_join_codes, user_device_tokens.
     if (userId) {
       await dataSource.query(`DELETE FROM users WHERE id = $1`, [userId]);
     }
@@ -72,17 +77,20 @@ describe('Database Migrations (Integration)', () => {
       await expect(dataSource.showMigrations()).resolves.toBe(false);
     });
 
-    it.each(['farms', 'user_farm', 'farm_join_codes', 'user_device_tokens'])(
-      'should create table %s',
-      async (table) => {
-        const rows = await dataSource.query(
-          `SELECT 1 FROM information_schema.tables
+    it.each([
+      'companies',
+      'establishments',
+      'user_farm',
+      'farm_join_codes',
+      'user_device_tokens',
+    ])('should create table %s', async (table) => {
+      const rows = await dataSource.query(
+        `SELECT 1 FROM information_schema.tables
            WHERE table_schema = 'public' AND table_name = $1`,
-          [table],
-        );
-        expect(rows).toHaveLength(1);
-      },
-    );
+        [table],
+      );
+      expect(rows).toHaveLength(1);
+    });
 
     it('should add refresh_token_version to users', async () => {
       const rows = await dataSource.query(
@@ -108,8 +116,8 @@ describe('Database Migrations (Integration)', () => {
 
     it('should reject an invalid user_farm.role', async () => {
       const [{ id: otherFarmId }] = await dataSource.query(
-        `INSERT INTO farms (name, provincia, owner_id) VALUES ('Otro', 'Salta', $1) RETURNING id`,
-        [userId],
+        `INSERT INTO establishments (name, provincia, company_id) VALUES ('Otro', 'Salta', $1) RETURNING id`,
+        [companyId],
       );
       await expectViolation(
         `INSERT INTO user_farm (user_id, farm_id, role) VALUES ($1, $2, 'owner')`,
@@ -173,12 +181,12 @@ describe('Database Migrations (Integration)', () => {
       );
     });
 
-    it('should reject a farm whose owner does not exist', async () => {
+    it('should reject an establishment whose company does not exist', async () => {
       await expectViolation(
-        `INSERT INTO farms (name, provincia, owner_id) VALUES ('X', 'Y', $1)`,
+        `INSERT INTO establishments (name, provincia, company_id) VALUES ('X', 'Y', $1)`,
         [randomUUID()],
         FK_VIOLATION,
-        'fk_farms_owner_id',
+        'fk_establishments_company_id',
       );
     });
   });
@@ -192,9 +200,9 @@ describe('Database Migrations (Integration)', () => {
       return rows[0]?.indexdef;
     };
 
-    it('should index farms(owner_id)', async () => {
-      expect(await indexDef('idx_farms_owner_id')).toMatch(
-        /ON public\.farms .*\(owner_id\)/,
+    it('should index establishments(company_id)', async () => {
+      expect(await indexDef('idx_establishments_company_id')).toMatch(
+        /ON public\.establishments .*\(company_id\)/,
       );
     });
 

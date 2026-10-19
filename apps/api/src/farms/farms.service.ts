@@ -5,16 +5,22 @@ import {
   ForbiddenException,
   NotFoundException,
 } from '@nestjs/common';
-import { FarmsRepository } from './farms.repository';
+import { InjectRepository } from '@nestjs/typeorm';
+import { IsNull, Repository } from 'typeorm';
+import { EstablishmentsRepository } from '../establishments/establishments.repository';
+import { Establishment } from '../establishments/establishments.entity';
+import { Company } from '../companies/companies.entity';
+import { User } from '../users/users.entity';
 import { UserFarmRepository } from './user-farm.repository';
 import { JoinCodeService } from './join-code.service';
-import { Farm } from './farms.entity';
 import { FarmResponseDto } from './dto';
 
 @Injectable()
 export class FarmsService {
   constructor(
-    private readonly farmsRepository: FarmsRepository,
+    private readonly establishmentsRepository: EstablishmentsRepository,
+    @InjectRepository(Company)
+    private readonly companiesRepository: Repository<Company>,
     private readonly userFarmRepository: UserFarmRepository,
     private readonly joinCodeService: JoinCodeService,
   ) {}
@@ -24,7 +30,12 @@ export class FarmsService {
     provincia: string,
     userId: string,
   ): Promise<FarmResponseDto & { join_code: string }> {
-    const farm = await this.farmsRepository.createFarm(name, provincia, userId);
+    const companyId = await this.resolveCompanyId(userId);
+    const farm = await this.establishmentsRepository.createEstablishment(
+      name,
+      provincia,
+      companyId,
+    );
     await this.userFarmRepository.createUserFarm(userId, farm.id, 'admin');
     // The newly created farm becomes the creator's active farm.
     await this.userFarmRepository.setActiveFarm(userId, farm.id);
@@ -47,7 +58,7 @@ export class FarmsService {
       throw new BadRequestException('Invalid or already-used join code');
     }
 
-    const farm = await this.farmsRepository.findById(farmId);
+    const farm = await this.establishmentsRepository.findById(farmId);
     if (!farm) {
       throw new NotFoundException('Farm not found');
     }
@@ -70,7 +81,7 @@ export class FarmsService {
     for (const userFarm of userFarms) {
       const farm =
         userFarm.farm ??
-        (await this.farmsRepository.findById(userFarm.farmId));
+        (await this.establishmentsRepository.findById(userFarm.farmId));
       if (!farm) continue;
       results.push(this.toResponse(farm, userFarm.role, userFarm.active));
     }
@@ -89,7 +100,7 @@ export class FarmsService {
       throw new ForbiddenException('User is not a member of this farm');
     }
 
-    const farm = await this.farmsRepository.findById(farmId);
+    const farm = await this.establishmentsRepository.findById(farmId);
     if (!farm) {
       throw new NotFoundException('Farm not found');
     }
@@ -117,8 +128,30 @@ export class FarmsService {
     return { join_code: joinCode };
   }
 
+  /**
+   * Interim (BFC-35 Task 2): establishments belong to a company, so farm
+   * creation needs one. Until signup auto-creates the company (Task 4), reuse
+   * the user's company or create it on first farm creation.
+   */
+  private async resolveCompanyId(userId: string): Promise<string> {
+    const existing = await this.companiesRepository.findOne({
+      where: { ownerId: userId },
+    });
+    if (existing) return existing.id;
+
+    const company = await this.companiesRepository.save(
+      this.companiesRepository.create({ ownerId: userId }),
+    );
+    await this.companiesRepository.manager.update(
+      User,
+      { id: userId, companyId: IsNull() },
+      { companyId: company.id },
+    );
+    return company.id;
+  }
+
   private toResponse(
-    farm: Farm,
+    farm: Establishment,
     role: 'admin' | 'tecnico',
     active: boolean,
   ): FarmResponseDto {
