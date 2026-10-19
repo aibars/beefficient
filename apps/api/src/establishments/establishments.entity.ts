@@ -37,6 +37,16 @@ export class Establishment {
   @Column({ type: 'varchar', length: 100 })
   provincia: string;
 
+  /**
+   * 6-character code other users enter to join this establishment. Nullable
+   * until one is generated. Uniqueness comes from the unique index (not
+   * `unique: true` on the column, which would make TypeORM expect a separate
+   * UQ_ constraint that migration 20261019000015 does not create).
+   */
+  @Index('uk_establishments_join_code', { unique: true })
+  @Column({ name: 'join_code', type: 'varchar', length: 6, nullable: true })
+  joinCode?: string | null;
+
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 
