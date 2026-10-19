@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { DataSource, Repository } from 'typeorm';
+import { DataSource, EntityManager, Repository } from 'typeorm';
 import { User } from './users.entity';
 
 @Injectable()
@@ -8,8 +8,12 @@ export class UsersRepository extends Repository<User> {
     super(User, dataSource.createEntityManager());
   }
 
-  async findByEmail(email: string): Promise<User | null> {
-    return this.findOne({ where: { email } });
+  async findByEmail(
+    email: string,
+    manager?: EntityManager,
+  ): Promise<User | null> {
+    const repo = manager ? manager.getRepository(User) : this;
+    return repo.findOne({ where: { email } });
   }
 
   async findByGoogleId(googleId: string): Promise<User | null> {
@@ -24,13 +28,15 @@ export class UsersRepository extends Repository<User> {
     email: string,
     passwordHash?: string,
     googleId?: string,
+    manager?: EntityManager,
   ): Promise<User> {
-    const user = this.create({
+    const repo = manager ? manager.getRepository(User) : this;
+    const user = repo.create({
       email,
       passwordHash,
       googleId,
     });
-    return this.save(user);
+    return repo.save(user);
   }
 
   async updateLastLogin(id: string): Promise<void> {

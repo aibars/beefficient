@@ -169,7 +169,9 @@ describe('Passport Strategies', () => {
     let configService: jest.Mocked<ConfigService>;
 
     beforeEach(async () => {
-      const mockAuthService = {};
+      const mockAuthService = {
+        registerUser: jest.fn(),
+      };
 
       const mockUsersService = {
         findByGoogleId: jest.fn(),
@@ -215,7 +217,7 @@ describe('Passport Strategies', () => {
     it('should create new user if email does not exist', async () => {
       usersService.findByGoogleId.mockResolvedValue(null);
       usersService.findByEmail.mockResolvedValue(null);
-      usersService.create.mockResolvedValue(mockGoogleUser);
+      authService.registerUser.mockResolvedValue(mockGoogleUser);
 
       const profile = {
         id: 'google_id_123',
@@ -228,7 +230,7 @@ describe('Passport Strategies', () => {
 
       expect(usersService.findByGoogleId).toHaveBeenCalledWith('google_id_123');
       expect(usersService.findByEmail).toHaveBeenCalledWith('google@example.com');
-      expect(usersService.create).toHaveBeenCalledWith(
+      expect(authService.registerUser).toHaveBeenCalledWith(
         'google@example.com',
         undefined,
         'google_id_123',
@@ -250,7 +252,7 @@ describe('Passport Strategies', () => {
 
       expect(usersService.findByGoogleId).toHaveBeenCalledWith('google_id_123');
       expect(usersService.findByEmail).not.toHaveBeenCalled();
-      expect(usersService.create).not.toHaveBeenCalled();
+      expect(authService.registerUser).not.toHaveBeenCalled();
       expect(done).toHaveBeenCalledWith(null, mockGoogleUser);
     });
 
@@ -269,7 +271,7 @@ describe('Passport Strategies', () => {
 
       expect(usersService.findByGoogleId).toHaveBeenCalledWith('new_google_id');
       expect(usersService.findByEmail).toHaveBeenCalledWith('test@example.com');
-      expect(usersService.create).not.toHaveBeenCalled();
+      expect(authService.registerUser).not.toHaveBeenCalled();
       expect(done).toHaveBeenCalledWith(null, mockUser);
     });
 

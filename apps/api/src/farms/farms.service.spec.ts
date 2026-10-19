@@ -6,12 +6,9 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { FarmsService } from './farms.service';
-import { getRepositoryToken } from '@nestjs/typeorm';
-import { IsNull } from 'typeorm';
 import { EstablishmentsRepository } from '../establishments/establishments.repository';
 import { Establishment } from '../establishments/establishments.entity';
-import { Company } from '../companies/companies.entity';
-import { User } from '../users/users.entity';
+import { CompanyService } from '../companies/companies.service';
 import { UserFarmRepository } from './user-farm.repository';
 import { JoinCodeService } from './join-code.service';
 import { UserFarm } from './user-farm.entity';
@@ -19,12 +16,7 @@ import { UserFarm } from './user-farm.entity';
 describe('FarmsService', () => {
   let service: FarmsService;
   let farmsRepo: { createEstablishment: jest.Mock; findById: jest.Mock };
-  let companiesRepo: {
-    findOne: jest.Mock;
-    create: jest.Mock;
-    save: jest.Mock;
-    manager: { update: jest.Mock };
-  };
+  let companyService: { findByUserId: jest.Mock };
   let userFarmRepo: {
     createUserFarm: jest.Mock;
     findByUserAndFarm: jest.Mock;
@@ -68,12 +60,7 @@ describe('FarmsService', () => {
 
   beforeEach(async () => {
     farmsRepo = { createEstablishment: jest.fn(), findById: jest.fn() };
-    companiesRepo = {
-      findOne: jest.fn(),
-      create: jest.fn((data) => data),
-      save: jest.fn(),
-      manager: { update: jest.fn() },
-    };
+    companyService = { findByUserId: jest.fn() };
     userFarmRepo = {
       createUserFarm: jest.fn(),
       findByUserAndFarm: jest.fn(),
@@ -89,7 +76,7 @@ describe('FarmsService', () => {
       providers: [
         FarmsService,
         { provide: EstablishmentsRepository, useValue: farmsRepo },
-        { provide: getRepositoryToken(Company), useValue: companiesRepo },
+        { provide: CompanyService, useValue: companyService },
         { provide: UserFarmRepository, useValue: userFarmRepo },
         { provide: JoinCodeService, useValue: joinCodeService },
       ],
@@ -100,7 +87,7 @@ describe('FarmsService', () => {
 
   describe('createFarm', () => {
     it('creates farm, assigns admin as active, and generates a join code', async () => {
-      companiesRepo.findOne.mockResolvedValue({
+      companyService.findByUserId.mockResolvedValue({
         id: companyId,
         ownerId: userId,
       });
@@ -115,10 +102,7 @@ describe('FarmsService', () => {
         userId,
       );
 
-      expect(companiesRepo.findOne).toHaveBeenCalledWith({
-        where: { ownerId: userId },
-      });
-      expect(companiesRepo.save).not.toHaveBeenCalled();
+      expect(companyService.findByUserId).toHaveBeenCalledWith(userId);
       expect(farmsRepo.createEstablishment).toHaveBeenCalledWith(
         'La Esperanza',
         'Buenos Aires',
@@ -143,26 +127,18 @@ describe('FarmsService', () => {
   });
 
   describe('createFarm without a company', () => {
-    it('creates the company and links it to the user first', async () => {
-      companiesRepo.findOne.mockResolvedValue(null);
-      companiesRepo.save.mockResolvedValue({ id: companyId, ownerId: userId });
-      farmsRepo.createEstablishment.mockResolvedValue(farm);
-      userFarmRepo.createUserFarm.mockResolvedValue(buildUserFarm());
-      joinCodeService.generateAndCreate.mockResolvedValue('ABCdef123');
+    it('test_create_farm_validates_company_exists', async () => {
+      companyService.findByUserId.mockResolvedValue(null);
 
-      await service.createFarm('La Esperanza', 'Buenos Aires', userId);
+      await expect(
+        service.createFarm('La Esperanza', 'Buenos Aires', userId),
+      ).rejects.toThrow(
+        new BadRequestException('User company not initialized'),
+      );
 
-      expect(companiesRepo.save).toHaveBeenCalledWith({ ownerId: userId });
-      expect(companiesRepo.manager.update).toHaveBeenCalledWith(
-        User,
-        { id: userId, companyId: IsNull() },
-        { companyId },
-      );
-      expect(farmsRepo.createEstablishment).toHaveBeenCalledWith(
-        'La Esperanza',
-        'Buenos Aires',
-        companyId,
-      );
+      expect(farmsRepo.createEstablishment).not.toHaveBeenCalled();
+      expect(userFarmRepo.createUserFarm).not.toHaveBeenCalled();
+      expect(joinCodeService.generateAndCreate).not.toHaveBeenCalled();
     });
   });
 

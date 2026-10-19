@@ -101,10 +101,11 @@ describe('UsersService', () => {
       const result = await service.create('test@example.com', 'hashed_password');
 
       expect(result).toEqual(mockUser);
-      expect(repository.findByEmail).toHaveBeenCalledWith('test@example.com');
+      expect(repository.findByEmail).toHaveBeenCalledWith('test@example.com', undefined);
       expect(repository.createUser).toHaveBeenCalledWith(
         'test@example.com',
         'hashed_password',
+        undefined,
         undefined,
       );
     });
@@ -117,14 +118,32 @@ describe('UsersService', () => {
         'google@example.com',
         undefined,
         'google_id_123',
+        undefined,
       );
 
       expect(result).toEqual(mockGoogleUser);
-      expect(repository.findByEmail).toHaveBeenCalledWith('google@example.com');
+      expect(repository.findByEmail).toHaveBeenCalledWith('google@example.com', undefined);
       expect(repository.createUser).toHaveBeenCalledWith(
         'google@example.com',
         undefined,
         'google_id_123',
+        undefined,
+      );
+    });
+
+    it('should run lookup and insert on a given transaction manager', async () => {
+      const manager = { __tx: true } as any;
+      repository.findByEmail.mockResolvedValue(null);
+      repository.createUser.mockResolvedValue(mockUser);
+
+      await service.create('test@example.com', 'hashed_password', undefined, manager);
+
+      expect(repository.findByEmail).toHaveBeenCalledWith('test@example.com', manager);
+      expect(repository.createUser).toHaveBeenCalledWith(
+        'test@example.com',
+        'hashed_password',
+        undefined,
+        manager,
       );
     });
 

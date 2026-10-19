@@ -2,7 +2,9 @@ import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import * as bcrypt from 'bcrypt';
+import { DataSource } from 'typeorm';
 import { UsersService } from 'src/users/users.service';
+import { CompanyService } from 'src/companies/companies.service';
 import { User } from 'src/users/users.entity';
 import { AuthResponseDto } from './dto/auth-response.dto';
 
@@ -24,6 +26,8 @@ export class AuthService {
     private readonly jwtService: JwtService,
     private readonly usersService: UsersService,
     private readonly configService: ConfigService,
+    private readonly companyService: CompanyService,
+    private readonly dataSource: DataSource,
   ) {
     this.bcryptRounds = this.configService.get('auth.bcryptRounds') || 10;
     this.jwtAccessExpiration =
@@ -39,8 +43,8 @@ export class AuthService {
     // Hash password
     const passwordHash = await bcrypt.hash(password, this.bcryptRounds);
 
-    // Create user (will throw ConflictException if email exists)
-    const user = await this.usersService.create(email, passwordHash);
+    // Create user + Company (will throw ConflictException if email exists)
+    const user = await this.registerUser(email, passwordHash);
 
     // Update lastLoginAt
     await this.usersService.updateLastLogin(user.id);
@@ -57,6 +61,33 @@ export class AuthService {
         createdAt: user.createdAt,
       },
     };
+  }
+
+  /**
+   * Creates a user together with its Company (1:1) in a single transaction.
+   * Every signup path (email/password and Google) must go through here so no
+   * user ends up without a Company — farm creation requires one.
+   */
+  async registerUser(
+    email: string,
+    passwordHash?: string,
+    googleId?: string,
+  ): Promise<User> {
+    return this.dataSource.transaction(async (manager) => {
+      const user = await this.usersService.create(
+        email,
+        passwordHash,
+        googleId,
+        manager,
+      );
+      const company = await this.companyService.createCompanyForUser(
+        user.id,
+        manager,
+      );
+      user.companyId = company.id;
+      user.company = company;
+      return user;
+    });
   }
 
   async login(email: string, password: string): Promise<AuthResponseDto> {

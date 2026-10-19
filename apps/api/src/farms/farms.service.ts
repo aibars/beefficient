@@ -5,12 +5,9 @@ import {
   ForbiddenException,
   NotFoundException,
 } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { IsNull, Repository } from 'typeorm';
 import { EstablishmentsRepository } from '../establishments/establishments.repository';
 import { Establishment } from '../establishments/establishments.entity';
-import { Company } from '../companies/companies.entity';
-import { User } from '../users/users.entity';
+import { CompanyService } from '../companies/companies.service';
 import { UserFarmRepository } from './user-farm.repository';
 import { JoinCodeService } from './join-code.service';
 import { FarmResponseDto } from './dto';
@@ -19,8 +16,7 @@ import { FarmResponseDto } from './dto';
 export class FarmsService {
   constructor(
     private readonly establishmentsRepository: EstablishmentsRepository,
-    @InjectRepository(Company)
-    private readonly companiesRepository: Repository<Company>,
+    private readonly companyService: CompanyService,
     private readonly userFarmRepository: UserFarmRepository,
     private readonly joinCodeService: JoinCodeService,
   ) {}
@@ -30,11 +26,17 @@ export class FarmsService {
     provincia: string,
     userId: string,
   ): Promise<FarmResponseDto & { join_code: string }> {
-    const companyId = await this.resolveCompanyId(userId);
+    // Signup creates the user's Company; a missing one is a data-integrity
+    // problem, not something to paper over here.
+    const company = await this.companyService.findByUserId(userId);
+    if (!company) {
+      throw new BadRequestException('User company not initialized');
+    }
+
     const farm = await this.establishmentsRepository.createEstablishment(
       name,
       provincia,
-      companyId,
+      company.id,
     );
     await this.userFarmRepository.createUserFarm(userId, farm.id, 'admin');
     // The newly created farm becomes the creator's active farm.
@@ -126,28 +128,6 @@ export class FarmsService {
 
     const joinCode = await this.joinCodeService.generateAndCreate(farmId);
     return { join_code: joinCode };
-  }
-
-  /**
-   * Interim (BFC-35 Task 2): establishments belong to a company, so farm
-   * creation needs one. Until signup auto-creates the company (Task 4), reuse
-   * the user's company or create it on first farm creation.
-   */
-  private async resolveCompanyId(userId: string): Promise<string> {
-    const existing = await this.companiesRepository.findOne({
-      where: { ownerId: userId },
-    });
-    if (existing) return existing.id;
-
-    const company = await this.companiesRepository.save(
-      this.companiesRepository.create({ ownerId: userId }),
-    );
-    await this.companiesRepository.manager.update(
-      User,
-      { id: userId, companyId: IsNull() },
-      { companyId: company.id },
-    );
-    return company.id;
   }
 
   private toResponse(
