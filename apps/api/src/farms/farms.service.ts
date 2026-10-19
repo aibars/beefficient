@@ -5,11 +5,16 @@ import {
   ForbiddenException,
   NotFoundException,
 } from '@nestjs/common';
+import { DataSource } from 'typeorm';
+import { isUniqueViolation } from '../common/database/pg-errors';
 import { EstablishmentsRepository } from '../establishments/establishments.repository';
 import { Establishment } from '../establishments/establishments.entity';
 import { CompanyService } from '../companies/companies.service';
 import { UserFarmRepository } from './user-farm.repository';
-import { JoinCodeService } from './join-code.service';
+import {
+  INVALID_JOIN_CODE_MESSAGE,
+  JoinCodeService,
+} from './join-code.service';
 import { FarmResponseDto } from './dto';
 
 @Injectable()
@@ -19,6 +24,7 @@ export class FarmsService {
     private readonly companyService: CompanyService,
     private readonly userFarmRepository: UserFarmRepository,
     private readonly joinCodeService: JoinCodeService,
+    private readonly dataSource: DataSource,
   ) {}
 
   async createFarm(
@@ -49,31 +55,55 @@ export class FarmsService {
     };
   }
 
+  /**
+   * Joins the user to the code's farm as `tecnico`, not active (the user
+   * switches via PATCH). The code is only burned when the join succeeds:
+   * the membership check runs before redemption, and redemption plus the
+   * user_farm insert share one transaction.
+   */
   async joinFarm(joinCode: string, userId: string): Promise<FarmResponseDto> {
-    let farmId: string;
-    try {
-      ({ farmId } = await this.joinCodeService.validateAndMarkUsed(
-        joinCode,
-        userId,
-      ));
-    } catch {
-      throw new BadRequestException('Invalid or already-used join code');
+    const code = await this.joinCodeService.findRedeemable(joinCode);
+    if (!code) {
+      throw new BadRequestException(INVALID_JOIN_CODE_MESSAGE);
     }
 
-    const farm = await this.establishmentsRepository.findById(farmId);
+    const farm = await this.establishmentsRepository.findById(code.farmId);
     if (!farm) {
       throw new NotFoundException('Farm not found');
     }
 
     const existing = await this.userFarmRepository.findByUserAndFarm(
       userId,
-      farmId,
+      farm.id,
     );
     if (existing) {
       throw new ConflictException('User is already a member of this farm');
     }
 
-    await this.userFarmRepository.createUserFarm(userId, farmId, 'tecnico');
+    try {
+      await this.dataSource.transaction(async (manager) => {
+        // Atomic; throws 400 if a concurrent request redeemed it first.
+        await this.joinCodeService.validateAndMarkUsed(
+          joinCode,
+          userId,
+          manager,
+        );
+        await this.userFarmRepository.createUserFarm(
+          userId,
+          farm.id,
+          'tecnico',
+          manager,
+        );
+      });
+    } catch (err) {
+      // A concurrent join of the same user to this farm won the race to the
+      // user_farm primary key; the redemption rolled back with it.
+      if (isUniqueViolation(err)) {
+        throw new ConflictException('User is already a member of this farm');
+      }
+      throw err;
+    }
+
     return this.toResponse(farm, 'tecnico', false);
   }
 

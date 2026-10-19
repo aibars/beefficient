@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { DataSource, Repository } from 'typeorm';
+import { DataSource, EntityManager, Repository } from 'typeorm';
 import { UserFarm } from './user-farm.entity';
 
 @Injectable()
@@ -34,9 +34,10 @@ export class UserFarmRepository extends Repository<UserFarm> {
     userId: string,
     farmId: string,
     role: 'admin' | 'tecnico',
+    manager?: EntityManager,
   ): Promise<UserFarm> {
-    const userFarm = this.create({ userId, farmId, role });
-    return this.save(userFarm);
+    const repo = manager ? manager.getRepository(UserFarm) : this;
+    return repo.save(repo.create({ userId, farmId, role }));
   }
 
   /** Atomically clears the user's active farm and activates the target. */

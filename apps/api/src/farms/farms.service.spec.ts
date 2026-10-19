@@ -12,6 +12,8 @@ import { CompanyService } from '../companies/companies.service';
 import { UserFarmRepository } from './user-farm.repository';
 import { JoinCodeService } from './join-code.service';
 import { UserFarm } from './user-farm.entity';
+import { FarmJoinCode } from './farm-join-code.entity';
+import { DataSource, EntityManager, QueryFailedError } from 'typeorm';
 
 describe('FarmsService', () => {
   let service: FarmsService;
@@ -25,8 +27,11 @@ describe('FarmsService', () => {
   };
   let joinCodeService: {
     generateAndCreate: jest.Mock;
+    findRedeemable: jest.Mock;
     validateAndMarkUsed: jest.Mock;
   };
+  let dataSource: { transaction: jest.Mock };
+  const txManager = { tx: true } as unknown as EntityManager;
 
   const userId = 'user-uuid-1';
   const companyId = 'company-uuid-1';
@@ -69,7 +74,14 @@ describe('FarmsService', () => {
     };
     joinCodeService = {
       generateAndCreate: jest.fn(),
+      findRedeemable: jest.fn(),
       validateAndMarkUsed: jest.fn(),
+    };
+    dataSource = {
+      transaction: jest.fn(
+        async (work: (manager: EntityManager) => Promise<unknown>) =>
+          work(txManager),
+      ),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -79,6 +91,7 @@ describe('FarmsService', () => {
         { provide: CompanyService, useValue: companyService },
         { provide: UserFarmRepository, useValue: userFarmRepo },
         { provide: JoinCodeService, useValue: joinCodeService },
+        { provide: DataSource, useValue: dataSource },
       ],
     }).compile();
 
@@ -143,27 +156,41 @@ describe('FarmsService', () => {
   });
 
   describe('joinFarm', () => {
+    const redeemable = {
+      id: 'code-uuid-1',
+      farmId: farm.id,
+      code: 'ABCdef123',
+      usedById: null,
+      usedAt: null,
+    } as FarmJoinCode;
+
     it('joins with valid code as tecnico, inactive', async () => {
+      joinCodeService.findRedeemable.mockResolvedValue(redeemable);
+      farmsRepo.findById.mockResolvedValue(farm);
+      userFarmRepo.findByUserAndFarm.mockResolvedValue(null);
       joinCodeService.validateAndMarkUsed.mockResolvedValue({
         farmId: farm.id,
       });
-      farmsRepo.findById.mockResolvedValue(farm);
-      userFarmRepo.findByUserAndFarm.mockResolvedValue(null);
       userFarmRepo.createUserFarm.mockResolvedValue(
         buildUserFarm({ role: 'tecnico' }),
       );
 
       const result = await service.joinFarm('ABCdef123', userId);
 
+      // Redemption and membership insert share one transaction.
+      expect(dataSource.transaction).toHaveBeenCalledTimes(1);
       expect(joinCodeService.validateAndMarkUsed).toHaveBeenCalledWith(
         'ABCdef123',
         userId,
+        txManager,
       );
       expect(userFarmRepo.createUserFarm).toHaveBeenCalledWith(
         userId,
         farm.id,
         'tecnico',
+        txManager,
       );
+      expect(userFarmRepo.setActiveFarm).not.toHaveBeenCalled();
       expect(result).toEqual({
         farm_id: farm.id,
         farm_name: farm.name,
@@ -173,39 +200,70 @@ describe('FarmsService', () => {
       });
     });
 
-    it('rejects invalid code with 400', async () => {
-      joinCodeService.validateAndMarkUsed.mockRejectedValue(
-        new Error('InvalidJoinCode'),
-      );
+    it('rejects invalid or used code with 400 without redeeming', async () => {
+      joinCodeService.findRedeemable.mockResolvedValue(null);
 
       await expect(service.joinFarm('BADcode1', userId)).rejects.toThrow(
+        new BadRequestException('Invalid or used join code'),
+      );
+      expect(joinCodeService.validateAndMarkUsed).not.toHaveBeenCalled();
+      expect(userFarmRepo.createUserFarm).not.toHaveBeenCalled();
+    });
+
+    it('rejects with 400 when a concurrent request redeems the code first', async () => {
+      joinCodeService.findRedeemable.mockResolvedValue(redeemable);
+      farmsRepo.findById.mockResolvedValue(farm);
+      userFarmRepo.findByUserAndFarm.mockResolvedValue(null);
+      joinCodeService.validateAndMarkUsed.mockRejectedValue(
+        new BadRequestException('Invalid or used join code'),
+      );
+
+      await expect(service.joinFarm('ABCdef123', userId)).rejects.toThrow(
         BadRequestException,
       );
       expect(userFarmRepo.createUserFarm).not.toHaveBeenCalled();
     });
 
     it('rejects with 404 if farm no longer exists', async () => {
-      joinCodeService.validateAndMarkUsed.mockResolvedValue({
-        farmId: farm.id,
-      });
+      joinCodeService.findRedeemable.mockResolvedValue(redeemable);
       farmsRepo.findById.mockResolvedValue(null);
 
       await expect(service.joinFarm('ABCdef123', userId)).rejects.toThrow(
         NotFoundException,
       );
+      expect(joinCodeService.validateAndMarkUsed).not.toHaveBeenCalled();
     });
 
-    it('rejects with 409 if already a member', async () => {
-      joinCodeService.validateAndMarkUsed.mockResolvedValue({
-        farmId: farm.id,
-      });
+    it('rejects with 409 if already a member, without burning the code', async () => {
+      joinCodeService.findRedeemable.mockResolvedValue(redeemable);
       farmsRepo.findById.mockResolvedValue(farm);
       userFarmRepo.findByUserAndFarm.mockResolvedValue(buildUserFarm());
 
       await expect(service.joinFarm('ABCdef123', userId)).rejects.toThrow(
         ConflictException,
       );
+      expect(joinCodeService.validateAndMarkUsed).not.toHaveBeenCalled();
       expect(userFarmRepo.createUserFarm).not.toHaveBeenCalled();
+    });
+
+    it('maps a racing duplicate membership insert to 409', async () => {
+      joinCodeService.findRedeemable.mockResolvedValue(redeemable);
+      farmsRepo.findById.mockResolvedValue(farm);
+      userFarmRepo.findByUserAndFarm.mockResolvedValue(null);
+      joinCodeService.validateAndMarkUsed.mockResolvedValue({
+        farmId: farm.id,
+      });
+      userFarmRepo.createUserFarm.mockRejectedValue(
+        new QueryFailedError(
+          'INSERT INTO user_farm',
+          [],
+          Object.assign(new Error('duplicate key'), { code: '23505' }),
+        ),
+      );
+
+      await expect(service.joinFarm('ABCdef123', userId)).rejects.toThrow(
+        ConflictException,
+      );
     });
   });
 

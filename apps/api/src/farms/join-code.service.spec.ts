@@ -1,4 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { BadRequestException } from '@nestjs/common';
+import { EntityManager, QueryFailedError } from 'typeorm';
 import { JoinCodeService } from './join-code.service';
 import { FarmJoinCodeRepository } from './farm-join-code.repository';
 import { FarmJoinCode } from './farm-join-code.entity';
@@ -6,8 +8,8 @@ import { FarmJoinCode } from './farm-join-code.entity';
 describe('JoinCodeService', () => {
   let service: JoinCodeService;
   let repo: {
-    findByCode: jest.Mock;
-    markAsUsed: jest.Mock;
+    findUnusedByCode: jest.Mock;
+    redeem: jest.Mock;
     createJoinCode: jest.Mock;
   };
 
@@ -27,8 +29,8 @@ describe('JoinCodeService', () => {
 
   beforeEach(async () => {
     repo = {
-      findByCode: jest.fn(),
-      markAsUsed: jest.fn(),
+      findUnusedByCode: jest.fn(),
+      redeem: jest.fn(),
       createJoinCode: jest.fn(),
     };
 
@@ -62,63 +64,120 @@ describe('JoinCodeService', () => {
     });
   });
 
+  describe('findRedeemable', () => {
+    it('returns the unused code from the repository', async () => {
+      const code = buildCode();
+      repo.findUnusedByCode.mockResolvedValue(code);
+
+      await expect(service.findRedeemable('ABCdef123')).resolves.toBe(code);
+      expect(repo.findUnusedByCode).toHaveBeenCalledWith('ABCdef123');
+      expect(repo.redeem).not.toHaveBeenCalled();
+    });
+  });
+
   describe('validateAndMarkUsed', () => {
-    it('throws InvalidJoinCode if code does not exist', async () => {
-      repo.findByCode.mockResolvedValue(null);
+    it('throws if the code does not exist or is already used', async () => {
+      repo.redeem.mockResolvedValue(null);
 
       await expect(
         service.validateAndMarkUsed('missing1', userId),
-      ).rejects.toThrow('InvalidJoinCode');
-      expect(repo.markAsUsed).not.toHaveBeenCalled();
-    });
-
-    it('throws InvalidJoinCode if code already used', async () => {
-      repo.findByCode.mockResolvedValue(buildCode({ usedById: 'other-user' }));
-
-      await expect(
-        service.validateAndMarkUsed('ABCdef123', userId),
-      ).rejects.toThrow('InvalidJoinCode');
-      expect(repo.markAsUsed).not.toHaveBeenCalled();
+      ).rejects.toThrow(new BadRequestException('Invalid or used join code'));
     });
 
     it('marks code as used and returns farmId on success', async () => {
-      repo.findByCode.mockResolvedValue(buildCode());
-      repo.markAsUsed.mockResolvedValue(undefined);
+      repo.redeem.mockResolvedValue(farmId);
 
       const result = await service.validateAndMarkUsed('ABCdef123', userId);
 
-      expect(repo.findByCode).toHaveBeenCalledWith('ABCdef123');
-      expect(repo.markAsUsed).toHaveBeenCalledWith('code-uuid-1', userId);
+      expect(repo.redeem).toHaveBeenCalledWith('ABCdef123', userId, undefined);
       expect(result).toEqual({ farmId });
+    });
+
+    it('passes the caller transaction manager to the repository', async () => {
+      repo.redeem.mockResolvedValue(farmId);
+      const manager = {} as EntityManager;
+
+      await service.validateAndMarkUsed('ABCdef123', userId, manager);
+
+      expect(repo.redeem).toHaveBeenCalledWith('ABCdef123', userId, manager);
+    });
+
+    it('rejects reuse of join code', async () => {
+      // First redemption wins; the conditional UPDATE matches nothing after.
+      repo.redeem.mockResolvedValueOnce(farmId).mockResolvedValueOnce(null);
+
+      await service.validateAndMarkUsed('ABCdef123', 'user-1');
+      await expect(
+        service.validateAndMarkUsed('ABCdef123', 'user-2'),
+      ).rejects.toThrow('Invalid or used join code');
     });
   });
 
   describe('generateAndCreate', () => {
-    it('retries until a unique code is found, then saves it', async () => {
+    const uniqueViolation = () =>
+      new QueryFailedError(
+        'INSERT INTO farm_join_codes',
+        [],
+        Object.assign(new Error('duplicate key'), { code: '23505' }),
+      );
+
+    it('saves and returns the generated code', async () => {
+      jest.spyOn(service, 'generateCode').mockReturnValueOnce('FREE12345');
+      repo.createJoinCode.mockResolvedValue(buildCode({ code: 'FREE12345' }));
+
+      await expect(service.generateAndCreate(farmId)).resolves.toBe(
+        'FREE12345',
+      );
+      expect(repo.createJoinCode).toHaveBeenCalledWith(farmId, 'FREE12345');
+    });
+
+    it('retries with a fresh code on a unique violation', async () => {
       jest
         .spyOn(service, 'generateCode')
         .mockReturnValueOnce('TAKEN1234')
         .mockReturnValueOnce('FREE12345');
-      repo.findByCode
-        .mockResolvedValueOnce(buildCode({ code: 'TAKEN1234' }))
-        .mockResolvedValueOnce(null);
-      repo.createJoinCode.mockResolvedValue(buildCode({ code: 'FREE12345' }));
+      repo.createJoinCode
+        .mockRejectedValueOnce(uniqueViolation())
+        .mockResolvedValueOnce(buildCode({ code: 'FREE12345' }));
 
       const code = await service.generateAndCreate(farmId);
 
       expect(code).toBe('FREE12345');
-      expect(repo.findByCode).toHaveBeenCalledTimes(2);
-      expect(repo.createJoinCode).toHaveBeenCalledTimes(1);
-      expect(repo.createJoinCode).toHaveBeenCalledWith(farmId, 'FREE12345');
+      expect(repo.createJoinCode).toHaveBeenCalledTimes(2);
+      expect(repo.createJoinCode).toHaveBeenLastCalledWith(farmId, 'FREE12345');
     });
 
     it('throws after too many collisions', async () => {
-      repo.findByCode.mockResolvedValue(buildCode());
+      repo.createJoinCode.mockRejectedValue(uniqueViolation());
 
       await expect(service.generateAndCreate(farmId)).rejects.toThrow(
         'Unable to generate a unique join code',
       );
-      expect(repo.createJoinCode).not.toHaveBeenCalled();
+      expect(repo.createJoinCode).toHaveBeenCalledTimes(10);
+    });
+
+    it('rethrows errors other than a unique violation', async () => {
+      const fkError = new QueryFailedError(
+        'INSERT INTO farm_join_codes',
+        [],
+        Object.assign(new Error('fk'), { code: '23503' }),
+      );
+      repo.createJoinCode.mockRejectedValue(fkError);
+
+      await expect(service.generateAndCreate(farmId)).rejects.toBe(fkError);
+      expect(repo.createJoinCode).toHaveBeenCalledTimes(1);
+    });
+
+    it('generates unique codes for concurrent requests', async () => {
+      repo.createJoinCode.mockImplementation(async (id: string, code: string) =>
+        buildCode({ farmId: id, code }),
+      );
+
+      const codes = await Promise.all(
+        Array.from({ length: 5 }, () => service.generateAndCreate(farmId)),
+      );
+
+      expect(new Set(codes).size).toBe(5);
     });
   });
 });
