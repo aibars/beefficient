@@ -5,7 +5,10 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   Index,
+  OneToOne,
+  JoinColumn,
 } from 'typeorm';
+import { Company } from '../companies/companies.entity';
 
 @Entity('users')
 @Index(['email'])
@@ -40,4 +43,15 @@ export class User {
 
   @Column({ name: 'refresh_token_version', type: 'integer', default: 1 })
   refreshTokenVersion: number;
+
+  @Column({ name: 'company_id', type: 'uuid', nullable: true })
+  companyId?: string | null;
+
+  // SET NULL, not CASCADE: deleting a company must not delete its user.
+  @OneToOne(() => Company, { cascade: true, onDelete: 'SET NULL' })
+  @JoinColumn({
+    name: 'company_id',
+    foreignKeyConstraintName: 'fk_users_company_id',
+  })
+  company?: Company | null;
 }
