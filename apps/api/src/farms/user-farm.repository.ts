@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { DataSource, EntityManager, Repository } from 'typeorm';
+import { User } from '../users/users.entity';
 import { UserFarm } from './user-farm.entity';
 
 @Injectable()
@@ -40,15 +41,33 @@ export class UserFarmRepository extends Repository<UserFarm> {
     return repo.save(repo.create({ userId, farmId, role }));
   }
 
-  /** Atomically clears the user's active farm and activates the target. */
+  /**
+   * Makes `farmId` the user's only active farm, in one transaction: clears
+   * every user_farm.active flag, sets the target one, and points
+   * users.active_farm_id at it. Throws (rolling back) if the user is not a
+   * member, so the two representations never disagree.
+   */
   async setActiveFarm(userId: string, farmId: string): Promise<void> {
     await this.dataSource.transaction(async (manager) => {
       await manager.update(UserFarm, { userId }, { active: false });
-      await manager.update(UserFarm, { userId, farmId }, { active: true });
+      const result = await manager.update(
+        UserFarm,
+        { userId, farmId },
+        { active: true },
+      );
+      if (!result.affected) {
+        throw new Error(
+          `User ${userId} is not a member of farm ${farmId}; active farm unchanged`,
+        );
+      }
+      await manager.update(User, { id: userId }, { activeFarmId: farmId });
     });
   }
 
   async clearActiveForUser(userId: string): Promise<void> {
-    await this.update({ userId }, { active: false });
+    await this.dataSource.transaction(async (manager) => {
+      await manager.update(UserFarm, { userId }, { active: false });
+      await manager.update(User, { id: userId }, { activeFarmId: null });
+    });
   }
 }

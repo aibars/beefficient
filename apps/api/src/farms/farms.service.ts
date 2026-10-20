@@ -10,6 +10,7 @@ import { isUniqueViolation } from '../common/database/pg-errors';
 import { EstablishmentsRepository } from '../establishments/establishments.repository';
 import { Establishment } from '../establishments/establishments.entity';
 import { CompanyService } from '../companies/companies.service';
+import { UsersService } from '../users/users.service';
 import { UserFarmRepository } from './user-farm.repository';
 import {
   INVALID_JOIN_CODE_MESSAGE,
@@ -25,6 +26,7 @@ export class FarmsService {
     private readonly userFarmRepository: UserFarmRepository,
     private readonly joinCodeService: JoinCodeService,
     private readonly dataSource: DataSource,
+    private readonly usersService: UsersService,
   ) {}
 
   async createFarm(
@@ -107,7 +109,13 @@ export class FarmsService {
     return this.toResponse(farm, 'tecnico', false);
   }
 
+  /**
+   * All farms the user belongs to. `active` comes from users.active_farm_id
+   * (the source of truth), so at most one farm is reported active.
+   */
   async listFarmsByUserId(userId: string): Promise<FarmResponseDto[]> {
+    const user = await this.usersService.findById(userId);
+    const activeFarmId = user?.activeFarmId ?? null;
     const userFarms = await this.userFarmRepository.findByUserId(userId);
     const results: FarmResponseDto[] = [];
     for (const userFarm of userFarms) {
@@ -115,7 +123,9 @@ export class FarmsService {
         userFarm.farm ??
         (await this.establishmentsRepository.findById(userFarm.farmId));
       if (!farm) continue;
-      results.push(this.toResponse(farm, userFarm.role, userFarm.active));
+      results.push(
+        this.toResponse(farm, userFarm.role, farm.id === activeFarmId),
+      );
     }
     return results;
   }

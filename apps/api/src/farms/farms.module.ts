@@ -3,6 +3,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { Establishment } from '../establishments/establishments.entity';
 import { EstablishmentsRepository } from '../establishments/establishments.repository';
 import { CompaniesModule } from '../companies/companies.module';
+import { UsersModule } from '../users/users.module';
 import { UserFarm } from './user-farm.entity';
 import { FarmJoinCode } from './farm-join-code.entity';
 import { UserFarmRepository } from './user-farm.repository';
@@ -14,6 +15,7 @@ import { JoinCodeService } from './join-code.service';
   imports: [
     TypeOrmModule.forFeature([Establishment, UserFarm, FarmJoinCode]),
     CompaniesModule,
+    UsersModule,
   ],
   providers: [
     EstablishmentsRepository,

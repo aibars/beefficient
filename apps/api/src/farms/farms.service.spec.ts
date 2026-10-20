@@ -9,6 +9,7 @@ import { FarmsService } from './farms.service';
 import { EstablishmentsRepository } from '../establishments/establishments.repository';
 import { Establishment } from '../establishments/establishments.entity';
 import { CompanyService } from '../companies/companies.service';
+import { UsersService } from '../users/users.service';
 import { UserFarmRepository } from './user-farm.repository';
 import { JoinCodeService } from './join-code.service';
 import { UserFarm } from './user-farm.entity';
@@ -31,6 +32,7 @@ describe('FarmsService', () => {
     validateAndMarkUsed: jest.Mock;
   };
   let dataSource: { transaction: jest.Mock };
+  let usersService: { findById: jest.Mock };
   const txManager = { tx: true } as unknown as EntityManager;
 
   const userId = 'user-uuid-1';
@@ -77,6 +79,7 @@ describe('FarmsService', () => {
       findRedeemable: jest.fn(),
       validateAndMarkUsed: jest.fn(),
     };
+    usersService = { findById: jest.fn().mockResolvedValue(null) };
     dataSource = {
       transaction: jest.fn(
         async (work: (manager: EntityManager) => Promise<unknown>) =>
@@ -92,6 +95,7 @@ describe('FarmsService', () => {
         { provide: UserFarmRepository, useValue: userFarmRepo },
         { provide: JoinCodeService, useValue: joinCodeService },
         { provide: DataSource, useValue: dataSource },
+        { provide: UsersService, useValue: usersService },
       ],
     }).compile();
 
@@ -268,7 +272,11 @@ describe('FarmsService', () => {
   });
 
   describe('listFarmsByUserId', () => {
-    it('returns farms in repository order (active DESC)', async () => {
+    it('returns farms in repository order, active from users.active_farm_id', async () => {
+      usersService.findById.mockResolvedValue({
+        id: userId,
+        activeFarmId: farm2.id,
+      });
       userFarmRepo.findByUserId.mockResolvedValue([
         buildUserFarm({ farmId: farm2.id, role: 'tecnico', active: true }),
         buildUserFarm({ farmId: farm.id, role: 'admin', active: false }),
@@ -279,6 +287,7 @@ describe('FarmsService', () => {
 
       const result = await service.listFarmsByUserId(userId);
 
+      expect(usersService.findById).toHaveBeenCalledWith(userId);
       expect(userFarmRepo.findByUserId).toHaveBeenCalledWith(userId);
       expect(result).toEqual([
         {
@@ -296,6 +305,54 @@ describe('FarmsService', () => {
           active: false,
         },
       ]);
+    });
+
+    it('lists all user farms with active status', async () => {
+      usersService.findById.mockResolvedValue({
+        id: userId,
+        activeFarmId: farm.id,
+      });
+      userFarmRepo.findByUserId.mockResolvedValue([
+        buildUserFarm({ farmId: farm.id, farm, role: 'admin' }),
+        buildUserFarm({ farmId: farm2.id, farm: farm2, role: 'tecnico' }),
+      ]);
+
+      const farms = await service.listFarmsByUserId(userId);
+
+      expect(farms).toHaveLength(2);
+      expect(farms.find((f) => f.farm_id === farm.id)?.active).toBe(true);
+      expect(farms.find((f) => f.farm_id === farm2.id)?.active).toBe(false);
+    });
+
+    it('ignores a stale user_farm.active flag that disagrees with the user', async () => {
+      usersService.findById.mockResolvedValue({
+        id: userId,
+        activeFarmId: farm.id,
+      });
+      userFarmRepo.findByUserId.mockResolvedValue([
+        buildUserFarm({ farmId: farm.id, farm, active: true }),
+        buildUserFarm({ farmId: farm2.id, farm: farm2, active: true }),
+      ]);
+
+      const farms = await service.listFarmsByUserId(userId);
+
+      expect(farms.filter((f) => f.active).map((f) => f.farm_id)).toEqual([
+        farm.id,
+      ]);
+    });
+
+    it('reports no active farm when the user has none', async () => {
+      usersService.findById.mockResolvedValue({
+        id: userId,
+        activeFarmId: null,
+      });
+      userFarmRepo.findByUserId.mockResolvedValue([
+        buildUserFarm({ farmId: farm.id, farm, role: 'tecnico' }),
+      ]);
+
+      const farms = await service.listFarmsByUserId(userId);
+
+      expect(farms).toEqual([expect.objectContaining({ active: false })]);
     });
 
     it('uses the loaded farm relation when present', async () => {
@@ -323,7 +380,30 @@ describe('FarmsService', () => {
       expect(result).toEqual({ farm_id: farm.id, active: true });
     });
 
-    it('forbids (403) if user is not a member', async () => {
+    it('switches active farm for user', async () => {
+      // Member of both farms, farm 1 currently active.
+      userFarmRepo.findByUserAndFarm.mockImplementation(
+        async (_uid: string, fid: string) =>
+          buildUserFarm({
+            farmId: fid,
+            role: fid === farm.id ? 'admin' : 'tecnico',
+          }),
+      );
+      farmsRepo.findById.mockResolvedValue(farm2);
+      userFarmRepo.setActiveFarm.mockResolvedValue(undefined);
+
+      const result = await service.setActiveFarm(farm2.id, userId);
+
+      expect(userFarmRepo.findByUserAndFarm).toHaveBeenCalledWith(
+        userId,
+        farm2.id,
+      );
+      expect(userFarmRepo.setActiveFarm).toHaveBeenCalledTimes(1);
+      expect(userFarmRepo.setActiveFarm).toHaveBeenCalledWith(userId, farm2.id);
+      expect(result).toEqual({ farm_id: farm2.id, active: true });
+    });
+
+    it('test_set_active_farm_validates_membership: forbids (403) if user is not a member', async () => {
       userFarmRepo.findByUserAndFarm.mockResolvedValue(null);
 
       await expect(service.setActiveFarm(farm.id, userId)).rejects.toThrow(

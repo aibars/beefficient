@@ -13,6 +13,8 @@ import { JoinCodeService } from 'src/farms/join-code.service';
 import { UserFarm } from 'src/farms/user-farm.entity';
 import { UserFarmRepository } from 'src/farms/user-farm.repository';
 import { User } from 'src/users/users.entity';
+import { UsersRepository } from 'src/users/users.repository';
+import { UsersService } from 'src/users/users.service';
 
 // Same standalone DataSource as the other integration specs. Concurrency is
 // only meaningful against the real database, so these complement the mocked
@@ -77,6 +79,7 @@ describe('Join codes (farm_join_codes)', () => {
       new UserFarmRepository(dataSource),
       joinCodeService,
       dataSource,
+      new UsersService(new UsersRepository(dataSource)),
     );
   });
 
