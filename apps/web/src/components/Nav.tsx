@@ -28,8 +28,8 @@ export function Nav({ onRoleSelect }: NavProps) {
   return (
     <nav className="nav">
       <div className="nav-brand">
-        <Link href="/">
-          <a className="nav-brand-link">
+        <Link href="/" legacyBehavior>
+          <a>
             <span className="beef">BEEF</span>
             <span className="icient">ICIENT</span>
           </a>
