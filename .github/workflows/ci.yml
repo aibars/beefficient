@@ -45,6 +45,8 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm typecheck
+      - run: pnpm build
+      - run: pnpm --filter @beefficient/api typeorm:migration:run
       - run: pnpm test
       # Incluye el build de Storybook (apps/storybook).
       - run: pnpm build
