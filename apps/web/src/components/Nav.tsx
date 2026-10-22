@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import Link from 'next/link';
 
 interface NavProps {
   onRoleSelect?: (role: 'productor' | 'tecnico') => void;
@@ -26,31 +25,31 @@ export function Nav({ onRoleSelect }: NavProps) {
   return (
     <nav className="nav">
       <div className="nav-brand">
-        <Link href="/">
+        <a href="/">
           <span className="beef">BEEF</span>
           <span className="icient">ICIENT</span>
-        </Link>
+        </a>
       </div>
 
       <div className="nav-center">
-        <Link href="/" className={role ? 'nav-link' : 'nav-link disabled'}>
+        <a href="/" className={role ? 'nav-link' : 'nav-link disabled'}>
           Inicio
-        </Link>
+        </a>
         {role === 'productor' && (
           <>
-            <Link href="/precios" className="nav-link">
+            <a href="/precios" className="nav-link">
               Precios
-            </Link>
+            </a>
           </>
         )}
         {role === 'tecnico' && (
           <>
-            <Link href="/productores" className="nav-link">
+            <a href="/productores" className="nav-link">
               Productores
-            </Link>
-            <Link href="/precios" className="nav-link">
+            </a>
+            <a href="/precios" className="nav-link">
               Precios
-            </Link>
+            </a>
           </>
         )}
       </div>
