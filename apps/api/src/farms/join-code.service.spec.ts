@@ -147,6 +147,34 @@ describe('JoinCodeService', () => {
       expect(repo.createJoinCode).toHaveBeenLastCalledWith(farmId, 'FREE12345');
     });
 
+    it('inside a caller transaction, runs each attempt in its own savepoint', async () => {
+      const savepoint = { savepoint: true } as unknown as EntityManager;
+      const manager = {
+        transaction: jest.fn(
+          async (work: (m: EntityManager) => Promise<unknown>) =>
+            work(savepoint),
+        ),
+      } as unknown as EntityManager;
+      jest
+        .spyOn(service, 'generateCode')
+        .mockReturnValueOnce('TAKEN1234')
+        .mockReturnValueOnce('FREE12345');
+      repo.createJoinCode
+        .mockRejectedValueOnce(uniqueViolation())
+        .mockResolvedValueOnce(buildCode({ code: 'FREE12345' }));
+
+      const code = await service.generateAndCreate(farmId, manager);
+
+      expect(code).toBe('FREE12345');
+      // One savepoint per attempt, so a collision only rolls back itself.
+      expect(manager.transaction).toHaveBeenCalledTimes(2);
+      expect(repo.createJoinCode).toHaveBeenLastCalledWith(
+        farmId,
+        'FREE12345',
+        savepoint,
+      );
+    });
+
     it('throws after too many collisions', async () => {
       repo.createJoinCode.mockRejectedValue(uniqueViolation());
 

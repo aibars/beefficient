@@ -8,10 +8,12 @@ const ESTABLISHMENTS_PK = 'PK_7fb6da6c365114ccb61b091bbdf';
  * instead of directly to a User.
  *
  * - Renames `farms` → `establishments` and `owner_id` → `company_id`.
- * - Backfills: every user that owned a farm gets a company (reusing an existing
- *   one when present) and `users.company_id` is set if it was still NULL; each
- *   row's `company_id` (which held the owner's user id) is rewritten to that
- *   company's id.
+ * - Backfills: every user without a company gets one (reusing a company they
+ *   already own when present), whether or not they own a farm — users without
+ *   farms (e.g. Google sign-ins matched to an existing account) would otherwise
+ *   hit "User company not initialized" on their first farm. `users.company_id`
+ *   is set if it was still NULL, and each establishment's `company_id` (which
+ *   held the owner's user id) is rewritten to that company's id.
  * - Renames the primary key to TypeORM's default name for `establishments`.
  * - Replaces fk_farms_owner_id (→ users) with fk_establishments_company_id
  *   (→ companies, ON DELETE CASCADE) and idx_farms_owner_id with
@@ -35,13 +37,15 @@ export class RenameFarmsToEstablishments20261019000014 implements MigrationInter
       `ALTER TABLE "establishments" RENAME COLUMN "owner_id" TO "company_id"`,
     );
 
-    // Give every farm owner without a company one company.
+    // Give every user without a company one company. Farm owners are users,
+    // so this also covers every establishment's owner.
     await queryRunner.query(`
       INSERT INTO "companies" ("owner_id")
-      SELECT DISTINCT e."company_id" FROM "establishments" e
-      WHERE NOT EXISTS (
-        SELECT 1 FROM "companies" c WHERE c."owner_id" = e."company_id"
-      )
+      SELECT u."id" FROM "users" u
+      WHERE u."company_id" IS NULL
+        AND NOT EXISTS (
+          SELECT 1 FROM "companies" c WHERE c."owner_id" = u."id"
+        )
     `);
     // Link users to their (oldest) company when not linked yet.
     await queryRunner.query(`

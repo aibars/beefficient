@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { DataSource, Repository } from 'typeorm';
+import { DataSource, EntityManager, Repository } from 'typeorm';
 import { Establishment } from './establishments.entity';
 
 @Injectable()
@@ -20,8 +20,9 @@ export class EstablishmentsRepository extends Repository<Establishment> {
     name: string,
     provincia: string,
     companyId: string,
+    manager?: EntityManager,
   ): Promise<Establishment> {
-    const establishment = this.create({ name, provincia, companyId });
-    return this.save(establishment);
+    const repo = manager ? manager.getRepository(Establishment) : this;
+    return repo.save(repo.create({ name, provincia, companyId }));
   }
 }

@@ -41,15 +41,31 @@ export class FarmsService {
       throw new BadRequestException('User company not initialized');
     }
 
-    const farm = await this.establishmentsRepository.createEstablishment(
-      name,
-      provincia,
-      company.id,
+    // One transaction: a failure in any step must not leave a farm without
+    // its admin, active-farm pointer or join code.
+    const { farm, joinCode } = await this.dataSource.transaction(
+      async (manager) => {
+        const farm = await this.establishmentsRepository.createEstablishment(
+          name,
+          provincia,
+          company.id,
+          manager,
+        );
+        await this.userFarmRepository.createUserFarm(
+          userId,
+          farm.id,
+          'admin',
+          manager,
+        );
+        // The newly created farm becomes the creator's active farm.
+        await this.userFarmRepository.setActiveFarm(userId, farm.id, manager);
+        const joinCode = await this.joinCodeService.generateAndCreate(
+          farm.id,
+          manager,
+        );
+        return { farm, joinCode };
+      },
     );
-    await this.userFarmRepository.createUserFarm(userId, farm.id, 'admin');
-    // The newly created farm becomes the creator's active farm.
-    await this.userFarmRepository.setActiveFarm(userId, farm.id);
-    const joinCode = await this.joinCodeService.generateAndCreate(farm.id);
 
     return {
       ...this.toResponse(farm, 'admin', true),

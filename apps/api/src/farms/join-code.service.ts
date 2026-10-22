@@ -63,12 +63,26 @@ export class JoinCodeService {
    * the `uk_farm_join_codes_code` constraint: a colliding insert (including
    * one racing a concurrent request) is retried with a fresh code, instead of
    * a check-then-insert that two requests could both pass.
+   *
+   * Pass `manager` to insert inside a caller's transaction. Each attempt then
+   * runs in its own savepoint (TypeORM nests `manager.transaction` as
+   * SAVEPOINT), because a failed insert aborts the whole Postgres
+   * transaction otherwise and the retry could never succeed.
    */
-  async generateAndCreate(farmId: string): Promise<string> {
+  async generateAndCreate(
+    farmId: string,
+    manager?: EntityManager,
+  ): Promise<string> {
     for (let attempt = 0; attempt < MAX_GENERATION_ATTEMPTS; attempt++) {
       const code = this.generateCode();
       try {
-        await this.joinCodeRepository.createJoinCode(farmId, code);
+        if (manager) {
+          await manager.transaction((savepoint) =>
+            this.joinCodeRepository.createJoinCode(farmId, code, savepoint),
+          );
+        } else {
+          await this.joinCodeRepository.createJoinCode(farmId, code);
+        }
         return code;
       } catch (err) {
         if (!isUniqueViolation(err)) throw err;

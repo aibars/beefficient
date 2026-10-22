@@ -120,18 +120,29 @@ describe('FarmsService', () => {
       );
 
       expect(companyService.findByUserId).toHaveBeenCalledWith(userId);
+      // Every write shares one transaction.
+      expect(dataSource.transaction).toHaveBeenCalledTimes(1);
       expect(farmsRepo.createEstablishment).toHaveBeenCalledWith(
         'La Esperanza',
         'Buenos Aires',
         companyId,
+        txManager,
       );
       expect(userFarmRepo.createUserFarm).toHaveBeenCalledWith(
         userId,
         farm.id,
         'admin',
+        txManager,
       );
-      expect(userFarmRepo.setActiveFarm).toHaveBeenCalledWith(userId, farm.id);
-      expect(joinCodeService.generateAndCreate).toHaveBeenCalledWith(farm.id);
+      expect(userFarmRepo.setActiveFarm).toHaveBeenCalledWith(
+        userId,
+        farm.id,
+        txManager,
+      );
+      expect(joinCodeService.generateAndCreate).toHaveBeenCalledWith(
+        farm.id,
+        txManager,
+      );
       expect(result).toEqual({
         farm_id: farm.id,
         farm_name: 'La Esperanza',
@@ -140,6 +151,31 @@ describe('FarmsService', () => {
         active: true,
         join_code: 'ABCdef123',
       });
+    });
+  });
+
+  describe('createFarm atomicity', () => {
+    it('propagates a failure after the farm is saved, inside the transaction', async () => {
+      companyService.findByUserId.mockResolvedValue({
+        id: companyId,
+        ownerId: userId,
+      });
+      farmsRepo.createEstablishment.mockResolvedValue(farm);
+      userFarmRepo.createUserFarm.mockResolvedValue(buildUserFarm());
+      userFarmRepo.setActiveFarm.mockResolvedValue(undefined);
+      const failure = new Error('Unable to generate a unique join code');
+      joinCodeService.generateAndCreate.mockRejectedValue(failure);
+
+      await expect(
+        service.createFarm('La Esperanza', 'Buenos Aires', userId),
+      ).rejects.toBe(failure);
+
+      // The error escapes the transaction callback, so the farm, membership
+      // and active-farm writes roll back with it.
+      expect(dataSource.transaction).toHaveBeenCalledTimes(1);
+      await expect(
+        dataSource.transaction.mock.results[0].value,
+      ).rejects.toBe(failure);
     });
   });
 
@@ -153,6 +189,7 @@ describe('FarmsService', () => {
         new BadRequestException('User company not initialized'),
       );
 
+      expect(dataSource.transaction).not.toHaveBeenCalled();
       expect(farmsRepo.createEstablishment).not.toHaveBeenCalled();
       expect(userFarmRepo.createUserFarm).not.toHaveBeenCalled();
       expect(joinCodeService.generateAndCreate).not.toHaveBeenCalled();

@@ -21,9 +21,13 @@ export class FarmJoinCodeRepository extends Repository<FarmJoinCode> {
     return this.find({ where: { farmId } });
   }
 
-  async createJoinCode(farmId: string, code: string): Promise<FarmJoinCode> {
-    const joinCode = this.create({ farmId, code });
-    return this.save(joinCode);
+  async createJoinCode(
+    farmId: string,
+    code: string,
+    manager?: EntityManager,
+  ): Promise<FarmJoinCode> {
+    const repo = manager ? manager.getRepository(FarmJoinCode) : this;
+    return repo.save(repo.create({ farmId, code }));
   }
 
   /**
