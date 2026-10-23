@@ -5,6 +5,7 @@ export class DatabaseConfig {
   static getOrmConfig(configService: ConfigService): TypeOrmModuleOptions {
     const nodeEnv = configService.get<string>('NODE_ENV', 'development');
     const isProd = nodeEnv === 'production';
+    const isTest = nodeEnv === 'test';
 
     return {
       type: 'postgres',
@@ -15,8 +16,8 @@ export class DatabaseConfig {
       database: configService.get<string>('DATABASE_NAME', 'beefficient'),
       entities: isProd ? ['dist/**/*.entity.js'] : ['src/**/*.entity.ts'],
       migrations: isProd ? ['dist/database/migrations/*.js'] : ['database/migrations/*.ts'],
-      migrationsRun: isProd,
-      synchronize: !isProd,
+      migrationsRun: isProd || isTest,
+      synchronize: nodeEnv === 'development',
       logging: !isProd,
       ssl: isProd,
     };
@@ -28,7 +29,9 @@ export class DatabaseConfig {
  * Kept for backwards compatibility.
  */
 export const getDatabaseConfig = (): TypeOrmModuleOptions => {
-  const isProd = process.env.NODE_ENV === 'production';
+  const nodeEnv = process.env.NODE_ENV || 'development';
+  const isProd = nodeEnv === 'production';
+  const isTest = nodeEnv === 'test';
   return {
     type: 'postgres',
     host: process.env.DATABASE_HOST || 'localhost',
@@ -38,8 +41,8 @@ export const getDatabaseConfig = (): TypeOrmModuleOptions => {
     database: process.env.DATABASE_NAME || 'beefficient',
     entities: isProd ? ['dist/**/*.entity.js'] : ['src/**/*.entity.ts'],
     migrations: isProd ? ['dist/database/migrations/*.js'] : ['database/migrations/*.ts'],
-    migrationsRun: isProd,
-    synchronize: !isProd,
+    migrationsRun: isProd || isTest,
+    synchronize: nodeEnv === 'development',
     logging: !isProd,
     ssl: isProd,
   };
