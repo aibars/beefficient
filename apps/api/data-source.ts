@@ -4,7 +4,7 @@ import * as dotenv from 'dotenv';
 dotenv.config();
 
 const nodeEnv = process.env.NODE_ENV || 'development';
-const isDev = nodeEnv === 'development';
+const isProd = nodeEnv === 'production';
 
 export const AppDataSource = new DataSource({
   type: 'postgres',
@@ -13,8 +13,8 @@ export const AppDataSource = new DataSource({
   username: process.env.DATABASE_USER || 'postgres',
   password: process.env.DATABASE_PASSWORD || 'postgres',
   database: process.env.DATABASE_NAME || 'beefficient',
-  entities: isDev ? ['src/**/*.entity.ts'] : ['dist/**/*.entity.js'],
-  migrations: isDev ? ['database/migrations/*.ts'] : ['dist/database/migrations/*.js'],
+  entities: isProd ? ['dist/**/*.entity.js'] : ['src/**/*.entity.ts'],
+  migrations: isProd ? ['dist/database/migrations/*.js'] : ['database/migrations/*.ts'],
   migrationsRun: false,
   synchronize: false,
   logging: false,
