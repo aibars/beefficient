@@ -198,8 +198,8 @@ export class AuthController {
           // Link existing email to Google ID
           await this.usersService.updateGoogleId(user.id, userId);
         } else if (!user) {
-          // Create new user with Google ID
-          user = await this.usersService.create(email, undefined, userId);
+          // Create new user (and its Company) with Google ID
+          user = await this.authService.registerUser(email, undefined, userId);
         }
       }
 

@@ -1,4 +1,5 @@
 import { Injectable, ConflictException } from '@nestjs/common';
+import { EntityManager } from 'typeorm';
 import { UsersRepository } from './users.repository';
 import { User } from './users.entity';
 
@@ -22,12 +23,19 @@ export class UsersService {
     email: string,
     passwordHash?: string,
     googleId?: string,
+    manager?: EntityManager,
   ): Promise<User> {
-    const existingUser = await this.usersRepository.findByEmail(email);
+    // `manager` lets callers run creation inside their own transaction.
+    const existingUser = await this.usersRepository.findByEmail(email, manager);
     if (existingUser) {
       throw new ConflictException('Email already registered');
     }
-    return this.usersRepository.createUser(email, passwordHash, googleId);
+    return this.usersRepository.createUser(
+      email,
+      passwordHash,
+      googleId,
+      manager,
+    );
   }
 
   async updateLastLogin(id: string): Promise<void> {

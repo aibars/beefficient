@@ -4,8 +4,11 @@ import { ConfigService } from '@nestjs/config';
 import { UnauthorizedException, ConflictException } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 import { AuthService } from './auth.service';
+import { DataSource, EntityManager } from 'typeorm';
 import { UsersService } from 'src/users/users.service';
 import { User } from 'src/users/users.entity';
+import { CompanyService } from 'src/companies/companies.service';
+import { Company } from 'src/companies/companies.entity';
 
 jest.mock('bcrypt');
 
@@ -14,6 +17,9 @@ describe('AuthService', () => {
   let jwtService: jest.Mocked<JwtService>;
   let usersService: jest.Mocked<UsersService>;
   let configService: jest.Mocked<ConfigService>;
+  let companyService: jest.Mocked<CompanyService>;
+  let dataSource: { transaction: jest.Mock };
+  const txManager = { __tx: true } as unknown as EntityManager;
 
   const mockUser: User = {
     id: '550e8400-e29b-41d4-a716-446655440000',
@@ -37,7 +43,27 @@ describe('AuthService', () => {
     refreshTokenVersion: 1,
   };
 
+  const mockCompany: Company = {
+    id: '770e8400-e29b-41d4-a716-446655440002',
+    ownerId: '550e8400-e29b-41d4-a716-446655440000',
+    createdAt: new Date('2026-10-08'),
+    updatedAt: new Date('2026-10-08'),
+  } as Company;
+
   beforeEach(async () => {
+    const mockCompanyService = {
+      createCompanyForUser: jest.fn().mockResolvedValue(mockCompany),
+      findByUserId: jest.fn(),
+    };
+
+    // Runs the callback with a fake transactional manager; a rejection inside
+    // the callback propagates, as a rolled-back TypeORM transaction does.
+    const mockDataSource = {
+      transaction: jest.fn((cb: (m: EntityManager) => unknown) =>
+        cb(txManager),
+      ),
+    };
+
     const mockJwtService = {
       sign: jest.fn(),
     };
@@ -77,6 +103,14 @@ describe('AuthService', () => {
           provide: ConfigService,
           useValue: mockConfigService,
         },
+        {
+          provide: CompanyService,
+          useValue: mockCompanyService,
+        },
+        {
+          provide: DataSource,
+          useValue: mockDataSource,
+        },
       ],
     }).compile();
 
@@ -84,6 +118,8 @@ describe('AuthService', () => {
     jwtService = module.get(JwtService) as jest.Mocked<JwtService>;
     usersService = module.get(UsersService) as jest.Mocked<UsersService>;
     configService = module.get(ConfigService) as jest.Mocked<ConfigService>;
+    companyService = module.get(CompanyService) as jest.Mocked<CompanyService>;
+    dataSource = module.get(DataSource);
   });
 
   afterEach(() => {
@@ -136,6 +172,8 @@ describe('AuthService', () => {
       expect(usersService.create).toHaveBeenCalledWith(
         email,
         '$2b$10$hashedpassword123456789012345678901234567890',
+        undefined,
+        txManager,
       );
       expect(usersService.updateLastLogin).toHaveBeenCalledWith(mockUser.id);
       expect(result.user.email).toBe(email);
@@ -160,7 +198,91 @@ describe('AuthService', () => {
       expect(usersService.create).toHaveBeenCalledWith(
         email,
         '$2b$10$hashedpassword123456789012345678901234567890',
+        undefined,
+        txManager,
       );
+    });
+  });
+
+  describe('signup Company auto-creation', () => {
+    beforeEach(() => {
+      (bcrypt.hash as jest.Mock).mockResolvedValue('$2b$10$hash');
+      usersService.updateLastLogin.mockResolvedValue(undefined);
+      jwtService.sign.mockReturnValue('token');
+    });
+
+    it('auto-creates Company when user signs up', async () => {
+      usersService.create.mockResolvedValue({ ...mockUser });
+
+      const result = await service.signup('test@example.com', 'Test123!@#');
+
+      expect(dataSource.transaction).toHaveBeenCalledTimes(1);
+      expect(companyService.createCompanyForUser).toHaveBeenCalledWith(
+        mockUser.id,
+        txManager,
+      );
+      expect(result.user.id).toBe(mockUser.id);
+    });
+
+    it('creates user and Company in the same transaction', async () => {
+      usersService.create.mockResolvedValue({ ...mockUser });
+
+      await service.signup('test@example.com', 'Test123!@#');
+
+      const userManager = usersService.create.mock.calls[0][3];
+      const companyManager = companyService.createCompanyForUser.mock.calls[0][1];
+      expect(userManager).toBe(txManager);
+      expect(companyManager).toBe(txManager);
+    });
+
+    it('registerUser links the Company to the returned user', async () => {
+      usersService.create.mockResolvedValue({ ...mockUser });
+
+      const user = await service.registerUser('test@example.com', '$2b$10$hash');
+
+      expect(user.companyId).toBe(mockCompany.id);
+      expect(user.company).toBe(mockCompany);
+    });
+
+    it('registerUser creates a Company for Google users too', async () => {
+      usersService.create.mockResolvedValue({ ...mockGoogleUser });
+
+      await service.registerUser('google@example.com', undefined, 'google_id_123');
+
+      expect(usersService.create).toHaveBeenCalledWith(
+        'google@example.com',
+        undefined,
+        'google_id_123',
+        txManager,
+      );
+      expect(companyService.createCompanyForUser).toHaveBeenCalledWith(
+        mockGoogleUser.id,
+        txManager,
+      );
+    });
+
+    it('signup fails (no tokens) if Company creation fails', async () => {
+      usersService.create.mockResolvedValue({ ...mockUser });
+      companyService.createCompanyForUser.mockRejectedValue(
+        new Error('insert failed'),
+      );
+
+      await expect(
+        service.signup('test@example.com', 'Test123!@#'),
+      ).rejects.toThrow('insert failed');
+      expect(jwtService.sign).not.toHaveBeenCalled();
+      expect(usersService.updateLastLogin).not.toHaveBeenCalled();
+    });
+
+    it('does not create a Company when email is taken', async () => {
+      usersService.create.mockRejectedValue(
+        new ConflictException('Email already registered'),
+      );
+
+      await expect(
+        service.signup('test@example.com', 'Test123!@#'),
+      ).rejects.toThrow(ConflictException);
+      expect(companyService.createCompanyForUser).not.toHaveBeenCalled();
     });
   });
 

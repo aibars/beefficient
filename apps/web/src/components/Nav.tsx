@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { useRole } from '@/hooks/useRole';
 
 interface NavProps {
   onRoleSelect?: (role: 'productor' | 'tecnico') => void;
@@ -8,6 +9,7 @@ interface NavProps {
 
 export function Nav({ onRoleSelect }: NavProps) {
   const [role, setRoleState] = useState<'productor' | 'tecnico' | null>(null);
+  const { logout } = useRole();
   const [showRoleMenu, setShowRoleMenu] = useState(false);
 
   useEffect(() => {
@@ -64,6 +66,10 @@ export function Nav({ onRoleSelect }: NavProps) {
           aria-label="Cambiar rol"
         >
           ⚙️
+        </button>
+
+        <button className="nav-logout" onClick={logout} aria-label="Cerrar sesión">
+          Salir
         </button>
 
         {showRoleMenu && (

@@ -10,6 +10,8 @@ import { User } from 'src/users/users.entity';
 import { FarmsService } from 'src/farms/farms.service';
 import { AppModule } from 'src/app.module';
 import { randomUUID } from 'crypto';
+import { DataSource } from 'typeorm';
+import { JoinCodeService } from 'src/farms/join-code.service';
 
 describe('AuthController (E2E)', () => {
   let app: INestApplication;
@@ -498,6 +500,231 @@ describe('Farm Management (E2E)', () => {
         .set('Authorization', `Bearer ${techToken}`);
 
       expect(response.status).toBe(403);
+    });
+  });
+
+  // Each test sets up its own users and farms so it does not depend on the
+  // order of the flow tests above.
+  describe('Review Focus', () => {
+    let dataSource: DataSource;
+
+    const signupUser = async (
+      prefix: string,
+    ): Promise<{ id: string; token: string; email: string }> => {
+      const email = `${prefix}-${randomUUID().slice(0, 8)}@farm.com`;
+      const response = await request(app.getHttpServer())
+        .post('/auth/signup')
+        .send({ email, password: 'SecurePass123' });
+      expect(response.status).toBe(201);
+      return { id: response.body.user.id, token: response.body.accessToken, email };
+    };
+
+    const createFarm = async (token: string, farm_name = 'Campo Review') => {
+      const response = await request(app.getHttpServer())
+        .post('/auth/farm/create')
+        .set('Authorization', `Bearer ${token}`)
+        .send({ farm_name, provincia: 'Entre Ríos' });
+      expect(response.status).toBe(201);
+      return response.body as { farm_id: string; join_code: string };
+    };
+
+    const join = (token: string, join_code: string) =>
+      request(app.getHttpServer())
+        .post('/auth/farm/join')
+        .set('Authorization', `Bearer ${token}`)
+        .send({ join_code });
+
+    beforeAll(() => {
+      dataSource = app.get(DataSource);
+    });
+
+    afterEach(() => {
+      jest.restoreAllMocks();
+    });
+
+    it('test_join_code_uniqueness_under_concurrent_generation: concurrent requests get distinct codes', async () => {
+      const admin = await signupUser('concurrent-admin');
+      const farm = await createFarm(admin.token);
+
+      const responses = await Promise.all(
+        Array.from({ length: 10 }, () =>
+          request(app.getHttpServer())
+            .post(`/auth/farm/${farm.farm_id}/join-code`)
+            .set('Authorization', `Bearer ${admin.token}`),
+        ),
+      );
+
+      expect(responses.map((r) => r.status)).toEqual(Array(10).fill(201));
+      const codes = responses.map((r) => r.body.join_code);
+      expect(new Set([...codes, farm.join_code]).size).toBe(codes.length + 1);
+
+      const stored = await dataSource.query(
+        'SELECT code FROM farm_join_codes WHERE farm_id = $1',
+        [farm.farm_id],
+      );
+      expect(stored).toHaveLength(codes.length + 1);
+    });
+
+    it('test_join_code_uniqueness_under_concurrent_generation: a colliding code is retried, not duplicated', async () => {
+      const admin = await signupUser('collision-admin');
+      const farm = await createFarm(admin.token);
+
+      // Force both concurrent requests to draw the farm's existing code first;
+      // the unique constraint rejects it and each retries with a fresh code.
+      const joinCodeService = app.get(JoinCodeService);
+      const realGenerate = joinCodeService.generateCode.bind(joinCodeService);
+      jest
+        .spyOn(joinCodeService, 'generateCode')
+        .mockReturnValueOnce(farm.join_code)
+        .mockReturnValueOnce(farm.join_code)
+        .mockImplementation(realGenerate);
+
+      const [a, b] = await Promise.all(
+        [0, 1].map(() =>
+          request(app.getHttpServer())
+            .post(`/auth/farm/${farm.farm_id}/join-code`)
+            .set('Authorization', `Bearer ${admin.token}`),
+        ),
+      );
+
+      expect(a.status).toBe(201);
+      expect(b.status).toBe(201);
+      expect(new Set([farm.join_code, a.body.join_code, b.body.join_code]).size).toBe(3);
+
+      const [{ count }] = await dataSource.query(
+        'SELECT COUNT(*)::int AS count FROM farm_join_codes WHERE code = $1',
+        [farm.join_code],
+      );
+      expect(count).toBe(1);
+    });
+
+    it('test_join_farm_rejects_used_join_code: a redeemed code cannot be used by another user', async () => {
+      const admin = await signupUser('reuse-admin');
+      const farm = await createFarm(admin.token);
+      const first = await signupUser('reuse-first');
+      const second = await signupUser('reuse-second');
+
+      const ok = await join(first.token, farm.join_code);
+      expect(ok.status).toBe(201);
+      expect(ok.body).toMatchObject({
+        farm_id: farm.farm_id,
+        role: 'tecnico',
+        active: false,
+      });
+
+      const reused = await join(second.token, farm.join_code);
+      expect(reused.status).toBe(400);
+      expect(reused.body.message).toContain('Invalid or used');
+
+      const farms = await request(app.getHttpServer())
+        .get('/auth/farms')
+        .set('Authorization', `Bearer ${second.token}`);
+      expect(farms.body.farms).toEqual([]);
+    });
+
+    it('test_join_farm_rejects_used_join_code: concurrent redemptions of one code let only one through', async () => {
+      const admin = await signupUser('race-admin');
+      const farm = await createFarm(admin.token);
+      const users = await Promise.all([
+        signupUser('race-a'),
+        signupUser('race-b'),
+        signupUser('race-c'),
+      ]);
+
+      const responses = await Promise.all(
+        users.map((u) => join(u.token, farm.join_code)),
+      );
+
+      const statuses = responses.map((r) => r.status).sort();
+      expect(statuses).toEqual([201, 400, 400]);
+
+      const [{ count }] = await dataSource.query(
+        `SELECT COUNT(*)::int AS count FROM user_farm
+         WHERE farm_id = $1 AND role = 'tecnico'`,
+        [farm.farm_id],
+      );
+      expect(count).toBe(1);
+    });
+
+    it('test_signup_auto_creates_company: signup creates the Company and links it to the user', async () => {
+      const user = await signupUser('company');
+
+      const companies = await dataSource.query(
+        'SELECT id FROM companies WHERE owner_id = $1',
+        [user.id],
+      );
+      expect(companies).toHaveLength(1);
+
+      const [row] = await dataSource.query(
+        'SELECT company_id FROM users WHERE id = $1',
+        [user.id],
+      );
+      expect(row.company_id).toBe(companies[0].id);
+
+      // The farm the user creates hangs off that Company.
+      const farm = await createFarm(user.token);
+      const [establishment] = await dataSource.query(
+        'SELECT company_id FROM establishments WHERE id = $1',
+        [farm.farm_id],
+      );
+      expect(establishment.company_id).toBe(companies[0].id);
+    });
+
+    it('test_create_farm_validates_company_exists: a user without Company cannot create a farm', async () => {
+      const user = await signupUser('no-company');
+      await dataSource.query('DELETE FROM companies WHERE owner_id = $1', [
+        user.id,
+      ]);
+
+      const response = await request(app.getHttpServer())
+        .post('/auth/farm/create')
+        .set('Authorization', `Bearer ${user.token}`)
+        .send({ farm_name: 'Huérfano', provincia: 'Salta' });
+
+      expect(response.status).toBe(400);
+      expect(response.body.message).toBe('User company not initialized');
+    });
+
+    it('test_set_active_farm_validates_membership: rejects a farm the user does not belong to', async () => {
+      const owner = await signupUser('member-owner');
+      const outsider = await signupUser('member-outsider');
+      const farm = await createFarm(owner.token);
+      const own = await createFarm(outsider.token, 'Campo Outsider');
+
+      const foreign = await request(app.getHttpServer())
+        .patch(`/auth/farm/${farm.farm_id}/active`)
+        .set('Authorization', `Bearer ${outsider.token}`);
+      expect(foreign.status).toBe(403);
+
+      const unknown = await request(app.getHttpServer())
+        .patch(`/auth/farm/${randomUUID()}/active`)
+        .set('Authorization', `Bearer ${outsider.token}`);
+      expect(unknown.status).toBe(403);
+
+      // The outsider's active farm is unchanged.
+      const list = await request(app.getHttpServer())
+        .get('/auth/farms')
+        .set('Authorization', `Bearer ${outsider.token}`);
+      expect(list.body.farms).toEqual([
+        expect.objectContaining({ farm_id: own.farm_id, active: true }),
+      ]);
+    });
+
+    it('test_company_cascade_delete_on_user_deletion: deleting the user removes its Company and frees the email', async () => {
+      const user = await signupUser('cascade');
+
+      await dataSource.query('DELETE FROM users WHERE id = $1', [user.id]);
+
+      const companies = await dataSource.query(
+        'SELECT id FROM companies WHERE owner_id = $1',
+        [user.id],
+      );
+      expect(companies).toEqual([]);
+
+      const again = await request(app.getHttpServer())
+        .post('/auth/signup')
+        .send({ email: user.email, password: 'SecurePass123' });
+      expect(again.status).toBe(201);
     });
   });
 });

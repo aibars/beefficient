@@ -7,7 +7,7 @@ import {
   CreateDateColumn,
 } from 'typeorm';
 import { User } from '../users/users.entity';
-import { Farm } from './farms.entity';
+import { Establishment } from '../establishments/establishments.entity';
 
 @Entity('farm_join_codes')
 export class FarmJoinCode {
@@ -29,9 +29,9 @@ export class FarmJoinCode {
   @Column({ name: 'used_at', type: 'timestamp', nullable: true })
   usedAt: Date | null;
 
-  @ManyToOne(() => Farm, { onDelete: 'CASCADE' })
+  @ManyToOne(() => Establishment, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'farm_id' })
-  farm: Farm;
+  farm: Establishment;
 
   @ManyToOne(() => User, { onDelete: 'SET NULL', nullable: true })
   @JoinColumn({ name: 'used_by_id' })

@@ -6,25 +6,21 @@ import {
   JoinColumn,
   CreateDateColumn,
   UpdateDateColumn,
+  Index,
 } from 'typeorm';
 import { User } from '../users/users.entity';
 
-@Entity('farms')
-export class Farm {
+@Entity('companies')
+export class Company {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ type: 'varchar', length: 255 })
-  name: string;
-
-  @Column({ type: 'varchar', length: 100 })
-  provincia: string;
-
+  @Index('idx_companies_owner_id')
   @Column({ name: 'owner_id', type: 'uuid' })
   ownerId: string;
 
   @ManyToOne(() => User, { onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'owner_id' })
+  @JoinColumn({ name: 'owner_id', foreignKeyConstraintName: 'fk_companies_owner_id' })
   owner: User;
 
   @CreateDateColumn({ name: 'created_at' })

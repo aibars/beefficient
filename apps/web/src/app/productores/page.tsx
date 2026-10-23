@@ -2,18 +2,27 @@
 
 import React, { useState, useMemo } from 'react';
 import { Table } from '@/components/Table';
-import { mockProducers } from '@/lib/mockData';
+import { AsyncState } from '@/components/AsyncState';
+import { useAsync } from '@/hooks/useAsync';
+import { getProducers } from '@/services/producers.service';
 import { daysAgo } from '@/lib/utils';
 
 export default function ProductoresPage() {
   const [searchTerm, setSearchTerm] = useState('');
 
+  const [page, setPage] = useState(1);
+  const limit = 50;
+  const result = useAsync(() => getProducers(page, limit), [page]);
+  const producers = result.data?.data ?? [];
+  const total = result.data?.meta.total ?? 0;
+  const totalPages = Math.max(1, Math.ceil(total / limit));
+
   const filteredProducers = useMemo(() => {
-    return mockProducers.filter((p) =>
+    return producers.filter((p) =>
       p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       p.region.toLowerCase().includes(searchTerm.toLowerCase())
     );
-  }, [searchTerm]);
+  }, [producers, searchTerm]);
 
   return (
     <div className="page-productores">
@@ -29,6 +38,9 @@ export default function ProductoresPage() {
         />
       </div>
 
+      <AsyncState loading={result.loading} error={result.error} onRetry={result.retry} />
+
+      {result.data && !result.loading && (
       <Table
         data={filteredProducers}
         columns={[
@@ -68,10 +80,26 @@ export default function ProductoresPage() {
           },
         ]}
       />
+      )}
 
-      <div className="results-info">
-        Mostrando {filteredProducers.length} de {mockProducers.length} productores
-      </div>
+      {result.data && (
+        <>
+          <div className="results-info">
+            Mostrando {filteredProducers.length} de {total} productores
+          </div>
+          {totalPages > 1 && (
+            <div className="pagination">
+              <button type="button" className="retry-button" disabled={page <= 1 || result.loading} onClick={() => setPage((p) => p - 1)}>
+                Anterior
+              </button>
+              <span>Página {page} de {totalPages}</span>
+              <button type="button" className="retry-button" disabled={page >= totalPages || result.loading} onClick={() => setPage((p) => p + 1)}>
+                Siguiente
+              </button>
+            </div>
+          )}
+        </>
+      )}
     </div>
   );
 }

@@ -1,8 +1,4 @@
 {
   "collection": "@nestjs/schematics",
-  "sourceRoot": "src",
-  "compilerOptions": {
-    "assets": ["../database/migrations/**/*.ts"],
-    "watchAssets": true
-  }
+  "sourceRoot": "src"
 }

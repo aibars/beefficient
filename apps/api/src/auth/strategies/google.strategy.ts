@@ -44,8 +44,8 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
         return done(null, user);
       }
 
-      // Create new user with googleId and email
-      user = await this.usersService.create(email, undefined, googleId);
+      // Create new user (and its Company) with googleId and email
+      user = await this.authService.registerUser(email, undefined, googleId);
       return done(null, user);
     } catch (error) {
       return done(error);

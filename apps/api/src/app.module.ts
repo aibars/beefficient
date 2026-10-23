@@ -12,6 +12,10 @@ import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
 import { FarmsModule } from './farms/farms.module';
 import { DevicesModule } from './devices/devices.module';
+import { ProducersModule } from './producers/producers.module';
+import { TechniciansModule } from './technicians/technicians.module';
+import { PricesModule } from './prices/prices.module';
+import { KpisModule } from './kpis/kpis.module';
 
 @Module({
   controllers: [AppController],
@@ -51,6 +55,10 @@ import { DevicesModule } from './devices/devices.module';
     AuthModule,
     FarmsModule,
     DevicesModule,
+    ProducersModule,
+    TechniciansModule,
+    PricesModule,
+    KpisModule,
   ],
 })
 export class AppModule {}
