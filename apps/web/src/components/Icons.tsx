@@ -6,7 +6,7 @@ interface IconProps {
   color?: string;
 }
 
-const iconRegistry: Record<string, (size: number, color: string) => JSX.Element> = {
+const iconRegistry: Record<string, (size: number, color: string) => React.ReactElement> = {
   inicio: (size, color) => (
     <svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" width={size} height={size}>
       <path
@@ -109,7 +109,7 @@ const iconRegistry: Record<string, (size: number, color: string) => JSX.Element>
   internacional: (size, color) => makeStub('int', size, color),
 };
 
-function makeStub(label: string, size: number, color: string): JSX.Element {
+function makeStub(label: string, size: number, color: string): React.ReactElement {
   return (
     <svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" width={size} height={size}>
       <rect width="64" height="64" fill={color} opacity="0.2" />
