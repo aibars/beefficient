@@ -13,7 +13,7 @@
     "typeorm": "typeorm",
     "typeorm:migration:show": "typeorm migration:show -d dist/data-source.js",
     "typeorm:migration:run": "typeorm migration:run -d dist/data-source.js",
-    "typeorm:migration:generate": "typeorm migration:generate -d data-source.ts",
+    "typeorm:migration:generate": "typeorm migration:generate -d dist/data-source.js",
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "test:unit": "jest --testPathIgnorePatterns \"e2e|integration\""
   },

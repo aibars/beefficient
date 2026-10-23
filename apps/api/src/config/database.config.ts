@@ -16,7 +16,7 @@ export class DatabaseConfig {
       entities: isProd ? ['dist/**/*.entity.js'] : ['src/**/*.entity.ts'],
       migrations: isProd ? ['dist/database/migrations/*.js'] : ['database/migrations/*.ts'],
       migrationsRun: !isProd,
-      synchronize: !isProd,
+      synchronize: false,
       logging: !isProd,
       ssl: isProd,
     };
@@ -39,7 +39,7 @@ export const getDatabaseConfig = (): TypeOrmModuleOptions => {
     entities: isProd ? ['dist/**/*.entity.js'] : ['src/**/*.entity.ts'],
     migrations: isProd ? ['dist/database/migrations/*.js'] : ['database/migrations/*.ts'],
     migrationsRun: !isProd,
-    synchronize: !isProd,
+    synchronize: false,
     logging: !isProd,
     ssl: isProd,
   };
