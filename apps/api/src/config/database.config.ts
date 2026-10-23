@@ -15,8 +15,8 @@ export class DatabaseConfig {
       database: configService.get<string>('DATABASE_NAME', 'beefficient'),
       entities: isProd ? ['dist/**/*.entity.js'] : ['src/**/*.entity.ts'],
       migrations: isProd ? ['dist/database/migrations/*.js'] : ['database/migrations/*.ts'],
-      migrationsRun: !isProd,
-      synchronize: false,
+      migrationsRun: isProd,
+      synchronize: !isProd,
       logging: !isProd,
       ssl: isProd,
     };
@@ -38,8 +38,8 @@ export const getDatabaseConfig = (): TypeOrmModuleOptions => {
     database: process.env.DATABASE_NAME || 'beefficient',
     entities: isProd ? ['dist/**/*.entity.js'] : ['src/**/*.entity.ts'],
     migrations: isProd ? ['dist/database/migrations/*.js'] : ['database/migrations/*.ts'],
-    migrationsRun: !isProd,
-    synchronize: false,
+    migrationsRun: isProd,
+    synchronize: !isProd,
     logging: !isProd,
     ssl: isProd,
   };
