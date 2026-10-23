@@ -7,13 +7,13 @@
     "start": "nest start",
     "start:dev": "nest start --watch",
     "start:debug": "nest start --debug --watch",
-    "build": "nest build",
+    "build": "nest build && tsc --skipLibCheck database/migrations/*.ts --outDir dist/database/migrations --declaration false --module commonjs --target es2020 && tsc --skipLibCheck data-source.ts --outDir dist --declaration false --module commonjs --target es2020",
     "test": "jest --runInBand",
     "test:watch": "jest --watch",
     "typeorm": "typeorm",
-    "typeorm:migration:show": "typeorm migration:show",
-    "typeorm:migration:run": "typeorm migration:run",
-    "typeorm:migration:generate": "typeorm migration:generate",
+    "typeorm:migration:show": "typeorm migration:show -d dist/data-source.js",
+    "typeorm:migration:run": "typeorm migration:run -d dist/data-source.js",
+    "typeorm:migration:generate": "typeorm migration:generate -d dist/data-source.js",
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "test:unit": "jest --testPathIgnorePatterns \"e2e|integration\""
   },
@@ -55,6 +55,7 @@
     "jest": "^30.5.2",
     "supertest": "^7.3.1",
     "ts-jest": "^29.4.14",
+    "ts-node": "^10.9.2",
     "typescript": "^5.0.0"
   },
   "private": true

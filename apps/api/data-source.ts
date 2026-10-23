@@ -3,6 +3,9 @@ import * as dotenv from 'dotenv';
 
 dotenv.config();
 
+// TypeORM CLI needs compiled .js files; development uses TypeScript via ts-jest
+const useCompiledFiles = process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'test';
+
 export const AppDataSource = new DataSource({
   type: 'postgres',
   host: process.env.DATABASE_HOST || 'localhost',
@@ -10,8 +13,8 @@ export const AppDataSource = new DataSource({
   username: process.env.DATABASE_USER || 'postgres',
   password: process.env.DATABASE_PASSWORD || 'postgres',
   database: process.env.DATABASE_NAME || 'beefficient',
-  entities: ['src/**/*.entity.ts'],
-  migrations: ['database/migrations/*.ts'],
+  entities: useCompiledFiles ? ['dist/**/*.entity.js'] : ['src/**/*.entity.ts'],
+  migrations: useCompiledFiles ? ['dist/database/migrations/*.js'] : ['database/migrations/*.ts'],
   migrationsRun: false,
   synchronize: false,
   logging: false,
