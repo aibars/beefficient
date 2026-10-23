@@ -3,9 +3,8 @@ import * as dotenv from 'dotenv';
 
 dotenv.config();
 
-const nodeEnv = process.env.NODE_ENV || 'development';
-const isDev = nodeEnv === 'development';
-
+// Used by the typeorm CLI scripts, which always run through ts-node, so it
+// reads the TypeScript sources in every environment.
 export const AppDataSource = new DataSource({
   type: 'postgres',
   host: process.env.DATABASE_HOST || 'localhost',
@@ -13,9 +12,12 @@ export const AppDataSource = new DataSource({
   username: process.env.DATABASE_USER || 'postgres',
   password: process.env.DATABASE_PASSWORD || 'postgres',
   database: process.env.DATABASE_NAME || 'beefficient',
-  entities: isDev ? ['src/**/*.entity.ts'] : ['dist/**/*.entity.js'],
-  migrations: isDev ? ['database/migrations/*.ts'] : ['dist/database/migrations/*.js'],
+  entities: ['src/**/*.entity.ts'],
+  migrations: ['src/database/migrations/*.ts'],
   migrationsRun: false,
   synchronize: false,
   logging: false,
+  ssl: process.env.DATABASE_SSL
+    ? process.env.DATABASE_SSL === 'true'
+    : process.env.NODE_ENV === 'production',
 });

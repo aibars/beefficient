@@ -54,7 +54,7 @@ describe('UserFarm and establishments.join_code', () => {
       database: process.env.DATABASE_NAME,
       entities: [join(__dirname, '..', '**', '*.entity.ts')],
       migrations: [
-        join(__dirname, '..', '..', 'database', 'migrations', '*.ts'),
+        join(__dirname, '..', 'database', 'migrations', '*.ts'),
       ],
       migrationsRun: true,
       synchronize: false,

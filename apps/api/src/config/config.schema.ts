@@ -18,6 +18,8 @@ export const configSchema = Joi.object({
     .required(),
   DATABASE_NAME: Joi.string()
     .required(),
+  // Optional: defaults to on in production and off elsewhere.
+  DATABASE_SSL: Joi.boolean(),
   JWT_ACCESS_SECRET: Joi.string()
     .required(),
   JWT_ACCESS_EXPIRATION: Joi.number()

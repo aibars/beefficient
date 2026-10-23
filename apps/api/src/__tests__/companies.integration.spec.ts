@@ -5,8 +5,7 @@ import { Company } from 'src/companies/companies.entity';
 import { User } from 'src/users/users.entity';
 
 // Builds its own DataSource from the TypeScript sources (like data-source.ts)
-// instead of booting AppModule, whose ORM config points at dist/ and forces SSL
-// outside development.
+// instead of booting AppModule, to test the entities without the whole app.
 describe('Company', () => {
   jest.setTimeout(30000);
 
@@ -25,7 +24,7 @@ describe('Company', () => {
       password: process.env.DATABASE_PASSWORD,
       database: process.env.DATABASE_NAME,
       entities: [join(__dirname, '..', '**', '*.entity.ts')],
-      migrations: [join(__dirname, '..', '..', 'database', 'migrations', '*.ts')],
+      migrations: [join(__dirname, '..', 'database', 'migrations', '*.ts')],
       migrationsRun: true,
       synchronize: false,
       logging: false,
