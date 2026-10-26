@@ -14,8 +14,9 @@ export const AppDataSource = new DataSource({
   database: process.env.DATABASE_NAME || 'beefficient',
   entities: ['src/**/*.entity.ts'],
   migrations: ['src/database/migrations/*.ts'],
-  migrationsRun: false,
-  synchronize: false,
+  // Development: auto-sync schema from entities; Production: run migrations
+  migrationsRun: process.env.NODE_ENV === 'production',
+  synchronize: process.env.NODE_ENV !== 'production',
   logging: false,
   ssl: process.env.DATABASE_SSL
     ? process.env.DATABASE_SSL === 'true'
