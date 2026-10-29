@@ -32,11 +32,9 @@ describe('tablas de referencia', () => {
     }
   });
 
-  it('COCIMANO transcribe el CORC del Engine salvo la celda corregida', () => {
-    const esperado = JSON.parse(JSON.stringify(Engine.CORC)); // lib ES2022: sin structuredClone
-    esperado[450][5][3] = 1.97;
-    expect(COCIMANO).toEqual(esperado);
-    expect(COCIMANO[450][5]![3]).toBe(1.97);
+  it('COCIMANO transcribe el CORC del Engine, sin correcciones hasta BFC-58', () => {
+    expect(COCIMANO).toEqual(Engine.CORC);
+    expect(COCIMANO[450][5]![3]).toBe(1.87);
   });
 
   it('vaquillonas livianas, %PV y supuestos coinciden con el Engine', () => {

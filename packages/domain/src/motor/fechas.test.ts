@@ -8,6 +8,8 @@ describe('fechas', () => {
     expect(etiquetaMes(diaDe('2026-04-01')!, diaDe('2026-05-01')!)).toBe('abril 2026');
     expect(etiquetaMes(diaDe('2026-03-20')!, diaDe('2026-05-10')!)).toBe('mar a may 2026');
     expect(etiquetaMes(diaDe('2026-04-01')!, null)).toBe('abril 2026');
+    expect(etiquetaMes(diaDe('2026-04-01')!, diaDe('2026-04-01')!)).toBe('abril 2026');
+    expect(etiquetaMes(diaDe('2026-04-01')!, diaDe('2026-03-25')!)).toBe('abril 2026');
   });
 
   it('mesDelCiclo = MOD(mes − servicio + 3; 12) + 1', () => {
@@ -22,6 +24,10 @@ describe('fechas', () => {
     expect(diaDe('2026-03-01')).toBe(Engine.dayOf('2026-03-01'));
     expect(fechaDe(diaDe('2024-02-29')!)).toBe('2024-02-29');
     expect(diaDe('2026-3-1')).toBeNull();
+    expect(diaDe('2026-02-30')).toBeNull();
+    expect(diaDe('2026-13-01')).toBeNull();
+    expect(diaDe('2025-02-29')).toBeNull();
+    expect(diaDe('2024-02-29')).not.toBeNull();
     expect(diaDe(null)).toBeNull();
   });
 });

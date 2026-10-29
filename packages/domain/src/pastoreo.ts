@@ -4,11 +4,10 @@ import type { FechaISO, Lote, Pastoreo, Rodeo } from './tipos';
 const MS_POR_DIA = 86_400_000;
 
 /**
- * Eficiencia de cosecha por defecto de la planilla CREA (fracción).
- *
- * @deprecated Es una fracción (0,5). El motor usa EFICIENCIA_COSECHA_POR_DEFECTO (50, porcentaje). Se quita cuando BFC-26 y BFC-29 migren las pantallas.
+ * Eficiencia de cosecha por defecto del cálculo simplificado, como fracción (0,5).
+ * No se exporta: el motor la toma como porcentaje (EFICIENCIA_COSECHA_POR_DEFECTO = 50).
  */
-export const EFICIENCIA_COSECHA = 0.5;
+const EFICIENCIA_COSECHA = 0.5;
 
 const aUTC = (fecha: FechaISO): number => {
   const [a, m, d] = fecha.split('-').map(Number);

@@ -11,7 +11,7 @@ it('calcularCampana = filas + resultados en las dos unidades', () => {
   const ctx = crearContexto(c);
   expect(r.filas).toEqual(c.pastoreos.map((p) => calcularFila(p, ctx)));
   expect(r.ev).toEqual(calcularResultados(r.filas, ctx, 'EV'));
-  expect(r.ms.unidad).toBe('MS');
+  expect(r.ms).toEqual(calcularResultados(r.filas, ctx, 'MS'));
 });
 
 it('el paquete exporta el motor y no el Engine de referencia', () => {

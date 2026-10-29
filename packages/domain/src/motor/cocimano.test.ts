@@ -4,9 +4,6 @@ import { evCocimano, evDelMes, usaCocimano } from './cocimano';
 import type { CategoriaRodeo, DuracionServicio, RodeoCampana } from './tipos';
 import { SUPUESTOS_POR_DEFECTO } from './tablas';
 
-// Única diferencia numérica con el Engine: la corrección de la celda 450 kg / 750 g/día / lactancia 7–8.
-Engine.CORC[450][5][3] = 1.97;
-
 function aEngine(r: RodeoCampana) {
   return {
     n: r.nombre, c: r.categoria ?? '', pv: r.pesoVivo, gan: r.ganancia,
@@ -39,8 +36,8 @@ describe('evCocimano', () => {
     expect(conNull.ev).toBe(evCocimano(420, 0, 4, 50).ev);
     expect(conNull.advertencias).toEqual([]);
   });
-  it('el 450 kg / 750 g/día en lactancia 7–8 usa el valor corregido', () => {
-    expect(evCocimano(450, 750, 3, 50).ev).toBeCloseTo(1.97, 12);
+  it('el 450 kg / 750 g/día en lactancia 7–8 usa el valor de la planilla hasta BFC-58', () => {
+    expect(evCocimano(450, 750, 3, 50).ev).toBeCloseTo(1.87, 12);
   });
 });
 

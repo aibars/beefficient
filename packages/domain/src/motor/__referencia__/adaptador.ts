@@ -1,16 +1,11 @@
 // Puente entre el motor y el Engine de referencia de la planilla. Solo para tests de fidelidad.
 import { expect } from 'vitest';
 import Engine from './planilla-engine.cjs';
-import { fechaDe } from '../fechas';
+import { diaDe, etiquetaMes, fechaDe } from '../fechas';
 import { TABLA_1 } from '../tablas';
 import type {
-  Campana, CategoriaRodeo, FilaCalculada, GrupoConsumo, ResultadoLote, ResultadoMes, ResultadoRodeo, ResultadosCampana,
+  Campana, CategoriaRodeo, FilaCalculada, GrupoConsumo, PastoreoCampana, ResultadoLote, ResultadoMes, ResultadoRodeo, ResultadosCampana,
 } from '../tipos';
-
-/** Única desviación permitida: la celda 450 kg / 750 g/día / lactancia 7–8 de Cocimano (1,87 → 1,97). */
-function parchearCocimano(): void {
-  Engine.CORC[450][5][3] = 1.97;
-}
 
 /**
  * Nombre del Engine para un id; un id que no existe da `''`, como si faltara el dato (así lo trata el motor).
@@ -23,7 +18,6 @@ function nombrePorId(lista: readonly { id: string; nombre: string }[], id: strin
 
 /** Arma la campaña en el formato del Engine (vínculos por nombre) y la calcula. */
 export function correrEngine(c: Campana): any {
-  parchearCocimano();
   const tabla1 = c.tabla1 ?? TABLA_1;
   const d = {
     anio: c.anio,
@@ -58,12 +52,17 @@ export function correrEngine(c: Campana): any {
 
 const nulo = <T>(v: T | ''): T | null => (v === '' ? null : v);
 
-/** Una fila de `calcRow` con los nombres de campo del motor y `''` → `null`. */
+/**
+ * Una fila de `calcRow` con los nombres de campo del motor y `''` → `null`.
+ * Desviación documentada: con salida ≤ entrada, el MES es el de la entrada (el Engine da un rango al revés).
+ */
 export function filaDelEngine(
   x: any,
+  p: PastoreoCampana,
 ): Omit<FilaCalculada, 'pastoreoId' | 'advertencias'> & { advertencias: string[] } {
+  const alReves = typeof x.K === 'number' && x.K <= 0;
   return {
-    mes: nulo(x.B),
+    mes: alReves ? etiquetaMes(diaDe(p.entrada)!, null) : nulo(x.B),
     hectareas: nulo(x.D),
     cabezas: nulo(x.F),
     evAutomatico: nulo(x.evAuto),

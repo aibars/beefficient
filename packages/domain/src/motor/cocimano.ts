@@ -1,13 +1,8 @@
 // Cocimano: EV por peso, ganancia y estado fisiológico. Traducción 1 a 1 del Engine de la planilla.
-import { diaDe, sumarMeses } from './fechas';
+import { diaDe, diaUTC, sumarMeses } from './fechas';
+import { esNumero } from './numeros';
 import { COCIMANO, COCIMANO_GANANCIAS, DURACIONES_SERVICIO, COCIMANO_PESOS, COCIMANO_VAQ, COCIMANO_VAQ_PESOS } from './tablas';
 import type { Advertencia, Campana, GrupoConsumo, RodeoCampana, Supuestos } from './tipos';
-
-const DIA_MS = 86400000;
-
-function esNumero(v: unknown): v is number {
-  return typeof v === 'number' && Number.isFinite(v);
-}
 
 function interpolar(xs: readonly number[], ys: readonly number[], x: number): number {
   const n = xs.length;
@@ -70,10 +65,10 @@ function tipoHembra(categoria: string | null): TipoHembra | null {
   return null;
 }
 
-interface ParamsRodeo { tipo: TipoHembra; C: number; P: number; W: number; sup: Supuestos }
+export interface ParamsRodeo { tipo: TipoHembra; C: number; P: number; W: number; sup: Supuestos }
 
-/** Parámetros de la vaca promedio del rodeo. */
-function paramsRodeo(
+/** Parámetros de la vaca promedio del rodeo. Null si no es una categoría de hembra. */
+export function paramsRodeo(
   rodeo: RodeoCampana,
   campana: Pick<Campana, 'anio' | 'mesServicio'>,
   sup: Supuestos,
@@ -81,7 +76,7 @@ function paramsRodeo(
   const tipo = tipoHembra(rodeo.categoria);
   if (!tipo) return null;
   const sRodeo = diaDe(rodeo.inicioServicio);
-  const S = sRodeo != null ? sRodeo : Date.UTC(campana.anio, campana.mesServicio - 1, 1) / DIA_MS;
+  const S = sRodeo != null ? sRodeo : diaUTC(campana.anio, campana.mesServicio, 1);
   const D = DURACIONES_SERVICIO.includes(rodeo.duracionServicio) ? rodeo.duracionServicio : 90;
   const C = S + Math.round(sup.fraccionServicio * D); // concepción media
   const P = C + sup.gestacion; // parto de la vaca promedio
@@ -127,13 +122,22 @@ export function evDelMes(
   anio: number,
   mes: number,
 ): { ev: number; advertencias: Advertencia[]; grupo: GrupoConsumo } | null {
-  const pr = paramsRodeo(rodeo, campana, supuestos);
+  return evDelMesCon(paramsRodeo(rodeo, campana, supuestos), rodeo, anio, mes);
+}
+
+/** Como `evDelMes`, con los parámetros del rodeo ya calculados (se arman una vez por campaña). */
+export function evDelMesCon(
+  pr: ParamsRodeo | null,
+  rodeo: RodeoCampana,
+  anio: number,
+  mes: number,
+): { ev: number; advertencias: Advertencia[]; grupo: GrupoConsumo } | null {
   if (!pr || !esNumero(rodeo.pesoVivo)) return null;
-  const T = Date.UTC(anio, mes - 1, 15) / DIA_MS;
+  const T = diaUTC(anio, mes, 15);
   const e = estadoEn(pr, T);
   const gMes = rodeo.ganancia[mes - 1];
   const g = esNumero(gMes) ? gMes : 0;
-  const r = evCocimano(rodeo.pesoVivo, g, e.col, supuestos.margenExtrapolacion);
+  const r = evCocimano(rodeo.pesoVivo, g, e.col, pr.sup.margenExtrapolacion);
   const grupo: GrupoConsumo = e.st === 'lact' ? 'lact' : e.st === 'gest' ? 'gest' : e.st === 'seca' ? 'seca' : (pr.tipo === 'vaq1' ? 'vaq1' : 'vaq2');
   return { ev: r.ev, advertencias: r.advertencias, grupo };
 }

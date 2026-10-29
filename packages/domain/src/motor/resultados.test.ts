@@ -117,6 +117,13 @@ describe('calcularResultados', () => {
     const c: Campana = { ...manual, pastoreos: [...manual.pastoreos, pastoreo({ id: 'x', loteId: null, entrada: '2024-02-10', salida: '2024-02-20' })] };
     expect(resultados(c).diasAnio).toBe(365);
   });
+
+  it('filas que no corresponden a los pastoreos, en el mismo orden, tiran error', () => {
+    const ctx = crearContexto(manual);
+    const filas = manual.pastoreos.map((p) => calcularFila(p, ctx));
+    expect(() => calcularResultados(filas.slice(1), ctx, 'EV')).toThrow();
+    expect(() => calcularResultados([...filas].reverse(), ctx, 'EV')).toThrow();
+  });
 });
 
 describe('fidelidad con resultados', () => {

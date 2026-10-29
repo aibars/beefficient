@@ -1,15 +1,23 @@
 // Resultados de la campaña por mes, lote y rodeo, en EV o en kg MS (pestañas Resultados de la planilla).
 // Traducción 1 a 1 de `resultados` del Engine de la planilla. La planilla agrupa por nombre; acá, por id.
-import { diaDe, fechaDe, inicioMes, partes, sumarMeses } from './fechas';
+import { diaDe, diasDelAnio, fechaDe, inicioMes, partes, sumarMeses } from './fechas';
 import type { Contexto } from './fila';
-import type { FilaCalculada, ResultadoLote, ResultadoMes, ResultadoRodeo, ResultadosCampana } from './tipos';
-
-function esNumero(v: unknown): v is number {
-  return typeof v === 'number' && Number.isFinite(v);
-}
+import { esNumero } from './numeros';
+import type {
+  FilaCalculada, IndicadoresFila, ResultadoLote, ResultadoMes, ResultadoRodeo, ResultadosCampana,
+} from './tipos';
 
 const orden = new Intl.Collator('es', { sensitivity: 'base' });
 const SIN_RODEO = '(sin rodeo)';
+
+/** Indicadores de una fila en una unidad, con 0 donde no hay número. */
+interface Valores {
+  /** EV o kg MS totales por día. */
+  totales: number;
+  raciones: number;
+  racionesPorHa: number;
+  racionesNumericas: boolean;
+}
 
 /**
  * Un pastoreo con lo que necesitan los resultados. `ok` = completo: entrada, salida posterior y lote.
@@ -21,42 +29,62 @@ interface Registro {
   salida: number | null;
   loteId: string | null;
   rodeoId: string | null;
-  /** EV o kg MS totales por día (0 si no hay). */
-  totales: number;
   cabezas: number;
-  raciones: number;
-  racionesPorHa: number;
-  racionesNumericas: boolean;
+  ev: Valores;
+  ms: Valores;
   /** Días del pastoreo en cada mes de `meses` (solo para los completos). */
   dias: number[];
 }
 
-/**
- * Resultados de la campaña en una unidad. `filas` debe tener el mismo largo y el mismo orden que `ctx.campana.pastoreos`.
- * Solo cuentan los pastoreos completos; sin ninguno, `hayDatos` es false y las listas quedan vacías.
- */
-export function calcularResultados(filas: readonly FilaCalculada[], ctx: Contexto, unidad: 'EV' | 'MS'): ResultadosCampana {
-  const R: ResultadosCampana = {
-    unidad, hayDatos: false, meses: [], diasAnio: 365, superficieTotal: ctx.superficieTotal,
-    eficienciaCosecha: ctx.eficiencia, porMes: [], lotes: [], rodeos: [], cargaAnual: 0, racionesTotales: 0,
-  };
-  const efic = ctx.eficiencia / 100;
+interface CoberturaLote {
+  loteId: string;
+  hectareas: number;
+  /** Pastoreos completos del lote. */
+  mios: Registro[];
+  diasPorMes: number[];
+  dias: number;
+}
 
-  const registros: Registro[] = filas.map((f, i) => {
-    const p = ctx.campana.pastoreos[i];
-    const entrada = diaDe(p?.entrada ?? null);
-    const salida = diaDe(p?.salida ?? null);
-    const loteId = p?.loteId && ctx.lotes.has(p.loteId) ? p.loteId : null;
-    const rodeoId = p?.rodeoId && ctx.rodeos.has(p.rodeoId) ? p.rodeoId : null;
-    const u = unidad === 'MS' ? f.ms : f.ev;
+/** Lo que no depende de la unidad: se arma una vez y sirve para EV y para MS. */
+export interface BaseResultados {
+  ctx: Contexto;
+  registros: Registro[];
+  completos: Registro[];
+  diasAnio: number;
+  /** Primer día de cada mes con pastoreo, y el primer día del mes siguiente. */
+  meses: number[];
+  finMes: number[];
+  lotes: CoberturaLote[];
+  rodeos: ResultadoRodeo[];
+}
+
+function valores(u: IndicadoresFila): Valores {
+  return {
+    totales: esNumero(u.totales) ? u.totales : 0,
+    raciones: esNumero(u.raciones) ? u.raciones : 0,
+    racionesPorHa: esNumero(u.racionesPorHa) ? u.racionesPorHa : 0,
+    racionesNumericas: esNumero(u.raciones),
+  };
+}
+
+/** Arma la base de los resultados. `filas` son las de `ctx.campana.pastoreos`, en el mismo orden; si no, tira error. */
+export function prepararResultados(filas: readonly FilaCalculada[], ctx: Contexto): BaseResultados {
+  const { pastoreos } = ctx.campana;
+  const desalineadas = (): Error => new Error('Las filas no corresponden a los pastoreos de la campaña, en el mismo orden.');
+  if (filas.length !== pastoreos.length) throw desalineadas();
+  const registros = filas.map((f, i): Registro => {
+    const p = pastoreos[i]!;
+    if (f.pastoreoId !== p.id) throw desalineadas();
+    const entrada = diaDe(p.entrada);
+    const salida = diaDe(p.salida);
+    const loteId = p.loteId && ctx.lotes.has(p.loteId) ? p.loteId : null;
+    const rodeoId = p.rodeoId && ctx.rodeos.has(p.rodeoId) ? p.rodeoId : null;
     return {
       ok: entrada != null && salida != null && salida > entrada && loteId != null,
       entrada, salida, loteId, rodeoId,
-      totales: esNumero(u.totales) ? u.totales : 0,
       cabezas: esNumero(f.cabezas) ? f.cabezas : 0,
-      raciones: esNumero(u.raciones) ? u.raciones : 0,
-      racionesPorHa: esNumero(u.racionesPorHa) ? u.racionesPorHa : 0,
-      racionesNumericas: esNumero(u.raciones),
+      ev: valores(f.ev),
+      ms: valores(f.ms),
       dias: [],
     };
   });
@@ -64,14 +92,11 @@ export function calcularResultados(filas: readonly FilaCalculada[], ctx: Context
   // Rareza de la planilla: el año sale de la entrada más temprana con lote, aunque la fila no esté completa.
   let primera = Infinity;
   for (const r of registros) if (r.entrada != null && r.loteId != null && r.entrada < primera) primera = r.entrada;
-  if (primera !== Infinity) {
-    const a = partes(primera).a;
-    R.diasAnio = (Date.UTC(a + 1, 0, 1) - Date.UTC(a, 0, 1)) / 86400000;
-  }
+  const diasAnio = primera !== Infinity ? diasDelAnio(partes(primera).a) : 365;
 
   const completos = registros.filter((r) => r.ok);
-  if (!completos.length) return R;
-  R.hayDatos = true;
+  const base: BaseResultados = { ctx, registros, completos, diasAnio, meses: [], finMes: [], lotes: [], rodeos: [] };
+  if (!completos.length) return base;
 
   let mn = Infinity, mx = -Infinity;
   for (const r of completos) {
@@ -81,34 +106,16 @@ export function calcularResultados(filas: readonly FilaCalculada[], ctx: Context
   const meses: number[] = [];
   for (let m = inicioMes(mn), ultimo = inicioMes(mx - 1); m <= ultimo; m = sumarMeses(m, 1)) meses.push(m);
   const finMes = meses.map((m) => sumarMeses(m, 1));
-  R.meses = meses.map(fechaDe);
   for (const r of completos) {
     r.dias = meses.map((m, k) => Math.max(Math.min(r.salida!, finMes[k]!) - Math.max(r.entrada!, m), 0));
   }
-
-  const racionesPorMes = (rs: readonly Registro[]): number[] =>
-    meses.map((_, k) => rs.reduce((s, r) => s + r.totales * r.dias[k]!, 0));
-  const racMes = racionesPorMes(completos);
-  R.porMes = meses.map((m, k): ResultadoMes => {
-    let evDias = 0;
-    for (const r of completos) evDias += r.dias[k]! * r.totales;
-    const promedio = evDias / (finMes[k]! - m);
-    return {
-      mes: fechaDe(m), promedio, carga: ctx.superficieTotal ? promedio / ctx.superficieTotal : null,
-      raciones: racMes[k]!, oferta: racMes[k]! / efic,
-    };
-  });
-  R.racionesTotales = completos.reduce((s, r) => s + r.raciones, 0);
-  R.cargaAnual = ctx.superficieTotal
-    ? completos.reduce((s, r) => s + r.totales * (r.salida! - r.entrada!), 0) / (ctx.superficieTotal * R.diasAnio)
-    : 0;
 
   // Lotes, en orden de primera aparición y después por nombre (sort estable, como el Engine).
   const idsLote: string[] = [];
   for (const r of completos) if (!idsLote.includes(r.loteId!)) idsLote.push(r.loteId!);
   const nombreLote = (id: string): string => ctx.lotes.get(id)!.nombre;
   idsLote.sort((a, b) => orden.compare(nombreLote(a), nombreLote(b)));
-  R.lotes = idsLote.map((loteId): ResultadoLote => {
+  const lotes = idsLote.map((loteId): CoberturaLote => {
     const mios = completos.filter((r) => r.loteId === loteId);
     // Cobertura por día: dos pastoreos superpuestos no cuentan dos veces el mismo día.
     const cubierto = new Uint8Array(mx - mn);
@@ -118,27 +125,8 @@ export function calcularResultados(filas: readonly FilaCalculada[], ctx: Context
       for (let d = Math.max(m, mn), fin = Math.min(finMes[k]!, mx); d < fin; d++) c += cubierto[d - mn]!;
       return c;
     });
-    const dias = diasPorMes.reduce((s, v) => s + v, 0);
-    const evDias = mios.reduce((s, r) => s + r.totales * (r.salida! - r.entrada!), 0);
     const ha = ctx.lotes.get(loteId)!.hectareas;
-    const hectareas = esNumero(ha) ? ha : 0;
-    const q = evDias / (hectareas * dias);
-    const racionesPorHa = mios.reduce((s, r) => s + r.racionesPorHa, 0);
-    const raciones = mios.reduce((s, r) => s + r.raciones, 0);
-    const racionesMes = racionesPorMes(mios);
-    // Rareza de la planilla: cuenta todas las filas del lote con raciones numéricas, aunque no estén completas.
-    const pastoreos = registros.filter((r) => r.loteId === loteId && r.racionesNumericas).length;
-    return {
-      loteId, hectareas, diasPorMes, dias,
-      diasLibres: R.diasAnio - dias,
-      ocupacion: dias / R.diasAnio,
-      carga: Number.isFinite(q) ? q : 0,
-      raciones, racionesPorHa, racionesPorMes: racionesMes,
-      oferta: raciones / efic, ofertaPorHa: racionesPorHa / efic, ofertaPorMes: racionesMes.map((v) => v / efic),
-      pastoreos,
-      racionesPromedio: pastoreos ? raciones / pastoreos : 0,
-      racionesPorHaPromedio: pastoreos ? racionesPorHa / pastoreos : 0,
-    };
+    return { loteId, hectareas: esNumero(ha) ? ha : 0, mios, diasPorMes, dias: diasPorMes.reduce((s, v) => s + v, 0) };
   });
 
   // Rodeos; los pastoreos sin rodeo forman un grupo que ordena como «(sin rodeo)».
@@ -146,12 +134,70 @@ export function calcularResultados(filas: readonly FilaCalculada[], ctx: Context
   for (const r of completos) if (!idsRodeo.includes(r.rodeoId)) idsRodeo.push(r.rodeoId);
   const nombreRodeo = (id: string | null): string => (id == null ? SIN_RODEO : ctx.rodeos.get(id)!.nombre);
   idsRodeo.sort((a, b) => orden.compare(nombreRodeo(a), nombreRodeo(b)));
-  R.rodeos = idsRodeo.map((rodeoId): ResultadoRodeo => ({
+  const rodeos = idsRodeo.map((rodeoId): ResultadoRodeo => ({
     rodeoId,
     categoria: rodeoId == null ? null : ctx.rodeos.get(rodeoId)!.categoria,
     // Cabezas presentes el primer día de cada mes.
     cabezasPorMes: meses.map((m) => completos.reduce(
       (s, r) => s + (r.rodeoId === rodeoId && r.entrada! <= m && m < r.salida! ? r.cabezas : 0), 0)),
   }));
+
+  return { ...base, meses, finMes, lotes, rodeos };
+}
+
+/**
+ * Resultados de la campaña en una unidad, a partir de la base.
+ * Solo cuentan los pastoreos completos; sin ninguno, `hayDatos` es false y las listas quedan vacías.
+ */
+export function resultadosEn(base: BaseResultados, unidad: 'EV' | 'MS'): ResultadosCampana {
+  const { ctx, registros, completos, diasAnio, meses, finMes } = base;
+  const R: ResultadosCampana = {
+    unidad, hayDatos: completos.length > 0, meses: meses.map(fechaDe), diasAnio, superficieTotal: ctx.superficieTotal,
+    eficienciaCosecha: ctx.eficiencia, porMes: [], lotes: [], rodeos: base.rodeos, cargaAnual: 0, racionesTotales: 0,
+  };
+  if (!R.hayDatos) return R;
+  const efic = ctx.eficiencia / 100;
+  const v = (r: Registro): Valores => (unidad === 'MS' ? r.ms : r.ev);
+
+  const racionesPorMes = (rs: readonly Registro[]): number[] =>
+    meses.map((_, k) => rs.reduce((s, r) => s + v(r).totales * r.dias[k]!, 0));
+  const racMes = racionesPorMes(completos);
+  R.porMes = meses.map((m, k): ResultadoMes => {
+    const promedio = racMes[k]! / (finMes[k]! - m);
+    return {
+      mes: fechaDe(m), promedio, carga: ctx.superficieTotal ? promedio / ctx.superficieTotal : null,
+      raciones: racMes[k]!, oferta: racMes[k]! / efic,
+    };
+  });
+  R.racionesTotales = completos.reduce((s, r) => s + v(r).raciones, 0);
+  R.cargaAnual = ctx.superficieTotal
+    ? completos.reduce((s, r) => s + v(r).totales * (r.salida! - r.entrada!), 0) / (ctx.superficieTotal * diasAnio)
+    : 0;
+
+  R.lotes = base.lotes.map(({ loteId, hectareas, mios, diasPorMes, dias }): ResultadoLote => {
+    const evDias = mios.reduce((s, r) => s + v(r).totales * (r.salida! - r.entrada!), 0);
+    const q = evDias / (hectareas * dias);
+    const racionesPorHa = mios.reduce((s, r) => s + v(r).racionesPorHa, 0);
+    const raciones = mios.reduce((s, r) => s + v(r).raciones, 0);
+    const racionesMes = racionesPorMes(mios);
+    // Rareza de la planilla: cuenta todas las filas del lote con raciones numéricas, aunque no estén completas.
+    const pastoreos = registros.filter((r) => r.loteId === loteId && v(r).racionesNumericas).length;
+    return {
+      loteId, hectareas, diasPorMes, dias,
+      diasLibres: diasAnio - dias,
+      ocupacion: dias / diasAnio,
+      carga: Number.isFinite(q) ? q : 0,
+      raciones, racionesPorHa, racionesPorMes: racionesMes,
+      oferta: raciones / efic, ofertaPorHa: racionesPorHa / efic, ofertaPorMes: racionesMes.map((x) => x / efic),
+      pastoreos,
+      racionesPromedio: pastoreos ? raciones / pastoreos : 0,
+      racionesPorHaPromedio: pastoreos ? racionesPorHa / pastoreos : 0,
+    };
+  });
   return R;
+}
+
+/** Resultados en una unidad. `filas` son las de `ctx.campana.pastoreos`, en el mismo orden; si no, tira error. */
+export function calcularResultados(filas: readonly FilaCalculada[], ctx: Contexto, unidad: 'EV' | 'MS'): ResultadosCampana {
+  return resultadosEn(prepararResultados(filas, ctx), unidad);
 }

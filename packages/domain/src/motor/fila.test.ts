@@ -87,13 +87,26 @@ describe('calcularFila', () => {
       mes: 'abril 2026', dias: null, evPorCabeza: 1.3, ev: { totales: 13, raciones: null, racionesPorHa: null, carga: 1.3 },
     });
     const alReves = con(manual, { salida: '2026-03-25' });
-    expect(calcularFila(alReves.p, alReves.ctx)).toMatchObject({ dias: -7, evPorCabeza: 1.3, ev: { raciones: -91 } });
+    expect(calcularFila(alReves.p, alReves.ctx)).toMatchObject({ mes: 'abril 2026', dias: -7, evPorCabeza: 1.3, ev: { raciones: -91 } });
+    const mismoDia = con(manual, { salida: manual.pastoreos[0]!.entrada });
+    expect(calcularFila(mismoDia.p, mismoDia.ctx)).toMatchObject({ mes: 'abril 2026', dias: 0 });
   });
 
-  it('eficiencia fuera de (0, 100] vale 50', () => {
+  it('eficiencia fuera de [1, 100] vale 50; una fracción no se toma como porcentaje', () => {
     expect(crearContexto({ ...manual, eficienciaCosecha: 0 }).eficiencia).toBe(50);
+    expect(crearContexto({ ...manual, eficienciaCosecha: 0.5 }).eficiencia).toBe(50);
     expect(crearContexto({ ...manual, eficienciaCosecha: 101 }).eficiencia).toBe(50);
+    expect(crearContexto({ ...manual, eficienciaCosecha: 1 }).eficiencia).toBe(1);
     expect(crearContexto({ ...manual, eficienciaCosecha: 100 }).eficiencia).toBe(100);
+  });
+
+  it('mes de servicio y supuestos se normalizan como en la planilla', () => {
+    expect(crearContexto({ ...manual, mesServicio: 0 }).campana.mesServicio).toBe(1);
+    expect(crearContexto({ ...manual, mesServicio: 13 }).campana.mesServicio).toBe(1);
+    expect(crearContexto({ ...manual, mesServicio: Number.NaN }).campana.mesServicio).toBe(1);
+    expect(crearContexto({ ...manual, mesServicio: 10.6 }).campana.mesServicio).toBe(11);
+    expect(crearContexto({ ...manual, supuestos: { diasPorMes: 0 } }).supuestos.diasPorMes).toBe(30.4375);
+    expect(crearContexto({ ...manual, supuestos: { diasPorMes: 30 } }).supuestos.diasPorMes).toBe(30);
   });
 });
 
@@ -110,6 +123,6 @@ describe('fidelidad con calcRow', () => {
     const ref = correrEngine(c);
     const ctx = crearContexto(c);
     expect(ref.calc).toHaveLength(c.pastoreos.length);
-    c.pastoreos.forEach((p, i) => expectParecido(calcularFila(p, ctx), filaDelEngine(ref.calc[i]), `fila ${i}`));
+    c.pastoreos.forEach((p, i) => expectParecido(calcularFila(p, ctx), filaDelEngine(ref.calc[i], p), `fila ${i}`));
   });
 });

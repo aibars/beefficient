@@ -1,5 +1,5 @@
 import { calcularFila, crearContexto } from './fila';
-import { calcularResultados } from './resultados';
+import { prepararResultados, resultadosEn } from './resultados';
 import type { Campana, CalculoCampana } from './tipos';
 
 export * from './tipos';
@@ -11,5 +11,6 @@ export { etiquetaMes, mesDelCiclo } from './fechas';
 export function calcularCampana(campana: Campana): CalculoCampana {
   const ctx = crearContexto(campana);
   const filas = campana.pastoreos.map((p) => calcularFila(p, ctx));
-  return { filas, ev: calcularResultados(filas, ctx, 'EV'), ms: calcularResultados(filas, ctx, 'MS') };
+  const base = prepararResultados(filas, ctx);
+  return { filas, ev: resultadosEn(base, 'EV'), ms: resultadosEn(base, 'MS') };
 }

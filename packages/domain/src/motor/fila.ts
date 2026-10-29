@@ -1,19 +1,17 @@
 // Una fila de la Planilla de Pastoreo (columnas B, D, F, I a N y su equivalente en kg MS).
-// Traducción 1 a 1 de `vigente`, `contexto`, `msKeyCat` y `calcRow` del Engine de la planilla.
-import { evDelMes, usaCocimano } from './cocimano';
+// Traducción de `vigente`, `contexto`, `msKeyCat` y `calcRow` del Engine de la planilla; las diferencias están en CalculoDePastoreo.mdx.
+import { evDelMesCon, paramsRodeo, usaCocimano, type ParamsRodeo } from './cocimano';
 import { diaDe, etiquetaMes, inicioMes, mesDelCiclo, partes, sumarMeses } from './fechas';
+import { esNumero } from './numeros';
 import { CONSUMO_POR_DEFECTO, EFICIENCIA_COSECHA_POR_DEFECTO, SUPUESTOS_POR_DEFECTO, TABLA_1 } from './tablas';
 import type {
   Advertencia, Campana, ConsumoGrupo, FilaCalculada, FilaTabla1, GrupoConsumo,
   LoteCampana, PastoreoCampana, PorMes, RodeoCampana, Supuestos,
 } from './tipos';
 
-function esNumero(v: unknown): v is number {
-  return typeof v === 'number' && Number.isFinite(v);
-}
-
 /** Datos de la campaña ya resueltos, compartidos por todas las filas. */
 export interface Contexto {
+  /** La campaña con `mesServicio` ya normalizado. */
   campana: Campana;
   supuestos: Supuestos;
   consumo: Readonly<Record<GrupoConsumo, ConsumoGrupo>>;
@@ -22,9 +20,11 @@ export interface Contexto {
   vigente: Map<string, PorMes<number | null>>;
   lotes: Map<string, LoteCampana>;
   rodeos: Map<string, RodeoCampana>;
+  /** Parámetros de Cocimano de cada rodeo, por id; null si no es una categoría de hembra. */
+  paramsRodeo: Map<string, ParamsRodeo | null>;
   /** Suma de las hectáreas de todos los lotes; un lote sin hectáreas suma 0. */
   superficieTotal: number;
-  /** Eficiencia de cosecha en %; fuera de (0, 100] vale 50. */
+  /** Eficiencia de cosecha en %; fuera de [1, 100] vale 50. */
   eficiencia: number;
 }
 
@@ -43,11 +43,15 @@ function vigenteDe(fila: FilaTabla1, mesServicio: number): (number | null)[] {
 }
 
 /** Arma el contexto de cálculo aplicando los valores por defecto de la planilla. */
-export function crearContexto(campana: Campana): Contexto {
+export function crearContexto(dada: Campana): Contexto {
+  // Como normCamp: el mes de servicio se redondea y, fuera de 1 a 12, vale 1.
+  const ms = Math.round(dada.mesServicio);
+  const campana: Campana = { ...dada, mesServicio: ms >= 1 && ms <= 12 ? ms : 1 };
   const supuestos: Supuestos = { ...SUPUESTOS_POR_DEFECTO };
   for (const k of Object.keys(SUPUESTOS_POR_DEFECTO) as (keyof Supuestos)[]) {
     const v = campana.supuestos?.[k];
-    if (esNumero(v)) supuestos[k] = v;
+    // diasPorMes ≤ 0 da NaN en Cocimano; la planilla no lo valida.
+    if (esNumero(v) && (k !== 'diasPorMes' || v > 0)) supuestos[k] = v;
   }
   // Como normPvms: un peso o %PV que no es número toma el valor por defecto del grupo.
   const consumo = { ...CONSUMO_POR_DEFECTO };
@@ -70,6 +74,9 @@ export function crearContexto(campana: Campana): Contexto {
   }
   const rodeos = new Map<string, RodeoCampana>();
   for (const r of campana.rodeos) if (!rodeos.has(r.id)) rodeos.set(r.id, r);
+  const params = new Map<string, ParamsRodeo | null>();
+  for (const [id, r] of rodeos) params.set(id, paramsRodeo(r, campana, supuestos));
+  // Es un porcentaje: una fracción como 0,5 queda fuera de rango y vale 50 (la planilla acepta (0, 100]).
   const ef = campana.eficienciaCosecha;
   return {
     campana,
@@ -79,8 +86,9 @@ export function crearContexto(campana: Campana): Contexto {
     vigente,
     lotes,
     rodeos,
+    paramsRodeo: params,
     superficieTotal,
-    eficiencia: ef > 0 && ef <= 100 ? ef : EFICIENCIA_COSECHA_POR_DEFECTO,
+    eficiencia: ef >= 1 && ef <= 100 ? ef : EFICIENCIA_COSECHA_POR_DEFECTO,
   };
 }
 
@@ -121,7 +129,7 @@ export function calcularFila(pastoreo: PastoreoCampana, ctx: Contexto): FilaCalc
       let ev: number | null = null;
       let grupo: GrupoConsumo | null = null;
       if (cocimano) {
-        const e = evDelMes(rodeo, ctx.campana, ctx.supuestos, p.a, p.m);
+        const e = evDelMesCon(ctx.paramsRodeo.get(rodeo.id) ?? null, rodeo, p.a, p.m);
         if (e) {
           ev = e.ev;
           grupo = e.grupo;

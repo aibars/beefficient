@@ -59,9 +59,9 @@ export interface Supuestos {
 
 export interface Campana {
   anio: number;
-  /** Mes de servicio, de 1 a 12 (enero = 1; no es `Date.getMonth()`). No se valida: un valor fuera de rango da resultados sin sentido. */
+  /** Mes de servicio, de 1 a 12 (enero = 1; no es `Date.getMonth()`). Se redondea; fuera de 1 a 12 vale 1, como en la planilla. */
   mesServicio: number;
-  /** % (1 a 100) */
+  /** Porcentaje, de 1 a 100 (50, no 0,5). Fuera de ese rango vale 50. */
   eficienciaCosecha: number;
   lotes: readonly LoteCampana[];
   rodeos: readonly RodeoCampana[];
