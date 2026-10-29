@@ -90,6 +90,17 @@ describe('calcularResultados', () => {
     expect(r.diasAnio).toBe(365);
   });
 
+  it('lotes y rodeos salen ordenados por nombre, no por id', () => {
+    const c: Campana = {
+      ...manual,
+      lotes: [{ id: 'A', nombre: 'Zeta', hectareas: 40 }, { id: 'B', nombre: 'Alfa', hectareas: 10 }],
+      rodeos: [{ ...manual.rodeos[0]!, nombre: 'Zorro' }, { ...manual.rodeos[1]!, nombre: 'Alce' }],
+    };
+    const r = resultados(c);
+    expect(r.lotes.map((l) => l.loteId)).toEqual(['B', 'A']);
+    expect(r.rodeos.map((x) => x.rodeoId)).toEqual(['V', 'T']);
+  });
+
   it('un rodeo que no existe va al grupo «sin rodeo»', () => {
     const c: Campana = { ...manual, pastoreos: [...manual.pastoreos, pastoreo({ id: 'x', rodeoId: 'no-existe' })] };
     const r = resultados(c);
@@ -100,6 +111,11 @@ describe('calcularResultados', () => {
   it('los días del año salen del año de la primera entrada con lote, aunque la fila no esté completa', () => {
     const c: Campana = { ...manual, pastoreos: [...manual.pastoreos, pastoreo({ id: 'x', entrada: '2024-12-31', salida: null })] };
     expect(resultados(c).diasAnio).toBe(366);
+  });
+
+  it('una entrada sin lote, aunque sea anterior y de un año bisiesto, no cambia los días del año', () => {
+    const c: Campana = { ...manual, pastoreos: [...manual.pastoreos, pastoreo({ id: 'x', loteId: null, entrada: '2024-02-10', salida: '2024-02-20' })] };
+    expect(resultados(c).diasAnio).toBe(365);
   });
 });
 

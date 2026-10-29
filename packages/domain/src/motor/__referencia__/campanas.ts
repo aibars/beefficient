@@ -171,10 +171,10 @@ function mulberry32(semilla: number): () => number {
 }
 
 const GRUPOS: readonly GrupoConsumo[] = ['lact', 'seca', 'gest', 'vaq2', 'vaq1', 'toro', 'tern', 'novt', 'nov'];
-const DIA_MIN = diaDe('2025-06-01')!;
-const DIA_MAX = diaDe('2027-06-30')!;
+const DIA_MIN = diaDe('2023-06-01')!;
+const DIA_MAX = diaDe('2028-06-30')!;
 
-/** Campaña al azar, reproducible por semilla. Nombres de lote, rodeo y fila de Tabla 1 únicos. */
+/** Campaña al azar, reproducible por semilla. Nombres de lote, rodeo y fila de Tabla 1 únicos; el orden por nombre de lotes y rodeos es el inverso del de los ids. */
 export function campanaAleatoria(semilla: number): Campana {
   const azar = mulberry32(semilla);
   const entero = (min: number, max: number): number => min + Math.floor(azar() * (max - min + 1));
@@ -186,13 +186,13 @@ export function campanaAleatoria(semilla: number): Campana {
     Array.from({ length: 12 }, () => (prob(pNull) ? null : redondo(min, max, dec)));
 
   const lotes: LoteCampana[] = Array.from({ length: entero(1, 4) }, (_, i) => ({
-    id: `l${i}`, nombre: `Lote ${i}`,
+    id: `l${i}`, nombre: `Lote ${'zyxw'[i]}`,
     hectareas: prob(0.2) ? null : prob(0.05) ? 0 : redondo(1, 300, prob(0.5) ? 0 : 1),
   }));
 
   const hembras: readonly CategoriaRodeo[] = CATEGORIAS_RODEO.slice(0, 4);
   const rodeos: RodeoCampana[] = Array.from({ length: entero(1, 5) }, (_, i) => ({
-    id: `r${i}`, nombre: `Rodeo ${i}`,
+    id: `r${i}`, nombre: `Rodeo ${'edcba'[i]}`,
     categoria: prob(0.08) ? null : prob(0.6) ? elegir(hembras) : elegir(CATEGORIAS_RODEO),
     pesoVivo: prob(0.15) ? null : entero(80, 720),
     ganancia: prob(0.3) ? SIN_DATO : porMes(0.3, prob(0.15) ? -600 : -200, prob(0.15) ? 1500 : 800, 0),
@@ -239,7 +239,7 @@ export function campanaAleatoria(semilla: number): Campana {
     };
   });
 
-  const consumo: Record<GrupoConsumo, ConsumoGrupo> | undefined = prob(0.2)
+  const consumo: Partial<Record<GrupoConsumo, ConsumoGrupo>> | undefined = prob(0.2)
     ? Object.fromEntries(GRUPOS.map((g) => [g, { pesoVivo: entero(150, 750), pct: redondo(1.5, 3, 2) }])) as Record<GrupoConsumo, ConsumoGrupo>
     : undefined;
 

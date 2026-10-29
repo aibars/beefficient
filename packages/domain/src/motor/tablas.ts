@@ -87,7 +87,7 @@ export const COCIMANO_VAQ: Readonly<Record<150 | 200 | 250, readonly number[]>> 
 export const COCIMANO_VAQ_PESOS = [150, 200, 250] as const;
 
 /** Consumo de MS: peso vivo (kg) y %PV por grupo; referencia orientativa, pastura de buena calidad. */
-export const CONSUMO_POR_DEFECTO: Readonly<Record<GrupoConsumo, ConsumoGrupo>> = {
+export const CONSUMO_POR_DEFECTO: Readonly<Record<GrupoConsumo, Readonly<ConsumoGrupo>>> = {
   lact: { pesoVivo: 450, pct: 2.7 },
   seca: { pesoVivo: 450, pct: 2 },
   gest: { pesoVivo: 450, pct: 2.2 },
@@ -99,7 +99,7 @@ export const CONSUMO_POR_DEFECTO: Readonly<Record<GrupoConsumo, ConsumoGrupo>> =
   nov: { pesoVivo: 400, pct: 2.4 },
 };
 
-export const SUPUESTOS_POR_DEFECTO: Supuestos = { gestacion: 283, fraccionServicio: 0.4, margenExtrapolacion: 50, diasPorMes: 30.4375 };
+export const SUPUESTOS_POR_DEFECTO: Readonly<Supuestos> = { gestacion: 283, fraccionServicio: 0.4, margenExtrapolacion: 50, diasPorMes: 30.4375 };
 
 export const CATEGORIAS_RODEO: readonly CategoriaRodeo[] = ['Vaca', 'Vaquillona 1er servicio', 'Vaquillona 2do servicio', 'Vaquillona de reposición', 'Toro', 'Ternero/a recría', 'Novillito', 'Novillo'];
 

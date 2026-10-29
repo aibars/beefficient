@@ -59,7 +59,7 @@ export interface Supuestos {
 
 export interface Campana {
   anio: number;
-  /** 1 a 12 */
+  /** Mes de servicio, de 1 a 12 (enero = 1; no es `Date.getMonth()`). No se valida: un valor fuera de rango da resultados sin sentido. */
   mesServicio: number;
   /** % (1 a 100) */
   eficienciaCosecha: number;
@@ -68,7 +68,7 @@ export interface Campana {
   pastoreos: readonly PastoreoCampana[];
   /** Por defecto: TABLA_1. Categorías propias = filas agregadas al final. */
   tabla1?: readonly FilaTabla1[];
-  consumo?: Readonly<Record<GrupoConsumo, ConsumoGrupo>>;
+  consumo?: Readonly<Partial<Record<GrupoConsumo, ConsumoGrupo>>>;
   supuestos?: Partial<Supuestos>;
 }
 

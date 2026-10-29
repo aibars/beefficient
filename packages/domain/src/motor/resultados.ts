@@ -32,7 +32,7 @@ interface Registro {
 }
 
 /**
- * Resultados de la campaña en una unidad. `filas` viene en el mismo orden que `ctx.campana.pastoreos`.
+ * Resultados de la campaña en una unidad. `filas` debe tener el mismo largo y el mismo orden que `ctx.campana.pastoreos`.
  * Solo cuentan los pastoreos completos; sin ninguno, `hayDatos` es false y las listas quedan vacías.
  */
 export function calcularResultados(filas: readonly FilaCalculada[], ctx: Contexto, unidad: 'EV' | 'MS'): ResultadosCampana {

@@ -1,6 +1,6 @@
 // Cocimano: EV por peso, ganancia y estado fisiológico. Traducción 1 a 1 del Engine de la planilla.
-import { diaDe, partes, sumarMeses } from './fechas';
-import { COCIMANO, COCIMANO_GANANCIAS, COCIMANO_PESOS, COCIMANO_VAQ, COCIMANO_VAQ_PESOS } from './tablas';
+import { diaDe, sumarMeses } from './fechas';
+import { COCIMANO, COCIMANO_GANANCIAS, DURACIONES_SERVICIO, COCIMANO_PESOS, COCIMANO_VAQ, COCIMANO_VAQ_PESOS } from './tablas';
 import type { Advertencia, Campana, GrupoConsumo, RodeoCampana, Supuestos } from './tipos';
 
 const DIA_MS = 86400000;
@@ -82,7 +82,7 @@ function paramsRodeo(
   if (!tipo) return null;
   const sRodeo = diaDe(rodeo.inicioServicio);
   const S = sRodeo != null ? sRodeo : Date.UTC(campana.anio, campana.mesServicio - 1, 1) / DIA_MS;
-  const D = [60, 75, 90, 105, 120].includes(rodeo.duracionServicio) ? rodeo.duracionServicio : 90;
+  const D = DURACIONES_SERVICIO.includes(rodeo.duracionServicio) ? rodeo.duracionServicio : 90;
   const C = S + Math.round(sup.fraccionServicio * D); // concepción media
   const P = C + sup.gestacion; // parto de la vaca promedio
   const wDef = sumarMeses(S, 4); // fin del mes 7 del ciclo (mes de servicio + 3)

@@ -61,12 +61,13 @@ const nulo = <T>(v: T | ''): T | null => (v === '' ? null : v);
 /** Una fila de `calcRow` con los nombres de campo del motor y `''` → `null`. */
 export function filaDelEngine(
   x: any,
-): Omit<FilaCalculada, 'pastoreoId' | 'advertencias' | 'evEsManual'> & { advertencias: string[] } {
+): Omit<FilaCalculada, 'pastoreoId' | 'advertencias'> & { advertencias: string[] } {
   return {
     mes: nulo(x.B),
     hectareas: nulo(x.D),
     cabezas: nulo(x.F),
     evAutomatico: nulo(x.evAuto),
+    evEsManual: x.manual,
     evPorCabeza: nulo(x.I),
     fuenteEv: x.src === 'corc' ? 'cocimano' : x.src === 'tabla' ? 'tabla1' : null,
     advertencias: x.warn,

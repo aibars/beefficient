@@ -22,11 +22,12 @@ no tiene salida, o la salida no es posterior a la entrada, se calcula un solo d�
   EV sale de la tabla de Cocimano según el peso, la ganancia diaria (g/día) del mes y el
   estado fisiológico del mes (lactancia, seca, gestación o vaquillona), evaluado el día 15.
   Entre pesos y ganancias de la tabla se interpola; la ganancia se recorta a los límites de
-  la tabla y el peso se extrapola hasta 50 kg fuera de rango. Las advertencias son
+  la tabla y el peso se extrapola hasta `supuestos.margenExtrapolacion` kg fuera de rango (por
+  defecto, 50). Las advertencias son
   `extrap`, `fuera` y `gan`.
 - **Tabla 1.** Si no, el EV sale de la categoría de la Tabla 1 elegida en el pastoreo, por
-  mes del ciclo (el mes de servicio es el mes 1). Las categorías propias se agregan al
-  final de la tabla.
+  mes del ciclo (el mes de servicio es el mes 4; los meses 1 a 3 son de parición). Las
+  categorías propias se agregan al final de la tabla.
 - **EV a mano.** Si el pastoreo trae un EV manual, reemplaza al automático.
 
 ## Consumo por grupo
@@ -71,13 +72,13 @@ Lo que la planilla deja vacío, el motor lo devuelve como `null`.
 
 ## Resultados de la campaña
 
-`calcularResultados` suma las filas completas (con entrada, salida posterior y lote) y
+`calcularCampana(...).ev` y `.ms` suman las filas completas (con entrada, salida posterior y lote) y
 devuelve lo mismo en EV y en MS.
 
 - **Por mes:** promedio, carga, raciones y oferta de cada mes con pastoreo.
 - **Por lote:** días por mes, días de uso y libres, ocupación, carga, raciones, raciones/ha,
   oferta y oferta/ha (total y por mes), cantidad de pastoreos y promedios por pastoreo.
-- **Por rodeo:** cabezas por mes, por categoría. Un `rodeoId` que no existe va a «sin
+- **Por rodeo:** cabezas por mes (los pastoreos que cubren el día 1 de cada mes), por categoría. Un `rodeoId` que no existe va a «sin
   rodeo».
 - **De la campaña:** superficie total, carga anual y raciones totales.
 
@@ -113,6 +114,19 @@ Datos de ejemplo: Vacas de cría (rodeo V, 100 cabezas, 400 kg, Tabla 1) en el l
 
 Los pesos y %PV de referencia son **valores de ejemplo** a validar con Gastón Alfaro y
 Federico Podversich.
+
+## Pantallas actuales (cálculo simplificado)
+
+Mientras BFC-26 y BFC-29 no migren las pantallas, **Nuevo pastoreo** y la **Planilla**
+siguen con el cálculo simplificado (`calcularPastoreo`). Lo que sigue describe su
+comportamiento actual, no el del motor.
+
+- Los datos se guardan en el teléfono y se sincronizan al volver la señal (ADR 0007).
+- Si la salida no es posterior a la entrada, no hay cálculo: los tiles muestran «—», la
+  barra inferior pide revisar las fechas y Guardar queda deshabilitado.
+- «El rodeo sigue en otro lote» (`buscarSuperposicion`): hay un pastoreo del mismo rodeo en
+  otro lote que todavía no terminó en la fecha de entrada. Puede entrar el mismo día que
+  sale del otro lote.
 
 ## Fuera de este alcance
 
