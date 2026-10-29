@@ -38,7 +38,11 @@ export class UserFarmRepository extends Repository<UserFarm> {
     manager?: EntityManager,
   ): Promise<UserFarm> {
     const repo = manager ? manager.getRepository(UserFarm) : this;
-    return repo.save(repo.create({ userId, farmId, role }));
+    const userFarm = repo.create({ userId, farmId, role });
+    // insert, not save: save updates an existing membership instead of hitting
+    // the primary key, and FarmsService.joinFarm relies on that violation.
+    await repo.insert(userFarm);
+    return userFarm;
   }
 
   /**

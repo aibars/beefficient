@@ -2,6 +2,7 @@ import { join } from 'path';
 import { randomUUID } from 'crypto';
 import { ForbiddenException } from '@nestjs/common';
 import { DataSource, EntityManager } from 'typeorm';
+import { isUniqueViolation } from 'src/common/database/pg-errors';
 import { Company } from 'src/companies/companies.entity';
 import { CompanyService } from 'src/companies/companies.service';
 import { Establishment } from 'src/establishments/establishments.entity';
@@ -122,6 +123,25 @@ describe('Active farm (users.active_farm_id)', () => {
       const reloaded = await usersService.findById(user.id);
       expect(reloaded).not.toBeNull();
       expect(reloaded?.activeFarmId).toBeNull();
+    });
+  });
+
+  describe('createUserFarm', () => {
+    it('rejects a duplicate membership instead of overwriting it', async () => {
+      const user = await createTestUser();
+      const est = await createTestEstablishment(company);
+      await userFarmRepo.createUserFarm(user.id, est.id, 'admin');
+
+      // A join that loses the race reaches the insert after the winner
+      // committed: it must hit the primary key, not update the row, so
+      // FarmsService.joinFarm rolls its redemption back.
+      const err = await userFarmRepo
+        .createUserFarm(user.id, est.id, 'tecnico')
+        .catch((e: unknown) => e);
+      expect(isUniqueViolation(err)).toBe(true);
+      await expect(
+        userFarmRepo.findByUserAndFarm(user.id, est.id),
+      ).resolves.toMatchObject({ role: 'admin' });
     });
   });
 
