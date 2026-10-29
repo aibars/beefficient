@@ -12,12 +12,9 @@ const orden = new Intl.Collator('es', { sensitivity: 'base' });
 const SIN_RODEO = '(sin rodeo)';
 
 /**
- * Nombre con que se ordena un lote o rodeo cuyo id no existe en la campaña. No tiene nombre propio;
- * ordena como «?id», el nombre con que los tests de fidelidad se lo pasan al Engine.
+ * Un pastoreo con lo que necesitan los resultados. `ok` = completo: entrada, salida posterior y lote.
+ * Un lote o rodeo cuyo id no existe en la campaña cuenta como faltante (null).
  */
-const nombreDesconocido = (id: string): string => `?${id}`;
-
-/** Un pastoreo con lo que necesitan los resultados. `ok` = completo: entrada, salida posterior y lote. */
 interface Registro {
   ok: boolean;
   entrada: number | null;
@@ -49,11 +46,12 @@ export function calcularResultados(filas: readonly FilaCalculada[], ctx: Context
     const p = ctx.campana.pastoreos[i];
     const entrada = diaDe(p?.entrada ?? null);
     const salida = diaDe(p?.salida ?? null);
-    const loteId = p?.loteId || null;
+    const loteId = p?.loteId && ctx.lotes.has(p.loteId) ? p.loteId : null;
+    const rodeoId = p?.rodeoId && ctx.rodeos.has(p.rodeoId) ? p.rodeoId : null;
     const u = unidad === 'MS' ? f.ms : f.ev;
     return {
       ok: entrada != null && salida != null && salida > entrada && loteId != null,
-      entrada, salida, loteId, rodeoId: p?.rodeoId || null,
+      entrada, salida, loteId, rodeoId,
       totales: esNumero(u.totales) ? u.totales : 0,
       cabezas: esNumero(f.cabezas) ? f.cabezas : 0,
       raciones: esNumero(u.raciones) ? u.raciones : 0,
@@ -108,7 +106,7 @@ export function calcularResultados(filas: readonly FilaCalculada[], ctx: Context
   // Lotes, en orden de primera aparición y después por nombre (sort estable, como el Engine).
   const idsLote: string[] = [];
   for (const r of completos) if (!idsLote.includes(r.loteId!)) idsLote.push(r.loteId!);
-  const nombreLote = (id: string): string => ctx.lotes.get(id)?.nombre ?? nombreDesconocido(id);
+  const nombreLote = (id: string): string => ctx.lotes.get(id)!.nombre;
   idsLote.sort((a, b) => orden.compare(nombreLote(a), nombreLote(b)));
   R.lotes = idsLote.map((loteId): ResultadoLote => {
     const mios = completos.filter((r) => r.loteId === loteId);
@@ -122,7 +120,7 @@ export function calcularResultados(filas: readonly FilaCalculada[], ctx: Context
     });
     const dias = diasPorMes.reduce((s, v) => s + v, 0);
     const evDias = mios.reduce((s, r) => s + r.totales * (r.salida! - r.entrada!), 0);
-    const ha = ctx.lotes.get(loteId)?.hectareas;
+    const ha = ctx.lotes.get(loteId)!.hectareas;
     const hectareas = esNumero(ha) ? ha : 0;
     const q = evDias / (hectareas * dias);
     const racionesPorHa = mios.reduce((s, r) => s + r.racionesPorHa, 0);
@@ -146,12 +144,11 @@ export function calcularResultados(filas: readonly FilaCalculada[], ctx: Context
   // Rodeos; los pastoreos sin rodeo forman un grupo que ordena como «(sin rodeo)».
   const idsRodeo: (string | null)[] = [];
   for (const r of completos) if (!idsRodeo.includes(r.rodeoId)) idsRodeo.push(r.rodeoId);
-  const nombreRodeo = (id: string | null): string =>
-    id == null ? SIN_RODEO : ctx.rodeos.get(id)?.nombre ?? nombreDesconocido(id);
+  const nombreRodeo = (id: string | null): string => (id == null ? SIN_RODEO : ctx.rodeos.get(id)!.nombre);
   idsRodeo.sort((a, b) => orden.compare(nombreRodeo(a), nombreRodeo(b)));
   R.rodeos = idsRodeo.map((rodeoId): ResultadoRodeo => ({
     rodeoId,
-    categoria: rodeoId == null ? null : ctx.rodeos.get(rodeoId)?.categoria ?? null,
+    categoria: rodeoId == null ? null : ctx.rodeos.get(rodeoId)!.categoria,
     // Cabezas presentes el primer día de cada mes.
     cabezasPorMes: meses.map((m) => completos.reduce(
       (s, r) => s + (r.rodeoId === rodeoId && r.entrada! <= m && m < r.salida! ? r.cabezas : 0), 0)),

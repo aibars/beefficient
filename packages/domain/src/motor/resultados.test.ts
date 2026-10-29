@@ -79,6 +79,24 @@ describe('calcularResultados', () => {
     expect(l.hectareas).toBe(0);
   });
 
+  it('un lote que no existe es un pastoreo sin lote: queda fuera de los resultados y de los días del año', () => {
+    const c: Campana = {
+      ...manual,
+      pastoreos: [...manual.pastoreos, pastoreo({ id: 'x', loteId: 'no-existe', entrada: '2024-03-01', salida: '2024-03-11' })],
+    };
+    const r = resultados(c);
+    expect(r.lotes.map((l) => l.loteId)).toEqual(['A', 'B']);
+    expect(r.meses).toEqual(['2026-03-01', '2026-04-01']);
+    expect(r.diasAnio).toBe(365);
+  });
+
+  it('un rodeo que no existe va al grupo «sin rodeo»', () => {
+    const c: Campana = { ...manual, pastoreos: [...manual.pastoreos, pastoreo({ id: 'x', rodeoId: 'no-existe' })] };
+    const r = resultados(c);
+    expect(r.rodeos.map((x) => x.rodeoId)).toEqual([null, 'T', 'V']);
+    expect(r.rodeos[0]).toEqual({ rodeoId: null, categoria: null, cabezasPorMes: [0, 10] });
+  });
+
   it('los días del año salen del año de la primera entrada con lote, aunque la fila no esté completa', () => {
     const c: Campana = { ...manual, pastoreos: [...manual.pastoreos, pastoreo({ id: 'x', entrada: '2024-12-31', salida: null })] };
     expect(resultados(c).diasAnio).toBe(366);

@@ -12,11 +12,13 @@ function parchearCocimano(): void {
   Engine.CORC[450][5][3] = 1.97;
 }
 
-/** Nombre del Engine para un id; un id que no existe da un nombre que el Engine tampoco conoce. */
+/**
+ * Nombre del Engine para un id; un id que no existe da `''`, como si faltara el dato (así lo trata el motor).
+ * En `calcRow`, `''` y un nombre desconocido dan la misma fila.
+ */
 function nombrePorId(lista: readonly { id: string; nombre: string }[], id: string | null): string {
   if (!id) return '';
-  const x = lista.find((e) => e.id === id);
-  return x ? x.nombre : `?${id}`;
+  return lista.find((e) => e.id === id)?.nombre ?? '';
 }
 
 /** Arma la campaña en el formato del Engine (vínculos por nombre) y la calcula. */
@@ -81,8 +83,9 @@ export function filaDelEngine(
 function idsPorNombre(lista: readonly { id: string; nombre: string }[], ids: readonly (string | null)[]): Map<string, string> {
   const out = new Map<string, string>();
   for (const id of ids) {
-    if (!id) continue;
-    const k = nombrePorId(lista, id).toLocaleLowerCase('es');
+    const nombre = nombrePorId(lista, id);
+    if (!id || !nombre) continue;
+    const k = nombre.toLocaleLowerCase('es');
     if (!out.has(k)) out.set(k, id);
   }
   return out;
