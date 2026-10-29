@@ -16,7 +16,10 @@ export function diasEntre(entrada: FechaISO, salida: FechaISO): number {
   return Math.round((aUTC(salida) - aUTC(entrada)) / MS_POR_DIA);
 }
 
-/** EV por cabeza: factor de la categoría × (peso vivo / 400)^0,75. */
+/** EV por cabeza: factor de la categoría × (peso vivo / 400)^0,75.
+ *
+ * @deprecated No reproduce la planilla CREA. Usar calcularCampana (motor/). Se quita cuando BFC-26 y BFC-29 migren las pantallas.
+ */
 export function evPorCabeza(r: Pick<Rodeo, 'factorEv' | 'pesoVivo'>): number {
   return r.factorEv * Math.pow(r.pesoVivo / 400, 0.75);
 }
@@ -50,6 +53,11 @@ export interface ResultadoPastoreo {
 
 export type CalculoPastoreo = ResultadoPastoreo | { valido: false; motivo: 'fechas-invalidas' };
 
+/**
+ * Cálculo simplificado de una fila de la planilla.
+ *
+ * @deprecated No reproduce la planilla CREA. Usar calcularCampana (motor/). Se quita cuando BFC-26 y BFC-29 migren las pantallas.
+ */
 export function calcularPastoreo(e: EntradaPastoreo): CalculoPastoreo {
   if (!e.entrada || !e.salida) return { valido: false, motivo: 'fechas-invalidas' };
   const dias = diasEntre(e.entrada, e.salida);

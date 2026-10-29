@@ -15,7 +15,10 @@ export interface GrupoLote {
   filas: FilaPlanilla[];
 }
 
-/** Agrupa por lote, en el orden de `lotes`, con las entradas más nuevas primero. */
+/** Agrupa por lote, en el orden de `lotes`, con las entradas más nuevas primero.
+ *
+ * @deprecated No reproduce la planilla CREA. Usar calcularCampana (motor/). Se quita cuando BFC-26 y BFC-29 migren las pantallas.
+ */
 export function agruparPorLote(
   pastoreos: readonly Pastoreo[],
   lotes: readonly Lote[],
