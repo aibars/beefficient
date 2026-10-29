@@ -4,33 +4,141 @@ import { Meta } from '@storybook/addon-docs/blocks';
 
 # Cálculo de pastoreo
 
-Lo que calcula la pantalla **Nuevo pastoreo** y cada fila de la **Planilla**. Implementado en
-`packages/domain/src/pastoreo.ts` (`calcularPastoreo`), con tests en `pastoreo.test.ts` que
-reproducen el caso del wireframe.
+Reproduce el motor de la planilla de pastoreo CREA Utracán. Está en
+`packages/domain/src/motor` y se usa con `calcularCampana(campana)`, que arma el contexto
+una sola vez y devuelve las filas y los resultados en EV y en MS (`filas`, `ev`, `ms`).
 
-| Resultado | Fórmula |
+> **Aviso.** Las pantallas **Nuevo pastoreo** y **Planilla** todavía usan el cálculo
+> simplificado anterior (`calcularPastoreo`, marcado `@deprecated`); sus números no son los
+> de la planilla CREA hasta BFC-26 y BFC-29.
+
+## EV por cabeza: dos vías
+
+El EV de una fila se calcula mes a mes, y el EV de la fila es el **promedio ponderado por
+los días de cada mes** entre la entrada y la salida (la salida no se cuenta). Si la fila
+no tiene salida, o la salida no es posterior a la entrada, se calcula un solo día.
+
+- **Cocimano.** Si el rodeo usa Cocimano, tiene peso vivo y su categoría es de hembras, el
+  EV sale de la tabla de Cocimano según el peso, la ganancia diaria (g/día) del mes y el
+  estado fisiológico del mes (lactancia, seca, gestación o vaquillona), evaluado el día 15.
+  Entre pesos y ganancias de la tabla se interpola; la ganancia se recorta a los límites de
+  la tabla y el peso se extrapola hasta `supuestos.margenExtrapolacion` kg fuera de rango (por
+  defecto, 50). Las advertencias son
+  `extrap`, `fuera` y `gan`.
+- **Tabla 1.** Si no, el EV sale de la categoría de la Tabla 1 elegida en el pastoreo, por
+  mes del ciclo (el mes de servicio es el mes 4; los meses 1 a 3 son de parición). Las
+  categorías propias se agregan al final de la tabla.
+- **EV a mano.** Si el pastoreo trae un EV manual, reemplaza al automático.
+
+## Consumo por grupo
+
+El consumo de MS por cabeza y por día es peso vivo × %PV, según el grupo de consumo del
+mes. Si el rodeo tiene peso vivo se usa el suyo; si no, el de referencia del grupo. En las
+filas de varios meses también se promedia por días.
+
+| Grupo | Peso vivo (kg) | %PV |
+|---|---|---|
+| Lactancia | 450 | 2,7 |
+| Seca | 450 | 2,0 |
+| Gestación | 450 | 2,2 |
+| Vaquillona 1er servicio (2 a 3 años) | 350 | 2,5 |
+| Vaquillona de reposición (1 a 2 años) | 250 | 2,6 |
+| Toro | 700 | 1,8 |
+| Ternero | 200 | 2,8 |
+| Novillito | 300 | 2,6 |
+| Novillo | 400 | 2,4 |
+
+Las filas de la Tabla 1 que son de vacas se resuelven por mes del ciclo: lactancia del
+mes 1 al 7, seca en el 8 y el 9, gestación del 10 al 12. Un rodeo «Vaquillona 2do
+servicio» con Cocimano usa los grupos de vaca (lactancia, seca o gestación).
+
+## Columnas de cada fila
+
+| Columna | Cómo sale |
 |---|---|
-| Días | Salida − entrada (la salida no se cuenta) |
-| EV por cabeza | Factor EV de la categoría × (peso vivo / 400)^0,75 |
+| Mes | «abril 2026», o «mar a may 2026» si cruza meses |
+| Hectáreas | Las del lote |
+| Cabezas | Las del pastoreo |
+| Días | Salida − entrada; puede ser 0 o negativo, como en la planilla |
+| EV por cabeza | Promedio por días de cada mes (o el EV manual) |
 | EV totales | EV por cabeza × cabezas |
 | Raciones | EV totales × días |
-| Raciones/ha | Raciones ÷ hectáreas del lote |
-| Carga | EV totales ÷ hectáreas del lote |
-| Consumo de MS | Peso vivo × %PV en MS × cabezas |
-| Oferta necesaria | Consumo ÷ eficiencia de cosecha (50 %) |
-| Oferta en el período | Oferta × días |
+| Raciones/ha | Raciones ÷ hectáreas |
+| Carga | EV totales ÷ hectáreas |
+| Consumo por cabeza | Peso vivo × %PV, en kg MS por día |
+| MS totales, raciones, raciones/ha y carga | Lo mismo que en EV, con el consumo en kg MS |
+| Oferta | Consumo ÷ eficiencia de cosecha, en % (por defecto 50) |
 
-**Caso de control** (datos de ejemplo): Lote 7 · El Bajo (42 ha), Vacas preñadas A (420 kg,
-factor 0,92, 2,0 %PV), 120 cabezas, del 1/4 al 15/4 → 14 días, 114,5 EV, **1.603 raciones**,
-38,2 raciones/ha, 2,73 EV/ha, 1.008 kg MS/día, 2.016 kg MS/día de oferta y 28.224 kg MS en
-el período.
+Lo que la planilla deja vacío, el motor lo devuelve como `null`.
 
-## Aclaraciones que no van en la pantalla
+## Resultados de la campaña
 
-- Un pastoreo es una fila de la planilla: qué rodeo entra a qué lote y por cuántos días.
-- La fecha de salida no se cuenta: del 1/4 al 15/4 son 14 días.
-- El EV sale de la tabla de Cocimano; el consumo, del %PV de referencia (BCNRM 2016).
-- La oferta necesaria asume 50 % de eficiencia de cosecha (`EFICIENCIA_COSECHA`).
+`calcularCampana(...).ev` y `.ms` suman las filas completas (con entrada, salida posterior y lote) y
+devuelve lo mismo en EV y en MS.
+
+- **Por mes:** promedio, carga, raciones y oferta de cada mes con pastoreo.
+- **Por lote:** días por mes, días de uso y libres, ocupación, carga, raciones, raciones/ha,
+  oferta y oferta/ha (total y por mes), cantidad de pastoreos y promedios por pastoreo.
+- **Por rodeo:** cabezas por mes (los pastoreos que cubren el día 1 de cada mes), por categoría. Un `rodeoId` que no existe va a «sin
+  rodeo».
+- **De la campaña:** superficie total, carga anual y raciones totales.
+
+Un `loteId` que no existe cuenta como pastoreo sin lote: queda afuera de los resultados.
+
+## Cocimano: celda a validar
+
+En la planilla, la celda de 450 kg con ganancia de 750 g/día en «Lactancia 7º y 8º mes»
+vale 1,87, menos que la de «5º y 6º mes» (1,91); en los demás pesos esa columna es 0,06
+más alta que la anterior, así que probablemente es un error de tipeo por 1,97. El motor
+usa **1,87, como la planilla**, hasta que lo validen Gastón Alfaro y Federico Podversich
+**(BFC-58)**.
+
+## Diferencias con la planilla
+
+Ninguna cambia un número de una campaña bien cargada; cubren datos que la planilla deja
+pasar.
+
+- **Eficiencia de cosecha.** Es un porcentaje de 1 a 100; fuera de ese rango vale 50. La
+  planilla acepta cualquier valor mayor que 0, así que una fracción como 0,5 daba una
+  oferta 100 veces más grande.
+- **Fechas imposibles.** «2026-02-30» o «2026-13-01» cuentan como fecha faltante; la
+  planilla las corría al mes siguiente.
+- **Mes de la fila con salida ≤ entrada.** Muestra el mes de la entrada; la planilla daba
+  un rango al revés («abr a mar 2026»).
+- **Días por mes ≤ 0** en los supuestos vale el valor por defecto (30,4375); en la planilla
+  daba un EV de Cocimano inválido.
+
+Como en la planilla, el mes de servicio se redondea y, fuera de 1 a 12, vale 1.
+
+## Rarezas que se reproducen tal cual
+
+- El grupo «Novillo» solo se alcanza con una categoría propia de la Tabla 1.
+- La ganancia de las vaquillonas livianas se recorta a 750 g/día aunque su tabla llega a
+  1.250.
+- Los días del año para la carga anual y los días libres salen del año de la primera
+  entrada, no del año de la campaña.
+- El promedio por pastoreo de cada lote cuenta filas cuya salida no es posterior a la
+  entrada.
+
+## Caso de control
+
+Datos de ejemplo: Vacas de cría (rodeo V, 100 cabezas, 400 kg, Tabla 1) en el lote A
+(40 ha), del 27/3 al 4/4/2026, con servicio en noviembre.
+
+- **8 días**: 5 en marzo (EV 0,80) y 3 en abril (EV 0,82).
+- EV por cabeza **0,8075**, **646 raciones**, 16,15 raciones/ha y 2,02 EV/ha.
+- Consumo de 8 kg MS por cabeza y por día (seca, 2,0 %PV): 6.400 kg MS consumidos.
+- Oferta de 12.800 kg MS con 50 % de eficiencia.
+
+Los pesos y %PV de referencia son **valores de ejemplo** a validar con Gastón Alfaro y
+Federico Podversich.
+
+## Pantallas actuales (cálculo simplificado)
+
+Mientras BFC-26 y BFC-29 no migren las pantallas, **Nuevo pastoreo** y la **Planilla**
+siguen con el cálculo simplificado (`calcularPastoreo`). Lo que sigue describe su
+comportamiento actual, no el del motor.
+
 - Los datos se guardan en el teléfono y se sincronizan al volver la señal (ADR 0007).
 - Si la salida no es posterior a la entrada, no hay cálculo: los tiles muestran «—», la
   barra inferior pide revisar las fechas y Guardar queda deshabilitado.
@@ -40,8 +148,5 @@ el período.
 
 ## Fuera de este alcance
 
-La tabla Cocimano completa por mes de ciclo, el EV escrito a mano, «continuar en el lote
-siguiente» y el resumen por lote (BFC-M4).
-
-Los factores EV y los %PV de los rodeos de ejemplo son **valores de ejemplo** a validar con
-Gastón Alfaro y Federico Podversich.
+Las pantallas que muestran estos números (BFC-26 y BFC-29) y el modelo de datos de la
+campaña (BFC-6).

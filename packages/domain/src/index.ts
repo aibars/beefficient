@@ -4,3 +4,4 @@ export * from './planilla';
 export * from './formulador';
 export * from './formato';
 export * from './ejemplo';
+export * from './motor';
