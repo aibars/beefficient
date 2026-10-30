@@ -16,6 +16,7 @@ import { ProducersModule } from './producers/producers.module';
 import { TechniciansModule } from './technicians/technicians.module';
 import { PricesModule } from './prices/prices.module';
 import { KpisModule } from './kpis/kpis.module';
+import { PlanillaModule } from './planilla/planilla.module';
 
 @Module({
   controllers: [AppController],
@@ -59,6 +60,7 @@ import { KpisModule } from './kpis/kpis.module';
     TechniciansModule,
     PricesModule,
     KpisModule,
+    PlanillaModule,
   ],
 })
 export class AppModule {}
