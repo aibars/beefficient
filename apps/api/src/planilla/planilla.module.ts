@@ -1,6 +1,8 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { FarmsModule } from '../farms/farms.module';
+import { CampanasController } from './campanas.controller';
+import { CampanasService } from './campanas.service';
 import { CampanaEntity } from './entities/campana.entity';
 import { LoteEntity } from './entities/lote.entity';
 import { PastoreoEntity } from './entities/pastoreo.entity';
@@ -23,8 +25,8 @@ import { EstablecimientoActivoService } from './establecimiento-activo.service';
     ]),
     FarmsModule,
   ],
-  controllers: [PotrerosController, LotesController],
-  providers: [EstablecimientoActivoService, PotrerosService, LotesService],
-  exports: [EstablecimientoActivoService],
+  controllers: [PotrerosController, LotesController, CampanasController],
+  providers: [EstablecimientoActivoService, PotrerosService, LotesService, CampanasService],
+  exports: [EstablecimientoActivoService, CampanasService],
 })
 export class PlanillaModule {}
