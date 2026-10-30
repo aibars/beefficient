@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { actualizarCampana, type CampanaCompleta } from '@/services/planilla.service';
 import { NOMBRES_MES } from '@/lib/planilla/vista';
+import { enRango, RANGOS } from '@/lib/planilla/rangos';
 
 interface Props {
   campana: CampanaCompleta;
@@ -14,6 +15,7 @@ export function ParametrosCampana({ campana, onCambio }: Props) {
   const [eficiencia, setEficiencia] = useState(String(campana.eficienciaCosecha));
   const [error, setError] = useState<string | null>(null);
   const [enCurso, setEnCurso] = useState(false);
+  const eficienciaOk = enRango(eficiencia, RANGOS.eficiencia);
 
   async function guardar() {
     setEnCurso(true);
@@ -49,9 +51,8 @@ export function ParametrosCampana({ campana, onCambio }: Props) {
           <input
             className="panel-input"
             type="number"
-            min={0}
-            max={100}
-            step="any"
+            {...RANGOS.eficiencia}
+            aria-invalid={!eficienciaOk}
             value={eficiencia}
             onChange={(e) => setEficiencia(e.target.value)}
           />
@@ -63,7 +64,7 @@ export function ParametrosCampana({ campana, onCambio }: Props) {
         </p>
       )}
       <div className="config-acciones">
-        <button type="button" className="planilla-boton" disabled={enCurso} onClick={() => void guardar()}>
+        <button type="button" className="planilla-boton" disabled={enCurso || !eficienciaOk} onClick={() => void guardar()}>
           Guardar
         </button>
       </div>

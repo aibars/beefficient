@@ -8,13 +8,23 @@ import {
   crearPastoreo,
   type CampanaCompleta,
 } from '@/services/planilla.service';
-import { calcularBorrador, avisosDeFila, conBorrador, TEXTO_AVISO } from '@/lib/planilla/vista';
+import {
+  calcularBorrador,
+  avisosDeFila,
+  conBorrador,
+  TEXTO_AVISO,
+  type Unidad,
+} from '@/lib/planilla/vista';
+import { enRango, RANGOS } from '@/lib/planilla/rangos';
 import { num, ha, unidadCarga } from '@/components/planilla/formato';
+import { BotonBorrar } from '@/components/BotonBorrar';
 
 interface Props {
   campana: CampanaCompleta;
   /** null = pastoreo nuevo. */
   pastoreo: PastoreoCampana | null;
+  /** La unidad de la página: Raciones y Carga se muestran en EV o en kg MS. */
+  unidad: Unidad;
   onCerrar: () => void;
   onGuardado: () => void;
 }
@@ -31,7 +41,7 @@ function mensajeDe(err: unknown): string {
   return err instanceof Error ? err.message : 'Ocurrió un error inesperado.';
 }
 
-export function PanelPastoreo({ campana, pastoreo, onCerrar, onGuardado }: Props) {
+export function PanelPastoreo({ campana, pastoreo, unidad, onCerrar, onGuardado }: Props) {
   const [loteId, setLoteId] = useState(pastoreo?.loteId ?? '');
   const [rodeoId, setRodeoId] = useState(pastoreo?.rodeoId ?? '');
   const [cabezas, setCabezas] = useState(aTexto(pastoreo?.cabezas));
@@ -52,6 +62,14 @@ export function PanelPastoreo({ campana, pastoreo, onCerrar, onGuardado }: Props
     if (desaparecio) onCerrar();
   }, [desaparecio, onCerrar]);
 
+  useEffect(() => {
+    const alTeclear = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onCerrar();
+    };
+    document.addEventListener('keydown', alTeclear);
+    return () => document.removeEventListener('keydown', alTeclear);
+  }, [onCerrar]);
+
   const datos = useMemo(
     () => ({
       loteId: loteId || null,
@@ -70,6 +88,9 @@ export function PanelPastoreo({ campana, pastoreo, onCerrar, onGuardado }: Props
   );
 
   const fila = useMemo(() => calcularBorrador(campana, borrador), [campana, borrador]);
+  const indicadores = unidad === 'EV' ? fila.ev : fila.ms;
+  const cabezasOk = enRango(cabezas, RANGOS.cabezas);
+  const evManualOk = enRango(evManual, RANGOS.evManual);
   const avisos = avisosDeFila(fila, borrador, conBorrador(campana.pastoreos, borrador));
 
   const rodeo = campana.rodeos.find((r) => r.id === rodeoId);
@@ -138,8 +159,8 @@ export function PanelPastoreo({ campana, pastoreo, onCerrar, onGuardado }: Props
           <input
             className="panel-input"
             type="number"
-            min={1}
-            step={1}
+            {...RANGOS.cabezas}
+            aria-invalid={!cabezasOk}
             value={cabezas}
             onChange={(e) => setCabezas(e.target.value)}
           />
@@ -189,8 +210,8 @@ export function PanelPastoreo({ campana, pastoreo, onCerrar, onGuardado }: Props
           <input
             className="panel-input"
             type="number"
-            min={0}
-            step="any"
+            {...RANGOS.evManual}
+            aria-invalid={!evManualOk}
             value={evManual}
             onChange={(e) => setEvManual(e.target.value)}
           />
@@ -205,7 +226,7 @@ export function PanelPastoreo({ campana, pastoreo, onCerrar, onGuardado }: Props
         <div className="panel-resultados">
           <div className="panel-tile destacado">
             <span className="panel-etiqueta">Raciones</span>
-            <b data-testid="raciones">{num(fila.ev.raciones)}</b>
+            <b data-testid="raciones">{num(indicadores.raciones)}</b>
           </div>
           <div className="panel-tile">
             <span className="panel-etiqueta">Días</span>
@@ -220,8 +241,8 @@ export function PanelPastoreo({ campana, pastoreo, onCerrar, onGuardado }: Props
           </div>
           <div className="panel-tile">
             <span className="panel-etiqueta">Carga</span>
-            <b>
-              {num(fila.ev.carga, 2)} {unidadCarga('EV')}
+            <b data-testid="carga">
+              {num(indicadores.carga, 2)} {unidadCarga(unidad)}
             </b>
           </div>
         </div>
@@ -234,11 +255,16 @@ export function PanelPastoreo({ campana, pastoreo, onCerrar, onGuardado }: Props
 
         <div className="panel-acciones">
           {idEditado && (
-            <button type="button" className="panel-eliminar" disabled={enCurso} onClick={eliminar}>
+            <BotonBorrar className="panel-eliminar" disabled={enCurso} onConfirmar={() => void eliminar()}>
               Eliminar
-            </button>
+            </BotonBorrar>
           )}
-          <button type="button" className="planilla-boton" disabled={enCurso} onClick={guardar}>
+          <button
+            type="button"
+            className="planilla-boton"
+            disabled={enCurso || !cabezasOk || !evManualOk}
+            onClick={guardar}
+          >
             Guardar
           </button>
         </div>

@@ -46,7 +46,7 @@ const campana: CampanaCompleta = {
   pastoreos: [existente],
 };
 
-const props = { campana, onCerrar: jest.fn(), onGuardado: jest.fn() };
+const props = { campana, unidad: 'EV' as const, onCerrar: jest.fn(), onGuardado: jest.fn() };
 
 beforeEach(() => jest.clearAllMocks());
 
@@ -114,12 +114,41 @@ describe('PanelPastoreo', () => {
     expect(screen.getByRole('button', { name: 'Guardar' })).toBeTruthy();
   });
 
-  it('elimina un pastoreo existente', async () => {
+  it('elimina un pastoreo existente en dos clics: Eliminar y Confirmar', async () => {
     (borrarPastoreo as jest.Mock).mockResolvedValue(undefined);
     render(<PanelPastoreo {...props} pastoreo={existente} />);
     fireEvent.click(screen.getByRole('button', { name: 'Eliminar' }));
+    expect(borrarPastoreo).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole('button', { name: 'Confirmar' }));
     await waitFor(() => expect(props.onGuardado).toHaveBeenCalled());
     expect(borrarPastoreo).toHaveBeenCalledWith('c1', 'p1');
+  });
+
+  it('en kg MS muestra las raciones y la carga de MS del motor', () => {
+    render(<PanelPastoreo {...props} unidad="MS" pastoreo={existente} />);
+    const fila = calcularBorrador(campana, existente);
+    expect(fila.ms.raciones).not.toBe(fila.ev.raciones);
+    expect(screen.getByTestId('raciones').textContent).toBe(num(fila.ms.raciones));
+    expect(screen.getByTestId('carga').textContent).toBe(`${num(fila.ms.carga, 2)} kg MS/ha`);
+  });
+
+  it.each([
+    ['Cabezas', '0'],
+    ['Cabezas', '1.5'],
+    ['EV manual', '1000'],
+    ['EV manual', '0'],
+  ])('deshabilita Guardar con %s = %s', (campo, valor) => {
+    render(<PanelPastoreo {...props} pastoreo={existente} />);
+    expect((screen.getByRole('button', { name: 'Guardar' }) as HTMLButtonElement).disabled).toBe(false);
+    fireEvent.change(screen.getByLabelText(campo), { target: { value: valor } });
+    expect((screen.getByRole('button', { name: 'Guardar' }) as HTMLButtonElement).disabled).toBe(true);
+    expect(screen.getByLabelText(campo).getAttribute('aria-invalid')).toBe('true');
+  });
+
+  it('Escape cierra el panel', () => {
+    render(<PanelPastoreo {...props} pastoreo={existente} />);
+    fireEvent.keyDown(document, { key: 'Escape' });
+    expect(props.onCerrar).toHaveBeenCalled();
   });
 
   it('si el pastoreo editado desaparece cierra el panel y nunca crea', () => {

@@ -2,6 +2,7 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { ApiError } from '@/lib/api';
 import {
   borrarLote,
+  borrarPotrero,
   crearLote,
   listarLotes,
   listarPotreros,
@@ -68,7 +69,44 @@ describe('PotrerosYLotes', () => {
     render(<PotrerosYLotes onCambio={jest.fn()} />);
     await screen.findByText('La Loma');
     fireEvent.click(screen.getByRole('button', { name: 'Borrar La Loma' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Confirmar borrar La Loma' }));
     expect(await screen.findByText('El lote tiene pastoreos cargados.')).toBeTruthy();
+  });
+
+  it('borra un lote o un potrero solo al confirmar', async () => {
+    (borrarLote as jest.Mock).mockResolvedValue(undefined);
+    (borrarPotrero as jest.Mock).mockResolvedValue(undefined);
+    render(<PotrerosYLotes onCambio={jest.fn()} />);
+    await screen.findByText('La Loma');
+    fireEvent.click(screen.getByRole('button', { name: 'Borrar La Loma' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Borrar potrero Norte' }));
+    expect(borrarLote).not.toHaveBeenCalled();
+    expect(borrarPotrero).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole('button', { name: 'Confirmar borrar La Loma' }));
+    await waitFor(() => expect(borrarLote).toHaveBeenCalledWith('l1'));
+    fireEvent.click(screen.getByRole('button', { name: 'Confirmar borrar potrero Norte' }));
+    await waitFor(() => expect(borrarPotrero).toHaveBeenCalledWith('p1'));
+  });
+
+  it('deshabilita Guardar con hectáreas fuera de rango', async () => {
+    await abrirLoteNuevo();
+    fireEvent.change(screen.getByLabelText('Nombre del lote'), { target: { value: 'Bajo' } });
+    const guardar = () => screen.getByRole('button', { name: 'Guardar lote' }) as HTMLButtonElement;
+    expect(guardar().disabled).toBe(false);
+    fireEvent.change(screen.getByLabelText('Hectáreas del lote'), { target: { value: '0' } });
+    expect(guardar().disabled).toBe(true);
+  });
+
+  it('deshabilita Guardar del potrero con hectáreas fuera de rango', async () => {
+    render(<PotrerosYLotes onCambio={jest.fn()} />);
+    await screen.findByText('La Loma');
+    fireEvent.click(screen.getByRole('button', { name: '+ Potrero' }));
+    fireEvent.change(screen.getByLabelText('Nombre del potrero'), { target: { value: 'Este' } });
+    fireEvent.change(screen.getByLabelText('Hectáreas del potrero'), { target: { value: '10' } });
+    const guardar = () => screen.getByRole('button', { name: 'Guardar potrero' }) as HTMLButtonElement;
+    expect(guardar().disabled).toBe(false);
+    fireEvent.change(screen.getByLabelText('Hectáreas del potrero'), { target: { value: '100000000' } });
+    expect(guardar().disabled).toBe(true);
   });
 
   const ha = () => (screen.getByLabelText('Hectáreas del lote') as HTMLInputElement).value;

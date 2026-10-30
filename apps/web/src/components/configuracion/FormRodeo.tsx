@@ -10,6 +10,7 @@ import {
 } from '@beefficient/domain';
 import { actualizarRodeo, crearRodeo } from '@/services/planilla.service';
 import { NOMBRES_MES } from '@/lib/planilla/vista';
+import { enRango, RANGOS } from '@/lib/planilla/rangos';
 
 interface Props {
   campanaId: string;
@@ -39,6 +40,7 @@ export function FormRodeo({ campanaId, rodeo, onGuardado, onCancelar }: Props) {
   const [cocimano, setCocimano] = useState(rodeo?.usaCocimano ?? true);
   const [error, setError] = useState<string | null>(null);
   const [enCurso, setEnCurso] = useState(false);
+  const pesoVivoOk = enRango(pesoVivo, RANGOS.pesoVivo);
 
   async function guardar() {
     setEnCurso(true);
@@ -93,9 +95,8 @@ export function FormRodeo({ campanaId, rodeo, onGuardado, onCancelar }: Props) {
           <input
             className="panel-input"
             type="number"
-            min={0}
-            max={99999.99}
-            step="any"
+            {...RANGOS.pesoVivo}
+            aria-invalid={!pesoVivoOk}
             value={pesoVivo}
             onChange={(e) => setPesoVivo(e.target.value)}
           />
@@ -150,7 +151,7 @@ export function FormRodeo({ campanaId, rodeo, onGuardado, onCancelar }: Props) {
         <button type="button" className="panel-eliminar" onClick={onCancelar}>
           Cancelar
         </button>
-        <button type="submit" className="planilla-boton" disabled={enCurso || nombre.trim() === ''}>
+        <button type="submit" className="planilla-boton" disabled={enCurso || nombre.trim() === '' || !pesoVivoOk}>
           Guardar
         </button>
       </div>

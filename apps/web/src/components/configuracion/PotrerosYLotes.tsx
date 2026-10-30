@@ -14,6 +14,8 @@ import {
   type Potrero,
 } from '@/services/planilla.service';
 import { ha } from '@/components/planilla/formato';
+import { BotonBorrar } from '@/components/BotonBorrar';
+import { enRango, RANGOS } from '@/lib/planilla/rangos';
 
 interface Props {
   /** Avisa que cambiaron lotes o potreros (la campaña los usa). */
@@ -97,14 +99,12 @@ export function PotrerosYLotes({ onCambio }: Props) {
                   <button type="button" className="config-link" onClick={() => setAbierto({ tipo: 'lote', lote: l })}>
                     Editar
                   </button>
-                  <button
-                    type="button"
-                    className="config-link"
-                    aria-label={`Borrar ${l.nombre}`}
-                    onClick={() => void correr(() => borrarLote(l.id))}
+                  <BotonBorrar
+                    etiqueta={`Borrar ${l.nombre}`}
+                    onConfirmar={() => void correr(() => borrarLote(l.id))}
                   >
                     Borrar
-                  </button>
+                  </BotonBorrar>
                 </td>
               </tr>
             ))}
@@ -130,14 +130,12 @@ export function PotrerosYLotes({ onCambio }: Props) {
                   <button type="button" className="config-link" onClick={() => setAbierto({ tipo: 'potrero', potrero: p })}>
                     Editar
                   </button>
-                  <button
-                    type="button"
-                    className="config-link"
-                    aria-label={`Borrar potrero ${p.nombre}`}
-                    onClick={() => void correr(() => borrarPotrero(p.id))}
+                  <BotonBorrar
+                    etiqueta={`Borrar potrero ${p.nombre}`}
+                    onConfirmar={() => void correr(() => borrarPotrero(p.id))}
                   >
                     Borrar
-                  </button>
+                  </BotonBorrar>
                 </td>
               </tr>
             ))}
@@ -184,6 +182,7 @@ function FormLote({
   const [nombre, setNombre] = useState(lote?.nombre ?? '');
   const [hectareas, setHectareas] = useState(aTexto(lote?.hectareas));
   const [potreroId, setPotreroId] = useState(lote?.potreroId ?? '');
+  const hectareasOk = enRango(hectareas, RANGOS.hectareas);
 
   function elegirPotrero(id: string) {
     const anterior = potreros.find((p) => p.id === potreroId);
@@ -225,9 +224,8 @@ function FormLote({
             className="panel-input"
             aria-label="Hectáreas del lote"
             type="number"
-            min={0}
-            max={99999999.99}
-            step="any"
+            {...RANGOS.hectareas}
+            aria-invalid={!hectareasOk}
             value={hectareas}
             onChange={(e) => setHectareas(e.target.value)}
           />
@@ -237,7 +235,7 @@ function FormLote({
         <button type="button" className="panel-eliminar" onClick={onCancelar}>
           Cancelar
         </button>
-        <button type="submit" className="planilla-boton" aria-label="Guardar lote" disabled={nombre.trim() === ''}>
+        <button type="submit" className="planilla-boton" aria-label="Guardar lote" disabled={nombre.trim() === '' || !hectareasOk}>
           Guardar
         </button>
       </div>
@@ -256,6 +254,7 @@ function FormPotrero({
 }) {
   const [nombre, setNombre] = useState(potrero?.nombre ?? '');
   const [hectareas, setHectareas] = useState(aTexto(potrero?.hectareas));
+  const hectareasOk = enRango(hectareas, RANGOS.hectareas);
 
   return (
     <form
@@ -276,9 +275,8 @@ function FormPotrero({
             className="panel-input"
             aria-label="Hectáreas del potrero"
             type="number"
-            min={0}
-            max={99999999.99}
-            step="any"
+            {...RANGOS.hectareas}
+            aria-invalid={!hectareasOk}
             value={hectareas}
             onChange={(e) => setHectareas(e.target.value)}
           />
@@ -292,7 +290,7 @@ function FormPotrero({
           type="submit"
           className="planilla-boton"
           aria-label="Guardar potrero"
-          disabled={nombre.trim() === '' || hectareas.trim() === ''}
+          disabled={nombre.trim() === '' || hectareas.trim() === '' || !hectareasOk}
         >
           Guardar
         </button>

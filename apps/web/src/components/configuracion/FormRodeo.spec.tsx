@@ -31,4 +31,13 @@ describe('FormRodeo', () => {
     expect(body).not.toHaveProperty('id');
     await waitFor(() => expect(onGuardado).toHaveBeenCalled());
   });
+
+  it('deshabilita Guardar con peso vivo fuera de rango', () => {
+    render(<FormRodeo campanaId="c1" rodeo={null} onGuardado={jest.fn()} onCancelar={jest.fn()} />);
+    fireEvent.change(screen.getByLabelText('Nombre'), { target: { value: 'Vacas 1' } });
+    const guardar = () => screen.getByRole('button', { name: 'Guardar' }) as HTMLButtonElement;
+    expect(guardar().disabled).toBe(false);
+    fireEvent.change(screen.getByLabelText('Peso vivo (kg)'), { target: { value: '100000' } });
+    expect(guardar().disabled).toBe(true);
+  });
 });

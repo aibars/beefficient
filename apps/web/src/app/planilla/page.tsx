@@ -104,6 +104,7 @@ export default function PlanillaPage() {
               key={pastoreoAbierto}
               campana={campana}
               pastoreo={pastoreoEditado}
+              unidad={unidad}
               onCerrar={cerrarPastoreo}
               onGuardado={() => {
                 setPastoreoAbierto(null);

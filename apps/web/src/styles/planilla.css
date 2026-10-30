@@ -295,7 +295,6 @@
   display: flex;
   flex-direction: column;
   gap: 2px;
-  flex: 1;
 }
 
 .panel-etiqueta {
@@ -323,6 +322,11 @@
 .panel-fila2 {
   display: flex;
   gap: var(--space-2);
+}
+
+.panel-fila2 > .panel-campo {
+  flex: 1;
+  min-width: 0;
 }
 
 .panel-aviso {
@@ -429,6 +433,13 @@
   color: inherit;
   text-decoration: underline;
   cursor: pointer;
+}
+
+/* BotonBorrar después del primer clic: «Confirmar». */
+.config-link.armado,
+.panel-eliminar.armado {
+  color: var(--color-accent);
+  font-weight: 600;
 }
 
 @media (max-width: 900px) {

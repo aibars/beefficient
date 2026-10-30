@@ -4,6 +4,7 @@ import { useState } from 'react';
 import type { RodeoCampana } from '@beefficient/domain';
 import { borrarRodeo, type CampanaCompleta } from '@/services/planilla.service';
 import { num } from '@/components/planilla/formato';
+import { BotonBorrar } from '@/components/BotonBorrar';
 import { FormRodeo } from './FormRodeo';
 
 interface Props {
@@ -66,14 +67,9 @@ export function RodeosCampana({ campana, onCambio }: Props) {
                   <button type="button" className="config-link" onClick={() => setAbierto(r.id)}>
                     Editar
                   </button>
-                  <button
-                    type="button"
-                    className="config-link"
-                    aria-label={`Borrar ${r.nombre}`}
-                    onClick={() => void borrar(r)}
-                  >
+                  <BotonBorrar etiqueta={`Borrar ${r.nombre}`} onConfirmar={() => void borrar(r)}>
                     Borrar
-                  </button>
+                  </BotonBorrar>
                 </td>
               </tr>
             ))}
