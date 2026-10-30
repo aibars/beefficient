@@ -376,3 +376,63 @@
   text-decoration: underline;
   cursor: pointer;
 }
+
+/* Configuración */
+.config-titulo {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  margin-bottom: var(--space-2);
+}
+
+.config-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin-top: var(--space-3);
+}
+
+.config-form-grilla {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: var(--space-2);
+}
+
+.config-ganancia {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: var(--space-2);
+}
+
+.config-check {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.config-acciones {
+  display: flex;
+  gap: var(--space-2);
+  justify-content: flex-end;
+}
+
+.config-celda-acciones {
+  white-space: nowrap;
+}
+
+.config-link {
+  border: none;
+  background: none;
+  padding: var(--space-1);
+  color: inherit;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+@media (max-width: 900px) {
+  .config-ganancia {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
