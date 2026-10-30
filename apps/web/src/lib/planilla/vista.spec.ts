@@ -111,6 +111,24 @@ describe('vista', () => {
     expect(avisosDeFila(calc.filas[0]!, x, [x, y])).toContain('superpuesto');
   });
 
+  it('avisosDeFila mapea las advertencias del motor', () => {
+    const p = past({ id: 'a' });
+    const fila = { ...calcularCampana(campana([p])).filas[0]!, advertencias: ['extrap', 'fuera', 'gan'] as const };
+    expect(avisosDeFila({ ...fila, advertencias: [...fila.advertencias] }, p, [p])).toEqual([
+      'extrapolado',
+      'fuera-de-tabla',
+      'ganancia',
+    ]);
+  });
+
+  it('avisosDeFila no marca fechas ni superpuesto cuando no corresponde', () => {
+    const x = past({ id: 'x', loteId: 'l1', entrada: '2026-12-10', salida: '2026-12-20' });
+    const y = past({ id: 'y', loteId: 'l2', entrada: '2026-12-20', salida: '2026-12-30' });
+    const calc = calcularCampana(campana([x, y]));
+    expect(avisosDeFila(calc.filas[0]!, x, [x, y])).toEqual([]);
+    expect(avisosDeFila(calc.filas[1]!, y, [x, y])).toEqual([]);
+  });
+
   it('TEXTO_AVISO tiene el copy', () => {
     expect(TEXTO_AVISO.fechas).toBe('La salida no es posterior a la entrada');
   });
