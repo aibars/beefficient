@@ -9,6 +9,8 @@ import {
   IsNumber,
   IsOptional,
   IsString,
+  Matches,
+  Max,
   MaxLength,
   Min,
   ValidateBy,
@@ -19,6 +21,9 @@ import type { CategoriaRodeo, DuracionServicio } from '@beefficient/domain';
 
 // Copias literales de CATEGORIAS_RODEO / DURACIONES_SERVICIO del dominio: el código de Node
 // no puede importar valores de @beefficient/domain (ESM). rodeo.dto.spec.ts las compara.
+/** Solo aaaa-mm-dd: Postgres truncaría en silencio un datetime. */
+export const SOLO_FECHA = /^\d{4}-\d{2}-\d{2}$/;
+
 export const CATEGORIAS_RODEO_API: readonly CategoriaRodeo[] = [
   'Vaca',
   'Vaquillona 1er servicio',
@@ -60,6 +65,7 @@ export class CreateRodeoDto {
   @IsOptional()
   @IsNumber({ maxDecimalPlaces: 2 })
   @Min(0.01)
+  @Max(99999.99)
   pesoVivo?: number | null;
 
   @ValidateIf((_, v) => v !== undefined)
@@ -71,10 +77,12 @@ export class CreateRodeoDto {
 
   @IsOptional()
   @IsDateString({ strict: true })
+  @Matches(SOLO_FECHA, { message: 'La fecha debe tener formato aaaa-mm-dd.' })
   inicioServicio?: string | null;
 
   @IsOptional()
   @IsDateString({ strict: true })
+  @Matches(SOLO_FECHA, { message: 'La fecha debe tener formato aaaa-mm-dd.' })
   destete?: string | null;
 
   @ValidateIf((_, v) => v !== undefined)
@@ -100,6 +108,7 @@ export class UpdateRodeoDto {
   @IsOptional()
   @IsNumber({ maxDecimalPlaces: 2 })
   @Min(0.01)
+  @Max(99999.99)
   pesoVivo?: number | null;
 
   @ValidateIf((_, v) => v !== undefined)
@@ -111,10 +120,12 @@ export class UpdateRodeoDto {
 
   @IsOptional()
   @IsDateString({ strict: true })
+  @Matches(SOLO_FECHA, { message: 'La fecha debe tener formato aaaa-mm-dd.' })
   inicioServicio?: string | null;
 
   @IsOptional()
   @IsDateString({ strict: true })
+  @Matches(SOLO_FECHA, { message: 'La fecha debe tener formato aaaa-mm-dd.' })
   destete?: string | null;
 
   @ValidateIf((_, v) => v !== undefined)

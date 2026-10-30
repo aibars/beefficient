@@ -5,6 +5,7 @@ import {
   IsString,
   IsUUID,
   MaxLength,
+  Max,
   Min,
   ValidateIf,
 } from 'class-validator';
@@ -18,6 +19,7 @@ export class CreateLoteDto {
   @IsOptional()
   @IsNumber({ maxDecimalPlaces: 2 })
   @Min(0.01)
+  @Max(99999999.99)
   hectareas?: number | null;
 
   @IsOptional()
@@ -35,6 +37,7 @@ export class UpdateLoteDto {
   @IsOptional()
   @IsNumber({ maxDecimalPlaces: 2 })
   @Min(0.01)
+  @Max(99999999.99)
   hectareas?: number | null;
 
   @IsOptional()

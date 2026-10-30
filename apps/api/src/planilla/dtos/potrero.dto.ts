@@ -3,6 +3,7 @@ import {
   IsNumber,
   IsString,
   MaxLength,
+  Max,
   Min,
   ValidateIf,
 } from 'class-validator';
@@ -15,6 +16,7 @@ export class CreatePotreroDto {
 
   @IsNumber({ maxDecimalPlaces: 2 })
   @Min(0.01)
+  @Max(99999999.99)
   hectareas: number;
 }
 
@@ -28,5 +30,6 @@ export class UpdatePotreroDto {
   @ValidateIf((_, v) => v !== undefined)
   @IsNumber({ maxDecimalPlaces: 2 })
   @Min(0.01)
+  @Max(99999999.99)
   hectareas?: number;
 }

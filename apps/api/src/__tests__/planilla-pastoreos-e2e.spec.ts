@@ -328,4 +328,52 @@ describe('Planilla: rodeos y pastoreos (e2e)', () => {
     const calculo = calcularCampana(get.body.data);
     expect(calculo.filas).toHaveLength(2);
   });
+
+  it('400 (no 500) con números fuera del rango de la columna', async () => {
+    const { token, campId, loteId } = await preparar('rango');
+    const rod = (b: object) =>
+      http().post(`/campanas/${campId}/rodeos`).set(auth(token)).send({ nombre: 'R', ...b });
+    const pas = (b: object) =>
+      http().post(`/campanas/${campId}/pastoreos`).set(auth(token)).send({ loteId, ...b });
+    expect((await rod({ pesoVivo: 1e9 })).status).toBe(400);
+    expect((await rod({ pesoVivo: 100000 })).status).toBe(400);
+    expect((await pas({ evManual: 1000 })).status).toBe(400);
+    expect((await pas({ evManual: 1.2345 })).status).toBe(400);
+    expect((await pas({ cabezas: 1e12 })).status).toBe(400);
+    expect((await pas({ cabezas: 2147483648 })).status).toBe(400);
+    expect((await rod({ pesoVivo: 99999.99 })).status).toBe(201);
+    expect((await pas({ evManual: 999.999, cabezas: 2147483647 })).status).toBe(201);
+    const l = await http().post('/lotes').set(auth(token)).send({ nombre: 'Grande', hectareas: 1e9 });
+    expect(l.status).toBe(400);
+    const p = await http().post('/potreros').set(auth(token)).send({ nombre: 'P', hectareas: 1e9 });
+    expect(p.status).toBe(400);
+    const ok = await http().post('/lotes').set(auth(token)).send({ nombre: 'OK', hectareas: 99999999.99 });
+    expect(ok.status).toBe(201);
+    expect(
+      (await http().patch(`/lotes/${ok.body.data.id}`).set(auth(token)).send({ hectareas: 1e9 })).status,
+    ).toBe(400);
+  });
+
+  it('400 con fechas que no son aaaa-mm-dd (datetime ISO)', async () => {
+    const { token, campId, loteId } = await preparar('fecha');
+    const dt = '2026-03-01T10:00:00Z';
+    const pas = await http()
+      .post(`/campanas/${campId}/pastoreos`)
+      .set(auth(token))
+      .send({ loteId, entrada: dt });
+    expect(pas.status).toBe(400);
+    expect(
+      (await http().post(`/campanas/${campId}/pastoreos`).set(auth(token)).send({ loteId, salida: dt })).status,
+    ).toBe(400);
+    expect(
+      (await http().post(`/campanas/${campId}/rodeos`).set(auth(token)).send({ nombre: 'R', destete: dt })).status,
+    ).toBe(400);
+    const r = await http()
+      .post(`/campanas/${campId}/rodeos`)
+      .set(auth(token))
+      .send({ nombre: 'R' });
+    expect(
+      (await http().patch(`/campanas/${campId}/rodeos/${r.body.data.id}`).set(auth(token)).send({ inicioServicio: dt })).status,
+    ).toBe(400);
+  });
 });
