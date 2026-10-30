@@ -32,6 +32,11 @@ const campana: CampanaCompleta = {
 };
 
 describe('RodeosCampana', () => {
+  it('el botón Editar lleva el nombre del rodeo', () => {
+    render(<RodeosCampana campana={campana} onCambio={jest.fn()} />);
+    expect(screen.getByRole('button', { name: 'Editar Vacas' })).toBeTruthy();
+  });
+
   it('borra un rodeo solo al confirmar', async () => {
     (borrarRodeo as jest.Mock).mockResolvedValue(undefined);
     const onCambio = jest.fn();

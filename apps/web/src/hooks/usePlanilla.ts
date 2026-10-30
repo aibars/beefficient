@@ -9,6 +9,7 @@ import {
   type CampanaCompleta,
   type CampanaResumen,
 } from '@/services/planilla.service';
+import { mensajeDe as mensaje } from '@/lib/formularios';
 import {
   activarEstablecimiento,
   listarEstablecimientos,
@@ -34,10 +35,6 @@ export interface Planilla {
 
 function masReciente(lista: readonly CampanaResumen[]): CampanaResumen | null {
   return lista.reduce<CampanaResumen | null>((max, c) => (!max || c.anio > max.anio ? c : max), null);
-}
-
-function mensaje(err: unknown): string {
-  return err instanceof Error ? err.message : 'Ocurrió un error inesperado.';
 }
 
 export function usePlanilla(): Planilla {

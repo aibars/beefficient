@@ -14,7 +14,7 @@ import {
 export type Unidad = 'EV' | 'MS';
 
 // Los nombres de mes son los del motor: la columna Mes y las etiquetas de la web dicen lo mismo.
-export { NOMBRES_MES };
+export { NOMBRES_MES, NOMBRES_MES_CORTOS };
 
 export function resultadosEn(calculo: CalculoCampana, unidad: Unidad): ResultadosCampana {
   return unidad === 'EV' ? calculo.ev : calculo.ms;

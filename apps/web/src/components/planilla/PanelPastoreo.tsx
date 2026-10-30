@@ -18,6 +18,7 @@ import {
 import { RANGOS, useCampoNumerico } from '@/lib/planilla/rangos';
 import { num, ha, unidadCarga } from '@/components/planilla/formato';
 import { BotonBorrar } from '@/components/BotonBorrar';
+import { aNumero, aTexto, mensajeDe } from '@/lib/formularios';
 
 interface Props {
   campana: CampanaCompleta;
@@ -33,13 +34,7 @@ const ID_BORRADOR = 'borrador';
 
 const FUENTE = { cocimano: 'Cocimano', tabla1: 'Tabla 1' } as const;
 
-const aTexto = (n: number | null | undefined) => (n === null || n === undefined ? '' : String(n));
-const aNumero = (t: string): number | null => (t.trim() === '' ? null : Number(t));
 const aFecha = (t: string): string | null => (t === '' ? null : t);
-
-function mensajeDe(err: unknown): string {
-  return err instanceof Error ? err.message : 'Ocurrió un error inesperado.';
-}
 
 export function PanelPastoreo({ campana, pastoreo, unidad, onCerrar, onGuardado }: Props) {
   const [loteId, setLoteId] = useState(pastoreo?.loteId ?? '');

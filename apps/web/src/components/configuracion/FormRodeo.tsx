@@ -9,7 +9,8 @@ import {
   type RodeoCampana,
 } from '@beefficient/domain';
 import { actualizarRodeo, crearRodeo } from '@/services/planilla.service';
-import { NOMBRES_MES } from '@/lib/planilla/vista';
+import { aNumero, aTexto, mensajeDe } from '@/lib/formularios';
+import { NOMBRES_MES, NOMBRES_MES_CORTOS } from '@/lib/planilla/vista';
 import { RANGOS, useCampoNumerico } from '@/lib/planilla/rangos';
 
 interface Props {
@@ -18,13 +19,6 @@ interface Props {
   rodeo: RodeoCampana | null;
   onGuardado: () => void;
   onCancelar: () => void;
-}
-
-const aTexto = (n: number | null | undefined) => (n === null || n === undefined ? '' : String(n));
-const aNumero = (t: string): number | null => (t.trim() === '' ? null : Number(t));
-
-function mensajeDe(err: unknown): string {
-  return err instanceof Error ? err.message : 'Ocurrió un error inesperado.';
 }
 
 export function FormRodeo({ campanaId, rodeo, onGuardado, onCancelar }: Props) {
@@ -126,7 +120,7 @@ export function FormRodeo({ campanaId, rodeo, onGuardado, onCancelar }: Props) {
       <div className="config-ganancia">
         {NOMBRES_MES.map((mes, i) => (
           <label key={mes} className="panel-campo">
-            <span className="panel-etiqueta">{mes.slice(0, 3)}</span>
+            <span className="panel-etiqueta">{NOMBRES_MES_CORTOS[i]}</span>
             <input
               className="panel-input"
               aria-label={`Ganancia ${mes}`}

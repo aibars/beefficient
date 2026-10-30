@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { actualizarCampana, type CampanaCompleta } from '@/services/planilla.service';
+import { mensajeDe } from '@/lib/formularios';
 import { NOMBRES_MES } from '@/lib/planilla/vista';
 import { RANGOS, useCampoNumerico } from '@/lib/planilla/rangos';
 
@@ -27,7 +28,7 @@ export function ParametrosCampana({ campana, onCambio }: Props) {
       await actualizarCampana(campana.id, cambios);
       onCambio();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Ocurrió un error inesperado.');
+      setError(mensajeDe(err));
     } finally {
       setEnCurso(false);
     }

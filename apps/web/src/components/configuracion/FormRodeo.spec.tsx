@@ -1,5 +1,5 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { crearRodeo } from '@/services/planilla.service';
+import { actualizarRodeo, crearRodeo } from '@/services/planilla.service';
 import { FormRodeo } from './FormRodeo';
 
 jest.mock('@/services/planilla.service', () => ({
@@ -30,6 +30,37 @@ describe('FormRodeo', () => {
     expect(body.ganancia).toHaveLength(12);
     expect(body).not.toHaveProperty('id');
     await waitFor(() => expect(onGuardado).toHaveBeenCalled());
+  });
+
+  it('al editar envía el body completo a actualizarRodeo', async () => {
+    (actualizarRodeo as jest.Mock).mockResolvedValue({});
+    const onGuardado = jest.fn();
+    const rodeo = {
+      id: 'r1',
+      nombre: 'Vacas',
+      categoria: 'Vaca' as const,
+      pesoVivo: 420,
+      ganancia: [300, ...Array(11).fill(null)],
+      inicioServicio: '2026-11-01',
+      duracionServicio: 105 as const,
+      destete: null,
+      usaCocimano: false,
+    };
+    render(<FormRodeo campanaId="c1" rodeo={rodeo} onGuardado={onGuardado} onCancelar={jest.fn()} />);
+    fireEvent.change(screen.getByLabelText('Nombre'), { target: { value: 'Vacas 2' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Guardar' }));
+    await waitFor(() => expect(onGuardado).toHaveBeenCalled());
+    expect(actualizarRodeo).toHaveBeenCalledWith('c1', 'r1', {
+      nombre: 'Vacas 2',
+      categoria: 'Vaca',
+      pesoVivo: 420,
+      ganancia: [300, null, null, null, null, null, null, null, null, null, null, null],
+      inicioServicio: '2026-11-01',
+      duracionServicio: 105,
+      destete: null,
+      usaCocimano: false,
+    });
+    expect(crearRodeo).not.toHaveBeenCalled();
   });
 
   it('deshabilita Guardar con peso vivo fuera de rango', () => {

@@ -5,6 +5,7 @@ import type { RodeoCampana } from '@beefficient/domain';
 import { borrarRodeo, type CampanaCompleta } from '@/services/planilla.service';
 import { num } from '@/components/planilla/formato';
 import { BotonBorrar } from '@/components/BotonBorrar';
+import { mensajeDe } from '@/lib/formularios';
 import { FormRodeo } from './FormRodeo';
 
 interface Props {
@@ -26,7 +27,7 @@ export function RodeosCampana({ campana, onCambio }: Props) {
       await borrarRodeo(campana.id, r.id);
       onCambio();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Ocurrió un error inesperado.');
+      setError(mensajeDe(err));
     }
   }
 
@@ -64,7 +65,12 @@ export function RodeosCampana({ campana, onCambio }: Props) {
                 <td>{r.duracionServicio} días</td>
                 <td>{r.usaCocimano ? 'Sí' : 'No'}</td>
                 <td className="config-celda-acciones">
-                  <button type="button" className="config-link" onClick={() => setAbierto(r.id)}>
+                  <button
+                    type="button"
+                    className="config-link"
+                    aria-label={`Editar ${r.nombre}`}
+                    onClick={() => setAbierto(r.id)}
+                  >
                     Editar
                   </button>
                   <BotonBorrar etiqueta={`Borrar ${r.nombre}`} onConfirmar={() => void borrar(r)}>

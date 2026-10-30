@@ -15,6 +15,7 @@ import {
 } from '@/services/planilla.service';
 import { ha } from '@/components/planilla/formato';
 import { BotonBorrar } from '@/components/BotonBorrar';
+import { aNumero, aTexto, mensajeDe } from '@/lib/formularios';
 import { RANGOS, useCampoNumerico } from '@/lib/planilla/rangos';
 
 interface Props {
@@ -23,10 +24,6 @@ interface Props {
 }
 
 type Abierto = { tipo: 'lote'; lote: Lote | null } | { tipo: 'potrero'; potrero: Potrero | null } | null;
-
-const aTexto = (n: number | null | undefined) => (n === null || n === undefined ? '' : String(n));
-const aNumero = (t: string): number | null => (t.trim() === '' ? null : Number(t));
-const mensajeDe = (err: unknown) => (err instanceof Error ? err.message : 'Ocurrió un error inesperado.');
 
 export function PotrerosYLotes({ onCambio }: Props) {
   const [potreros, setPotreros] = useState<Potrero[]>([]);
@@ -96,7 +93,12 @@ export function PotrerosYLotes({ onCambio }: Props) {
                 <td className="izq">{potreros.find((p) => p.id === l.potreroId)?.nombre ?? '—'}</td>
                 <td>{ha(l.hectareas)}</td>
                 <td className="config-celda-acciones">
-                  <button type="button" className="config-link" onClick={() => setAbierto({ tipo: 'lote', lote: l })}>
+                  <button
+                    type="button"
+                    className="config-link"
+                    aria-label={`Editar ${l.nombre}`}
+                    onClick={() => setAbierto({ tipo: 'lote', lote: l })}
+                  >
                     Editar
                   </button>
                   <BotonBorrar
@@ -127,7 +129,12 @@ export function PotrerosYLotes({ onCambio }: Props) {
                 <td className="izq">{p.nombre}</td>
                 <td>{ha(p.hectareas)}</td>
                 <td className="config-celda-acciones">
-                  <button type="button" className="config-link" onClick={() => setAbierto({ tipo: 'potrero', potrero: p })}>
+                  <button
+                    type="button"
+                    className="config-link"
+                    aria-label={`Editar potrero ${p.nombre}`}
+                    onClick={() => setAbierto({ tipo: 'potrero', potrero: p })}
+                  >
                     Editar
                   </button>
                   <BotonBorrar

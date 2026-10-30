@@ -109,6 +109,13 @@ describe('PotrerosYLotes', () => {
     expect(guardar().disabled).toBe(true);
   });
 
+  it('los botones Editar llevan el nombre de la fila', async () => {
+    render(<PotrerosYLotes onCambio={jest.fn()} />);
+    await screen.findByText('La Loma');
+    expect(screen.getByRole('button', { name: 'Editar La Loma' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Editar potrero Norte' })).toBeTruthy();
+  });
+
   it('deshabilita Guardar del lote con hectáreas ilegibles (badInput)', async () => {
     await abrirLoteNuevo();
     fireEvent.change(screen.getByLabelText('Nombre del lote'), { target: { value: 'Bajo' } });
@@ -134,7 +141,7 @@ describe('PotrerosYLotes', () => {
   it('al editar un lote con las hectáreas de su potrero, siguen al nuevo potrero', async () => {
     render(<PotrerosYLotes onCambio={jest.fn()} />);
     await screen.findByText('El Bajo');
-    fireEvent.click(screen.getAllByRole('button', { name: 'Editar' })[1]);
+    fireEvent.click(screen.getByRole('button', { name: 'Editar El Bajo' }));
     expect(ha()).toBe('35');
     potrero('p2');
     expect(ha()).toBe('20');
@@ -143,7 +150,7 @@ describe('PotrerosYLotes', () => {
   it('al editar un lote con hectáreas propias, no las pisa al cambiar de potrero', async () => {
     render(<PotrerosYLotes onCambio={jest.fn()} />);
     await screen.findByText('La Cuchilla');
-    fireEvent.click(screen.getAllByRole('button', { name: 'Editar' })[2]);
+    fireEvent.click(screen.getByRole('button', { name: 'Editar La Cuchilla' }));
     expect(ha()).toBe('12');
     potrero('p2');
     expect(ha()).toBe('12');
