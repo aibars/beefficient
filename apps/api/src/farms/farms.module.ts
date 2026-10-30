@@ -24,6 +24,6 @@ import { JoinCodeService } from './join-code.service';
     FarmsService,
     JoinCodeService,
   ],
-  exports: [FarmsService, JoinCodeService],
+  exports: [FarmsService, JoinCodeService, UserFarmRepository],
 })
 export class FarmsModule {}
