@@ -3,6 +3,7 @@
 import type { CampanaResumen } from '@/services/planilla.service';
 import type { Establecimiento } from '@/services/farms.service';
 import type { Unidad } from '@/lib/planilla/vista';
+import { SelectoresCampana } from '@/components/planilla/SelectoresCampana';
 
 interface Props {
   titulo: string;
@@ -35,38 +36,17 @@ export function EncabezadoCampana({
   onUnidad,
   onNuevoPastoreo,
 }: Props) {
-  const ordenadas = [...campanas].sort((a, b) => b.anio - a.anio);
   return (
     <header className="planilla-encabezado">
       <h1 className="planilla-titulo">{titulo}</h1>
-      <select
-        aria-label="Establecimiento"
-        className="planilla-pill"
-        value={establecimientoId ?? ''}
-        onChange={(e) => onCambiarEstablecimiento(e.target.value)}
-        disabled={establecimientos.length === 0}
-      >
-        {establecimientoId === null && <option value="">Establecimiento</option>}
-        {establecimientos.map((e) => (
-          <option key={e.id} value={e.id}>
-            {e.nombre}
-          </option>
-        ))}
-      </select>
-      {ordenadas.length > 0 && (
-        <select
-          aria-label="Campaña"
-          className="planilla-pill"
-          value={campanaId ?? ''}
-          onChange={(e) => onElegirCampana(e.target.value)}
-        >
-          {ordenadas.map((c) => (
-            <option key={c.id} value={c.id}>
-              {c.anio}
-            </option>
-          ))}
-        </select>
-      )}
+      <SelectoresCampana
+        establecimientos={establecimientos}
+        establecimientoId={establecimientoId}
+        onCambiarEstablecimiento={onCambiarEstablecimiento}
+        campanas={campanas}
+        campanaId={campanaId}
+        onElegirCampana={onElegirCampana}
+      />
       <div className="planilla-segmentado" role="group" aria-label="Unidad">
         {UNIDADES.map((u) => (
           <button

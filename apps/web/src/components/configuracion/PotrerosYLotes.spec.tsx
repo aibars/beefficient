@@ -23,9 +23,12 @@ beforeEach(() => {
   jest.clearAllMocks();
   (listarPotreros as jest.Mock).mockResolvedValue([
     { id: 'p1', nombre: 'Norte', hectareas: 35 },
+    { id: 'p2', nombre: 'Sur', hectareas: 20 },
   ]);
   (listarLotes as jest.Mock).mockResolvedValue([
     { id: 'l1', nombre: 'La Loma', hectareas: 30, potreroId: null },
+    { id: 'l2', nombre: 'El Bajo', hectareas: 35, potreroId: 'p1' },
+    { id: 'l3', nombre: 'La Cuchilla', hectareas: 12, potreroId: 'p1' },
   ]);
 });
 
@@ -66,5 +69,35 @@ describe('PotrerosYLotes', () => {
     await screen.findByText('La Loma');
     fireEvent.click(screen.getByRole('button', { name: 'Borrar La Loma' }));
     expect(await screen.findByText('El lote tiene pastoreos cargados.')).toBeTruthy();
+  });
+
+  const ha = () => (screen.getByLabelText('Hectáreas del lote') as HTMLInputElement).value;
+  const potrero = (id: string) =>
+    fireEvent.change(screen.getByLabelText('Potrero del lote'), { target: { value: id } });
+
+  it('reemplaza las hectáreas autocompletadas al cambiar de potrero', async () => {
+    await abrirLoteNuevo();
+    potrero('p1');
+    expect(ha()).toBe('35');
+    potrero('p2');
+    expect(ha()).toBe('20');
+  });
+
+  it('al editar un lote con las hectáreas de su potrero, siguen al nuevo potrero', async () => {
+    render(<PotrerosYLotes onCambio={jest.fn()} />);
+    await screen.findByText('El Bajo');
+    fireEvent.click(screen.getAllByRole('button', { name: 'Editar' })[1]);
+    expect(ha()).toBe('35');
+    potrero('p2');
+    expect(ha()).toBe('20');
+  });
+
+  it('al editar un lote con hectáreas propias, no las pisa al cambiar de potrero', async () => {
+    render(<PotrerosYLotes onCambio={jest.fn()} />);
+    await screen.findByText('La Cuchilla');
+    fireEvent.click(screen.getAllByRole('button', { name: 'Editar' })[2]);
+    expect(ha()).toBe('12');
+    potrero('p2');
+    expect(ha()).toBe('12');
   });
 });
