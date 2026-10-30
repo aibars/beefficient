@@ -121,4 +121,22 @@ describe('PanelPastoreo', () => {
     await waitFor(() => expect(props.onGuardado).toHaveBeenCalled());
     expect(borrarPastoreo).toHaveBeenCalledWith('c1', 'p1');
   });
+
+  it('si el pastoreo editado desaparece cierra el panel y nunca crea', () => {
+    const { rerender } = render(<PanelPastoreo {...props} pastoreo={existente} />);
+    rerender(
+      <PanelPastoreo {...props} campana={{ ...campana, pastoreos: [] }} pastoreo={null} />,
+    );
+    expect(props.onCerrar).toHaveBeenCalled();
+    expect(crearPastoreo).not.toHaveBeenCalled();
+  });
+
+  it('guarda con la campaña fijada al abrir aunque cambien las props', async () => {
+    (actualizarPastoreo as jest.Mock).mockResolvedValue({});
+    const { rerender } = render(<PanelPastoreo {...props} pastoreo={existente} />);
+    rerender(<PanelPastoreo {...props} campana={{ ...campana, id: 'otra' }} pastoreo={existente} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Guardar' }));
+    await waitFor(() => expect(props.onGuardado).toHaveBeenCalled());
+    expect((actualizarPastoreo as jest.Mock).mock.calls[0].slice(0, 2)).toEqual(['c1', 'p1']);
+  });
 });

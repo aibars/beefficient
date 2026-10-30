@@ -28,12 +28,19 @@ export function etiquetaMesCorto(mes: FechaISO): string {
   return `${nombre.slice(0, 3)} ${(anio ?? '').slice(-2)}`;
 }
 
+/** Los pastoreos con el borrador: reemplaza al de su id o se agrega al final. */
+export function conBorrador(
+  pastoreos: readonly PastoreoCampana[],
+  borrador: PastoreoCampana,
+): PastoreoCampana[] {
+  return pastoreos.some((p) => p.id === borrador.id)
+    ? pastoreos.map((p) => (p.id === borrador.id ? borrador : p))
+    : [...pastoreos, borrador];
+}
+
 /** Calcula la fila de un borrador dentro de la campaña, sin guardarlo. */
 export function calcularBorrador(campana: Campana, borrador: PastoreoCampana): FilaCalculada {
-  const existe = campana.pastoreos.some((p) => p.id === borrador.id);
-  const pastoreos = existe
-    ? campana.pastoreos.map((p) => (p.id === borrador.id ? borrador : p))
-    : [...campana.pastoreos, borrador];
+  const pastoreos = conBorrador(campana.pastoreos, borrador);
   const calculo = calcularCampana({ ...campana, pastoreos });
   return calculo.filas.find((f) => f.pastoreoId === borrador.id)!;
 }

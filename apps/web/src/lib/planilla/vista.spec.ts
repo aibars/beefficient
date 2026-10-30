@@ -4,6 +4,7 @@ import {
   TEXTO_AVISO,
   avisosDeFila,
   calcularBorrador,
+  conBorrador,
   etiquetaMesCorto,
   resultadosEn,
 } from './vista';
@@ -83,6 +84,15 @@ describe('vista', () => {
     expect(mas.ev.raciones!).toBeGreaterThan(original.ev.raciones!);
     const nueva = calcularBorrador(base, past({ id: 'nuevo', cabezas: 10 }));
     expect(nueva.pastoreoId).toBe('nuevo');
+  });
+
+  it('conBorrador reemplaza por id o agrega al final', () => {
+    const a = past({ id: 'a' });
+    const b = past({ id: 'b' });
+    const a2 = past({ id: 'a', cabezas: 5 });
+    expect(conBorrador([a, b], a2)).toEqual([a2, b]);
+    const c = past({ id: 'c' });
+    expect(conBorrador([a, b], c)).toEqual([a, b, c]);
   });
 
   it('avisosDeFila marca fechas y superpuesto', () => {

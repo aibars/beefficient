@@ -225,4 +225,19 @@ describe('usePlanilla', () => {
     await waitFor(() => expect(result.current.error).toBe('No tenés un establecimiento activo.'));
     expect(result.current.loading).toBe(false);
   });
+
+  it('recargar que falla deja el mensaje en error, sin rechazar y conservando la campaña', async () => {
+    mPlanilla.listarCampanas.mockResolvedValue([resumen('c26', 2026)]);
+    mPlanilla.obtenerCampana.mockResolvedValueOnce(completa('c26', 2026));
+    const { result } = renderHook(() => usePlanilla());
+    await waitFor(() => expect(result.current.campana?.id).toBe('c26'));
+
+    mPlanilla.obtenerCampana.mockRejectedValueOnce(new Error('No se pudo conectar'));
+    await act(async () => {
+      await result.current.recargar();
+    });
+
+    expect(result.current.error).toBe('No se pudo conectar');
+    expect(result.current.campana?.id).toBe('c26');
+  });
 });

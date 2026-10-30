@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { TABLA_1, type PastoreoCampana } from '@beefficient/domain';
 import {
   actualizarPastoreo,
@@ -8,7 +8,7 @@ import {
   crearPastoreo,
   type CampanaCompleta,
 } from '@/services/planilla.service';
-import { calcularBorrador, avisosDeFila, TEXTO_AVISO } from '@/lib/planilla/vista';
+import { calcularBorrador, avisosDeFila, conBorrador, TEXTO_AVISO } from '@/lib/planilla/vista';
 import { num, ha, unidadCarga } from '@/components/planilla/formato';
 
 interface Props {
@@ -42,29 +42,35 @@ export function PanelPastoreo({ campana, pastoreo, onCerrar, onGuardado }: Props
   const [error, setError] = useState<string | null>(null);
   const [enCurso, setEnCurso] = useState(false);
 
-  const datos = {
-    loteId: loteId || null,
-    rodeoId: rodeoId || null,
-    cabezas: aNumero(cabezas),
-    entrada: aFecha(entrada),
-    salida: aFecha(salida),
-    categoriaTabla1Id: categoria || null,
-    evManual: aNumero(evManual),
-  };
-  const borrador: PastoreoCampana = { id: pastoreo?.id ?? ID_BORRADOR, ...datos };
+  // Qué se edita y en qué campaña se fija al abrir: un refresco no lo cambia.
+  const [campanaId] = useState(campana.id);
+  const [idEditado] = useState(pastoreo?.id ?? null);
 
-  const fila = useMemo(
-    () => calcularBorrador(campana, borrador),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [campana, loteId, rodeoId, cabezas, entrada, salida, categoria, evManual],
+  // Si el pastoreo editado desaparece tras un refresco, no se puede guardar: se cierra.
+  const desaparecio = idEditado !== null && pastoreo === null;
+  useEffect(() => {
+    if (desaparecio) onCerrar();
+  }, [desaparecio, onCerrar]);
+
+  const datos = useMemo(
+    () => ({
+      loteId: loteId || null,
+      rodeoId: rodeoId || null,
+      cabezas: aNumero(cabezas),
+      entrada: aFecha(entrada),
+      salida: aFecha(salida),
+      categoriaTabla1Id: categoria || null,
+      evManual: aNumero(evManual),
+    }),
+    [loteId, rodeoId, cabezas, entrada, salida, categoria, evManual],
   );
-  const avisos = avisosDeFila(
-    fila,
-    borrador,
-    campana.pastoreos.some((p) => p.id === borrador.id)
-      ? campana.pastoreos.map((p) => (p.id === borrador.id ? borrador : p))
-      : [...campana.pastoreos, borrador],
+  const borrador = useMemo<PastoreoCampana>(
+    () => ({ id: idEditado ?? ID_BORRADOR, ...datos }),
+    [idEditado, datos],
   );
+
+  const fila = useMemo(() => calcularBorrador(campana, borrador), [campana, borrador]);
+  const avisos = avisosDeFila(fila, borrador, conBorrador(campana.pastoreos, borrador));
 
   const rodeo = campana.rodeos.find((r) => r.id === rodeoId);
   const mostrarTabla1 = rodeo !== undefined && !rodeo.usaCocimano;
@@ -86,11 +92,11 @@ export function PanelPastoreo({ campana, pastoreo, onCerrar, onGuardado }: Props
 
   const guardar = () =>
     ejecutar(() =>
-      pastoreo
-        ? actualizarPastoreo(campana.id, pastoreo.id, datos)
-        : crearPastoreo(campana.id, datos),
+      idEditado
+        ? actualizarPastoreo(campanaId, idEditado, datos)
+        : crearPastoreo(campanaId, datos),
     );
-  const eliminar = () => ejecutar(() => borrarPastoreo(campana.id, pastoreo!.id));
+  const eliminar = () => ejecutar(() => borrarPastoreo(campanaId, idEditado!));
 
   return (
     <>
@@ -227,7 +233,7 @@ export function PanelPastoreo({ campana, pastoreo, onCerrar, onGuardado }: Props
         )}
 
         <div className="panel-acciones">
-          {pastoreo && (
+          {idEditado && (
             <button type="button" className="panel-eliminar" disabled={enCurso} onClick={eliminar}>
               Eliminar
             </button>

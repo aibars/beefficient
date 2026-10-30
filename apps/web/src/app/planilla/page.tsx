@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { AsyncState } from '@/components/AsyncState';
 import { EncabezadoCampana } from '@/components/planilla/EncabezadoCampana';
 import { TotalesCampana } from '@/components/planilla/TotalesCampana';
@@ -21,7 +21,19 @@ export default function PlanillaPage() {
   const [unidad, setUnidad] = useState<Unidad>('EV');
   // Pastoreo abierto en el panel (Tarea 11): un id, NUEVO o null.
   const [pastoreoAbierto, setPastoreoAbierto] = useState<string | null>(null);
+  const cerrarPastoreo = useCallback(() => setPastoreoAbierto(null), []);
   const onAbrirPastoreo = (id: string | null) => setPastoreoAbierto(id ?? NUEVO);
+
+  // Si el pastoreo abierto ya no está en la campaña (refresco), se cierra.
+  const pastoreoEditado =
+    pastoreoAbierto === null || pastoreoAbierto === NUEVO
+      ? null
+      : campana?.pastoreos.find((p) => p.id === pastoreoAbierto) ?? null;
+  const faltaEditado =
+    pastoreoAbierto !== null && pastoreoAbierto !== NUEVO && campana !== null && !pastoreoEditado;
+  useEffect(() => {
+    if (faltaEditado) setPastoreoAbierto(null);
+  }, [faltaEditado]);
 
   const anioActual = new Date().getFullYear();
   const resultados = calculo ? resultadosEn(calculo, unidad) : null;
@@ -87,12 +99,12 @@ export default function PlanillaPage() {
             onAbrir={onAbrirPastoreo}
             seleccionado={pastoreoAbierto}
           />
-          {pastoreoAbierto !== null && (
+          {pastoreoAbierto !== null && !faltaEditado && (
             <PanelPastoreo
               key={pastoreoAbierto}
               campana={campana}
-              pastoreo={campana.pastoreos.find((p) => p.id === pastoreoAbierto) ?? null}
-              onCerrar={() => setPastoreoAbierto(null)}
+              pastoreo={pastoreoEditado}
+              onCerrar={cerrarPastoreo}
               onGuardado={() => {
                 setPastoreoAbierto(null);
                 void planilla.recargar();

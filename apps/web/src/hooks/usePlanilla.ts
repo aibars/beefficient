@@ -27,7 +27,7 @@ export interface Planilla {
   loading: boolean;
   error: string | null;
   retry: () => void;
-  /** Vuelve a pedir la campaña elegida sin vaciar la pantalla; los errores van al que llama. */
+  /** Vuelve a pedir la campaña elegida sin vaciar la pantalla; si falla, deja el mensaje en `error`. */
   recargar: () => Promise<void>;
   crearCampanaDelAnio: () => Promise<void>;
 }
@@ -149,7 +149,12 @@ export function usePlanilla(): Planilla {
   const recargar = useCallback(async () => {
     const id = campanaIdRef.current;
     if (!id) return;
-    await cargarCampana(id, generacion.current);
+    const g = generacion.current;
+    try {
+      await cargarCampana(id, g);
+    } catch (err) {
+      if (g === generacion.current) setError(mensaje(err));
+    }
   }, [cargarCampana]);
 
   const retry = useCallback(() => setIntento((n) => n + 1), []);
