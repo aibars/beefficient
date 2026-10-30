@@ -197,7 +197,7 @@
 }
 
 .planilla-tabla td.calc {
-  color: var(--color-accent-2);
+  color: var(--color-accent-2-strong);
   font-weight: 600;
 }
 
@@ -348,7 +348,7 @@
 }
 
 .panel-tile.destacado {
-  background: var(--color-accent-2);
+  background: var(--color-accent-2-strong);
   color: var(--color-background);
 }
 

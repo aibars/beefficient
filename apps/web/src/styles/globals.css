@@ -7,6 +7,8 @@
   --color-background: #f5ead8;
   --color-accent: #c67139;
   --color-accent-2: #7a8a5e;
+  /* Oliva oscuro para texto y fondos con texto: 5,61:1 sobre #fffaf2, 4,60:1 sobre la fila seleccionada. */
+  --color-accent-2-strong: #5c6a44;
   --color-divider: rgba(32, 30, 29, 0.16);
   --color-neutral-900: rgba(0, 0, 0, 0.5);
 
