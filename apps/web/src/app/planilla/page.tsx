@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { AsyncState } from '@/components/AsyncState';
-import { EncabezadoCampana } from '@/components/planilla/EncabezadoCampana';
+import { EncabezadoCampana, ID_NUEVO_PASTOREO } from '@/components/planilla/EncabezadoCampana';
 import { TotalesCampana } from '@/components/planilla/TotalesCampana';
 import { CargaPorMes } from '@/components/planilla/CargaPorMes';
 import { TablaPorLote } from '@/components/planilla/TablaPorLote';
@@ -57,7 +57,7 @@ export default function PlanillaPage() {
         }}
         unidad={unidad}
         onUnidad={setUnidad}
-        onNuevoPastoreo={campana ? () => onAbrirPastoreo(null) : null}
+        onNuevoPastoreo={campana && calculo ? () => onAbrirPastoreo(null) : null}
       />
 
       <AsyncState loading={loading} error={error} onRetry={planilla.retry} />
@@ -105,6 +105,7 @@ export default function PlanillaPage() {
               campana={campana}
               pastoreo={pastoreoEditado}
               unidad={unidad}
+              volverA={() => document.getElementById(ID_NUEVO_PASTOREO)}
               onCerrar={cerrarPastoreo}
               onGuardado={() => {
                 setPastoreoAbierto(null);

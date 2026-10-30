@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { createEvent, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { type PastoreoCampana } from '@beefficient/domain';
 import type { CampanaCompleta } from '@/services/planilla.service';
 import { ApiError } from '@/lib/api';
@@ -200,6 +200,56 @@ describe('PanelPastoreo', () => {
     primero.focus();
     fireEvent.keyDown(primero, { key: 'Tab', shiftKey: true });
     expect(document.activeElement).toBe(ultimo);
+  });
+
+  it('si el abridor ya no está en el documento, el foco vuelve al destino alternativo', () => {
+    const fila = document.createElement('tr');
+    fila.tabIndex = 0;
+    const nuevo = document.createElement('button');
+    document.body.append(fila, nuevo);
+    fila.focus();
+    const { unmount } = render(<PanelPastoreo {...props} pastoreo={existente} volverA={() => nuevo} />);
+    fila.remove();
+    unmount();
+    expect(document.activeElement).toBe(nuevo);
+    nuevo.remove();
+  });
+
+  it('si el abridor era body, el foco vuelve al destino alternativo', () => {
+    const nuevo = document.createElement('button');
+    document.body.append(nuevo);
+    (document.activeElement as HTMLElement | null)?.blur();
+    const { unmount } = render(<PanelPastoreo {...props} pastoreo={existente} volverA={() => nuevo} />);
+    unmount();
+    expect(document.activeElement).toBe(nuevo);
+    nuevo.remove();
+  });
+
+  it('tras eliminar, el foco va al destino alternativo aunque la fila siga en el documento', async () => {
+    (borrarPastoreo as jest.Mock).mockResolvedValue(undefined);
+    const fila = document.createElement('tr');
+    fila.tabIndex = 0;
+    const nuevo = document.createElement('button');
+    document.body.append(fila, nuevo);
+    fila.focus();
+    const { unmount } = render(<PanelPastoreo {...props} pastoreo={existente} volverA={() => nuevo} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Eliminar' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Confirmar' }));
+    await waitFor(() => expect(props.onGuardado).toHaveBeenCalled());
+    unmount();
+    expect(document.activeElement).toBe(nuevo);
+    fila.remove();
+    nuevo.remove();
+  });
+
+  it('con el foco fuera del panel (body), Tab lo lleva al primer campo', () => {
+    render(<PanelPastoreo {...props} pastoreo={existente} />);
+    (document.activeElement as HTMLElement).blur();
+    expect(document.activeElement).toBe(document.body);
+    const tab = createEvent.keyDown(document.body, { key: 'Tab' });
+    fireEvent(document.body, tab);
+    expect(tab.defaultPrevented).toBe(true);
+    expect(document.activeElement).toBe(screen.getByLabelText('Lote'));
   });
 
   it('las opciones vacías de los selectores tienen texto', () => {

@@ -5,6 +5,9 @@ import type { Establecimiento } from '@/services/farms.service';
 import type { Unidad } from '@/lib/planilla/vista';
 import { SelectoresCampana } from '@/components/planilla/SelectoresCampana';
 
+/** Id del botón «+ Pastoreo»: el panel le devuelve el foco cuando quien lo abrió ya no está. */
+export const ID_NUEVO_PASTOREO = 'nuevo-pastoreo';
+
 interface Props {
   titulo: string;
   establecimientos: readonly Establecimiento[];
@@ -61,6 +64,7 @@ export function EncabezadoCampana({
         ))}
       </div>
       <button
+        id={ID_NUEVO_PASTOREO}
         type="button"
         className="planilla-boton"
         onClick={onNuevoPastoreo ?? undefined}

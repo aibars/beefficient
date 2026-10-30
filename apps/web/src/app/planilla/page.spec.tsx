@@ -33,4 +33,16 @@ describe('PlanillaPage', () => {
     expect(screen.getByRole('alert').textContent).toContain('No se pudo calcular la campaña.');
     expect(screen.getByRole('button', { name: 'Reintentar' })).toBeTruthy();
   });
+
+  it('con error del motor deshabilita + Pastoreo', () => {
+    (usePlanilla as jest.Mock).mockReturnValue({
+      ...base,
+      campanaId: 'c1',
+      campana: { id: 'c1', anio: 2026, mesServicio: 11, eficienciaCosecha: 50, lotes: [], rodeos: [], pastoreos: [] },
+      calculo: null,
+      error: 'No se pudo calcular la campaña.',
+    });
+    render(<PlanillaPage />);
+    expect((screen.getByRole('button', { name: '+ Pastoreo' }) as HTMLButtonElement).disabled).toBe(true);
+  });
 });

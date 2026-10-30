@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState, type KeyboardEvent as TeclaReact } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { TABLA_1, type PastoreoCampana } from '@beefficient/domain';
 import {
   actualizarPastoreo,
@@ -27,6 +27,8 @@ interface Props {
   pastoreo: PastoreoCampana | null;
   /** La unidad de la página: Raciones y Carga se muestran en EV o en kg MS. */
   unidad: Unidad;
+  /** Dónde va el foco al cerrar si quien abrió el panel ya no está (p. ej. el botón «+ Pastoreo»). */
+  volverA?: () => HTMLElement | null;
   onCerrar: () => void;
   onGuardado: () => void;
 }
@@ -39,7 +41,7 @@ const FUENTE = { cocimano: 'Cocimano', tabla1: 'Tabla 1' } as const;
 
 const aFecha = (t: string): string | null => (t === '' ? null : t);
 
-export function PanelPastoreo({ campana, pastoreo, unidad, onCerrar, onGuardado }: Props) {
+export function PanelPastoreo({ campana, pastoreo, unidad, volverA, onCerrar, onGuardado }: Props) {
   const [loteId, setLoteId] = useState(pastoreo?.loteId ?? '');
   const [rodeoId, setRodeoId] = useState(pastoreo?.rodeoId ?? '');
   const campoCabezas = useCampoNumerico(aTexto(pastoreo?.cabezas), RANGOS.cabezas);
@@ -62,32 +64,41 @@ export function PanelPastoreo({ campana, pastoreo, unidad, onCerrar, onGuardado 
     if (desaparecio) onCerrar();
   }, [desaparecio, onCerrar]);
 
-  // Foco: entra al primer campo y, al cerrar, vuelve a quien abrió el panel.
+  // Foco: entra al primer campo y, al cerrar, vuelve a quien abrió el panel; si ese elemento ya
+  // no sirve (se borró la fila, o el foco estaba en body) va al destino que pasa la página.
   const panel = useRef<HTMLElement>(null);
+  const eliminado = useRef(false);
+  const destino = useRef(volverA);
+  destino.current = volverA;
   useEffect(() => {
     const abridor = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     panel.current?.querySelector<HTMLElement>('select, input')?.focus();
-    return () => abridor?.focus();
+    return () => {
+      const sirve =
+        !eliminado.current && abridor !== null && abridor !== document.body && abridor.isConnected;
+      (sirve ? abridor : destino.current?.() ?? abridor)?.focus();
+    };
   }, []);
-
-  function mantenerFoco(e: TeclaReact<HTMLElement>) {
-    if (e.key !== 'Tab') return;
-    const lista = Array.from(panel.current?.querySelectorAll<HTMLElement>(FOCALIZABLES) ?? []);
-    const primero = lista[0];
-    const ultimo = lista[lista.length - 1];
-    if (!primero || !ultimo) return;
-    if (e.shiftKey && document.activeElement === primero) {
-      e.preventDefault();
-      ultimo.focus();
-    } else if (!e.shiftKey && document.activeElement === ultimo) {
-      e.preventDefault();
-      primero.focus();
-    }
-  }
 
   useEffect(() => {
     const alTeclear = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onCerrar();
+      if (e.key !== 'Tab') return;
+      const lista = Array.from(panel.current?.querySelectorAll<HTMLElement>(FOCALIZABLES) ?? []);
+      const primero = lista[0];
+      const ultimo = lista[lista.length - 1];
+      if (!primero || !ultimo) return;
+      const activo = document.activeElement;
+      if (!panel.current?.contains(activo)) {
+        e.preventDefault();
+        (panel.current?.querySelector<HTMLElement>('select, input') ?? primero).focus();
+      } else if (e.shiftKey && activo === primero) {
+        e.preventDefault();
+        ultimo.focus();
+      } else if (!e.shiftKey && activo === ultimo) {
+        e.preventDefault();
+        primero.focus();
+      }
     };
     document.addEventListener('keydown', alTeclear);
     return () => document.removeEventListener('keydown', alTeclear);
@@ -147,7 +158,11 @@ export function PanelPastoreo({ campana, pastoreo, unidad, onCerrar, onGuardado 
         ? actualizarPastoreo(campanaId, idEditado, datos)
         : crearPastoreo(campanaId, datos),
     );
-  const eliminar = () => ejecutar(() => borrarPastoreo(campanaId, idEditado!));
+  const eliminar = () =>
+    ejecutar(async () => {
+      await borrarPastoreo(campanaId, idEditado!);
+      eliminado.current = true;
+    });
 
   return (
     <>
@@ -158,7 +173,6 @@ export function PanelPastoreo({ campana, pastoreo, unidad, onCerrar, onGuardado 
         role="dialog"
         aria-modal="true"
         aria-labelledby="panel-pastoreo-titulo"
-        onKeyDown={mantenerFoco}
       >
         <div className="panel-top">
           <h2 id="panel-pastoreo-titulo" className="panel-titulo">
