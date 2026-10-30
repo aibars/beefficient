@@ -1,4 +1,4 @@
-import { IsArray, IsInt, IsNumber, IsObject, IsOptional, Max, Min } from 'class-validator';
+import { IsArray, IsInt, IsNumber, IsObject, IsOptional, Max, Min, ValidateIf } from 'class-validator';
 import type { ConsumoGrupo, FilaTabla1, GrupoConsumo, Supuestos } from '@beefficient/domain';
 
 export class CreateCampanaDto {
@@ -21,13 +21,13 @@ export class CreateCampanaDto {
 }
 
 export class UpdateCampanaDto {
-  @IsOptional()
+  @ValidateIf((_, v) => v !== undefined)
   @IsInt()
   @Min(1)
   @Max(12)
   mesServicio?: number;
 
-  @IsOptional()
+  @ValidateIf((_, v) => v !== undefined)
   @IsNumber({ maxDecimalPlaces: 2 })
   @Min(1)
   @Max(100)

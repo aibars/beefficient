@@ -3,13 +3,14 @@ import { INestApplication, ValidationPipe } from '@nestjs/common';
 import request from 'supertest';
 import { randomUUID } from 'crypto';
 import { AppModule } from 'src/app.module';
+import { VALIDATION_PIPE_OPTIONS } from 'src/common/validation';
 
 export async function crearAppDePrueba(): Promise<INestApplication> {
   const moduleFixture = await Test.createTestingModule({
     imports: [AppModule],
   }).compile();
   const app = moduleFixture.createNestApplication();
-  app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
+  app.useGlobalPipes(new ValidationPipe(VALIDATION_PIPE_OPTIONS));
   await app.init();
   return app;
 }

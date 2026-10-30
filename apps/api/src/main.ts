@@ -2,6 +2,7 @@ import { NestFactory } from '@nestjs/core';
 import { ConfigService } from '@nestjs/config';
 import { ValidationPipe } from '@nestjs/common';
 import { AppModule } from './app.module';
+import { VALIDATION_PIPE_OPTIONS } from './common/validation';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -9,14 +10,7 @@ async function bootstrap() {
 
   // Global ValidationPipe with whitelist and transform
   app.useGlobalPipes(
-    new ValidationPipe({
-      whitelist: true,
-      forbidNonWhitelisted: true,
-      transform: true,
-      transformOptions: {
-        enableImplicitConversion: true,
-      },
-    }),
+    new ValidationPipe(VALIDATION_PIPE_OPTIONS),
   );
 
   // Enable CORS with configurable origins from environment

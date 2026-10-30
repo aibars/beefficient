@@ -92,6 +92,25 @@ describe('Planilla: campañas (e2e)', () => {
     expect(res.body.data).not.toHaveProperty('supuestos');
   });
 
+  it('PATCH con mesServicio o eficienciaCosecha null da 400 y no cambia nada', async () => {
+    const { token } = await registrarConCampo(app, 'camp-nn');
+    const c = await http().post('/campanas').set(auth(token)).send({ anio: 2026 });
+    const id = c.body.data.id;
+    const a = await http().patch(`/campanas/${id}`).set(auth(token)).send({ mesServicio: null });
+    expect(a.status).toBe(400);
+    const b = await http().patch(`/campanas/${id}`).set(auth(token)).send({ eficienciaCosecha: null });
+    expect(b.status).toBe(400);
+    const lista = await http().get('/campanas').set(auth(token));
+    expect(lista.body.data).toEqual([c.body.data]);
+  });
+
+  it('PATCH con claves desconocidas (anio) da 400, como en producción', async () => {
+    const { token } = await registrarConCampo(app, 'camp-anio');
+    const c = await http().post('/campanas').set(auth(token)).send({ anio: 2026 });
+    const r = await http().patch(`/campanas/${c.body.data.id}`).set(auth(token)).send({ anio: 2030 });
+    expect(r.status).toBe(400);
+  });
+
   it('Review Focus 1: la campaña de otro campo del mismo usuario da 404', async () => {
     const { token, campoId: campoA } = await registrarConCampo(app, 'camp-multi');
     await http()
