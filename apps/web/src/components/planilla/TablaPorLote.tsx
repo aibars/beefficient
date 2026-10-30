@@ -18,7 +18,7 @@ export function TablaPorLote({ resultados, lotes }: Props) {
               <th className="izq">Lote</th>
               <th>ha</th>
               <th>Días</th>
-              <th>Ocup.</th>
+              <th>Ocupación</th>
               <th>Carga</th>
               <th>Rac/ha</th>
             </tr>
