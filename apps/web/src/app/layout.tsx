@@ -3,6 +3,7 @@ import { RoleProvider } from '@/context/RoleContext';
 import { Nav } from '@/components/Nav';
 import '@/styles/globals.css';
 import '@/styles/components.css';
+import '@/styles/planilla.css';
 
 export const metadata: Metadata = {
   title: 'Beefficient',
