@@ -8,6 +8,7 @@ import { CargaPorMes } from '@/components/planilla/CargaPorMes';
 import { TablaPorLote } from '@/components/planilla/TablaPorLote';
 import { CabezasPorRodeo } from '@/components/planilla/CabezasPorRodeo';
 import { TablaPastoreos } from '@/components/planilla/TablaPastoreos';
+import { PanelPastoreo } from '@/components/planilla/PanelPastoreo';
 import { usePlanilla } from '@/hooks/usePlanilla';
 import { resultadosEn, type Unidad } from '@/lib/planilla/vista';
 
@@ -86,6 +87,18 @@ export default function PlanillaPage() {
             onAbrir={onAbrirPastoreo}
             seleccionado={pastoreoAbierto}
           />
+          {pastoreoAbierto !== null && (
+            <PanelPastoreo
+              key={pastoreoAbierto}
+              campana={campana}
+              pastoreo={campana.pastoreos.find((p) => p.id === pastoreoAbierto) ?? null}
+              onCerrar={() => setPastoreoAbierto(null)}
+              onGuardado={() => {
+                setPastoreoAbierto(null);
+                void planilla.recargar();
+              }}
+            />
+          )}
         </>
       )}
     </div>
