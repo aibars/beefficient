@@ -44,9 +44,7 @@ describe('Esquema de la planilla', () => {
   });
 
   afterAll(async () => {
-    // Pastoreos RESTRICT their lote/rodeo, so campañas (and their pastoreos)
-    // go first; the rest cascades from the user.
-    if (campo) await em.delete(CampanaEntity, { establecimientoId: campo.id });
+    // Cascades to companies, establishments and everything under them.
     if (user) await em.remove(user);
     await dataSource?.destroy();
   });
@@ -125,5 +123,34 @@ describe('Esquema de la planilla', () => {
     expect(r.inicioServicio).toBe('2025-11-01');
     expect(r.pesoVivo).toBe(420.5);
     expect(l.hectareas).toBe(30.5);
+  });
+
+  it('no deja borrar un rodeo con pastoreos', async () => {
+    const campana = await nuevaCampana(2036);
+    const rodeo = await em.save(em.create(RodeoEntity, { campanaId: campana.id, nombre: 'Rodeo con pastoreo' }));
+    await em.save(em.create(PastoreoEntity, { campanaId: campana.id, rodeoId: rodeo.id }));
+    const err = await em.delete(RodeoEntity, rodeo.id).catch((e: unknown) => e);
+    expect(err).toBeInstanceOf(QueryFailedError);
+    expect((err as QueryFailedError & { driverError: { code: string } }).driverError.code).toBe('23503');
+  });
+
+  it('borrar un establecimiento arrastra potreros, lotes, campañas, rodeos y pastoreos', async () => {
+    const company = await em.save(em.create(Company, { ownerId: user.id }));
+    const otro = await em.save(
+      em.create(Establishment, { companyId: company.id, name: 'Campo a borrar', provincia: 'Córdoba' }),
+    );
+    const potrero = await em.save(em.create(PotreroEntity, { establecimientoId: otro.id, nombre: 'P', hectareas: 10 }));
+    const lote = await em.save(em.create(LoteEntity, { establecimientoId: otro.id, potreroId: potrero.id, nombre: 'L' }));
+    const campana = await em.save(em.create(CampanaEntity, { establecimientoId: otro.id, anio: 2040 }));
+    const rodeo = await em.save(em.create(RodeoEntity, { campanaId: campana.id, nombre: 'R' }));
+    await em.save(em.create(PastoreoEntity, { campanaId: campana.id, loteId: lote.id, rodeoId: rodeo.id }));
+
+    await em.delete(Establishment, otro.id);
+
+    expect(await em.countBy(PotreroEntity, { establecimientoId: otro.id })).toBe(0);
+    expect(await em.countBy(LoteEntity, { establecimientoId: otro.id })).toBe(0);
+    expect(await em.countBy(CampanaEntity, { establecimientoId: otro.id })).toBe(0);
+    expect(await em.countBy(RodeoEntity, { campanaId: campana.id })).toBe(0);
+    expect(await em.countBy(PastoreoEntity, { campanaId: campana.id })).toBe(0);
   });
 });

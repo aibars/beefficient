@@ -19,14 +19,14 @@ export class PastoreoEntity {
   @Column({ name: 'lote_id', type: 'uuid', nullable: true })
   loteId: string | null;
 
-  @ManyToOne(() => LoteEntity, { onDelete: 'RESTRICT', nullable: true })
+  @ManyToOne(() => LoteEntity, { onDelete: 'NO ACTION', deferrable: 'INITIALLY DEFERRED', nullable: true })
   @JoinColumn({ name: 'lote_id', foreignKeyConstraintName: 'fk_pastoreos_lote_id' })
   lote: LoteEntity | null;
 
   @Column({ name: 'rodeo_id', type: 'uuid', nullable: true })
   rodeoId: string | null;
 
-  @ManyToOne(() => RodeoEntity, { onDelete: 'RESTRICT', nullable: true })
+  @ManyToOne(() => RodeoEntity, { onDelete: 'NO ACTION', deferrable: 'INITIALLY DEFERRED', nullable: true })
   @JoinColumn({ name: 'rodeo_id', foreignKeyConstraintName: 'fk_pastoreos_rodeo_id' })
   rodeo: RodeoEntity | null;
 
