@@ -1,6 +1,8 @@
 import {
   buscarSuperposicionCampana,
   calcularCampana,
+  NOMBRES_MES,
+  NOMBRES_MES_CORTOS,
   type CalculoCampana,
   type Campana,
   type FechaISO,
@@ -11,21 +13,18 @@ import {
 
 export type Unidad = 'EV' | 'MS';
 
-/** Índice 0 = enero. */
-export const NOMBRES_MES: readonly string[] = [
-  'enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio',
-  'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre',
-];
+// Los nombres de mes son los del motor: la columna Mes y las etiquetas de la web dicen lo mismo.
+export { NOMBRES_MES };
 
 export function resultadosEn(calculo: CalculoCampana, unidad: Unidad): ResultadosCampana {
   return unidad === 'EV' ? calculo.ev : calculo.ms;
 }
 
-/** '2026-12-01' → 'dic 26'. */
+/** '2026-12-01' → 'dic 26'; septiembre → 'sept 26', como la columna Mes del motor. */
 export function etiquetaMesCorto(mes: FechaISO): string {
   const [anio, m] = mes.split('-');
-  const nombre = NOMBRES_MES[Number(m) - 1] ?? '';
-  return `${nombre.slice(0, 3)} ${(anio ?? '').slice(-2)}`;
+  const nombre = NOMBRES_MES_CORTOS[Number(m) - 1] ?? '';
+  return `${nombre} ${(anio ?? '').slice(-2)}`;
 }
 
 /** Los pastoreos con el borrador: reemplaza al de su id o se agrega al final. */

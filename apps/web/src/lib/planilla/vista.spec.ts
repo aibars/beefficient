@@ -1,4 +1,4 @@
-import { calcularCampana, type Campana, type PastoreoCampana } from '@beefficient/domain';
+import { NOMBRES_MES as NOMBRES_MES_DOMINIO, calcularCampana, type Campana, type PastoreoCampana } from '@beefficient/domain';
 import {
   NOMBRES_MES,
   TEXTO_AVISO,
@@ -45,6 +45,10 @@ const campana = (pastoreos: PastoreoCampana[]): Campana => ({
 });
 
 describe('vista', () => {
+  it('NOMBRES_MES es el del dominio', () => {
+    expect(NOMBRES_MES).toBe(NOMBRES_MES_DOMINIO);
+  });
+
   it('NOMBRES_MES tiene los 12 meses', () => {
     expect(NOMBRES_MES).toHaveLength(12);
     expect(NOMBRES_MES[0]).toBe('enero');
@@ -54,6 +58,7 @@ describe('vista', () => {
   it('etiquetaMesCorto', () => {
     expect(etiquetaMesCorto('2026-12-01')).toBe('dic 26');
     expect(etiquetaMesCorto('2027-01-01')).toBe('ene 27');
+    expect(etiquetaMesCorto('2026-09-01')).toBe('sept 26');
   });
 
   it('resultadosEn elige la unidad', () => {

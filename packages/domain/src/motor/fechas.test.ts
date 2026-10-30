@@ -1,8 +1,17 @@
 import { describe, expect, it } from 'vitest';
 import Engine from './__referencia__/planilla-engine.cjs';
 import { diaDe, etiquetaMes, fechaDe, mesDelCiclo } from './fechas';
+import { NOMBRES_MES, NOMBRES_MES_CORTOS } from './index';
 
 describe('fechas', () => {
+  it('exporta los nombres de mes del motor, índice 0 = enero', () => {
+    expect(NOMBRES_MES).toHaveLength(12);
+    expect(NOMBRES_MES[0]).toBe('enero');
+    expect(NOMBRES_MES[8]).toBe('septiembre');
+    expect(NOMBRES_MES_CORTOS).toHaveLength(12);
+    expect(NOMBRES_MES_CORTOS[8]).toBe('sept');
+  });
+
   it('etiquetaMes: un mes o un rango; la salida no se cuenta', () => {
     expect(etiquetaMes(diaDe('2026-04-01')!, diaDe('2026-04-15')!)).toBe('abril 2026');
     expect(etiquetaMes(diaDe('2026-04-01')!, diaDe('2026-05-01')!)).toBe('abril 2026');

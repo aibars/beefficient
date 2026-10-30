@@ -2,8 +2,10 @@
 import type { FechaISO } from '../tipos';
 
 const MS_POR_DIA = 86400000;
-const MESES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
-const MESES_CORTOS = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sept', 'oct', 'nov', 'dic'];
+/** Nombres de los meses, índice 0 = enero. */
+export const NOMBRES_MES: readonly string[] = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+/** Nombres cortos (el de septiembre es 'sept'), índice 0 = enero. */
+export const NOMBRES_MES_CORTOS: readonly string[] = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sept', 'oct', 'nov', 'dic'];
 
 /** Días desde la época de un año, mes (1 a 12) y día; desborda como `Date.UTC`. */
 export function diaUTC(a: number, m: number, d: number): number {
@@ -58,8 +60,8 @@ export function diasDelAnio(a: number): number {
 export function etiquetaMes(entrada: number, salida: number | null): string {
   const a = partes(entrada);
   const h = salida == null || salida <= entrada ? a : partes(salida - 1);
-  if (a.a === h.a && a.m === h.m) return `${MESES[a.m - 1]} ${a.a}`;
-  return `${MESES_CORTOS[a.m - 1]} a ${MESES_CORTOS[h.m - 1]} ${h.a}`;
+  if (a.a === h.a && a.m === h.m) return `${NOMBRES_MES[a.m - 1]} ${a.a}`;
+  return `${NOMBRES_MES_CORTOS[a.m - 1]} a ${NOMBRES_MES_CORTOS[h.m - 1]} ${h.a}`;
 }
 
 /** Mes del ciclo (1 a 12) de un mes calendario: MOD(mes − servicio + 3; 12) + 1. */

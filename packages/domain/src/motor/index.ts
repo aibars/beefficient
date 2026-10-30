@@ -6,7 +6,7 @@ export * from './tipos';
 export * from './tablas';
 export { evCocimano } from './cocimano';
 export { buscarSuperposicionCampana } from './superposicion';
-export { etiquetaMes, mesDelCiclo } from './fechas';
+export { etiquetaMes, mesDelCiclo, NOMBRES_MES, NOMBRES_MES_CORTOS } from './fechas';
 
 /** Calcula la campaña como la planilla CREA: filas y resultados en EV y en MS. */
 export function calcularCampana(campana: Campana): CalculoCampana {
