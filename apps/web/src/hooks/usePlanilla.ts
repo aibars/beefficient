@@ -53,10 +53,12 @@ export function usePlanilla(): Planilla {
   // Cada operación toma un número; las respuestas de una operación vieja se descartan,
   // así la campaña de un campo anterior no pisa la del campo elegido.
   const generacion = useRef(0);
+  // Aparte: la lista de establecimientos no depende de las operaciones de campaña.
+  // Sube cuando el servidor confirma un cambio de campo, para que una lista pedida
+  // antes no vuelva a marcar el campo anterior.
+  const generacionCampo = useRef(0);
   const campanaIdRef = useRef<string | null>(null);
   campanaIdRef.current = campanaId;
-
-  const vigente = (g: number) => g === generacion.current;
 
   const ejecutar = useCallback(async (trabajo: (g: number) => Promise<void>) => {
     const g = ++generacion.current;
@@ -89,27 +91,37 @@ export function usePlanilla(): Planilla {
     [cargarCampana],
   );
 
-  useEffect(() => {
-    void ejecutar(async (g) => {
-      const [lista] = await Promise.all([
-        listarEstablecimientos(),
-        cargarCampanas(g, campanaIdRef.current),
-      ]);
-      if (!vigente(g)) return;
+  const cargarEstablecimientos = useCallback(async () => {
+    const g = generacionCampo.current;
+    try {
+      const lista = await listarEstablecimientos();
       setEstablecimientos(lista);
-      setEstablecimientoId((actual) => actual ?? lista.find((e) => e.activo)?.id ?? null);
-    });
+      // El campo elegido es el que el servidor tiene activo.
+      if (g === generacionCampo.current) {
+        setEstablecimientoId(lista.find((e) => e.activo)?.id ?? null);
+      }
+    } catch (err) {
+      setError(mensaje(err));
+    }
+  }, []);
+
+  useEffect(() => {
+    void cargarEstablecimientos();
+    void ejecutar((g) => cargarCampanas(g, campanaIdRef.current));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [intento]);
 
   const cambiarEstablecimiento = useCallback(
     (id: string) =>
       ejecutar(async (g) => {
-        setEstablecimientoId(id);
         setCampana(null);
         setCampanas([]);
         setCampanaId(null);
         await activarEstablecimiento(id);
+        if (g !== generacion.current) return;
+        // Recién con el campo activado en el servidor cambia la selección.
+        generacionCampo.current++;
+        setEstablecimientoId(id);
         await cargarCampanas(g);
       }),
     [ejecutar, cargarCampanas],

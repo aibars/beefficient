@@ -94,7 +94,8 @@ describe('usePlanilla', () => {
     expect(result.current.campana).toBeNull();
     expect(result.current.calculo).toBeNull();
     expect(result.current.campanas).toEqual([]);
-    expect(result.current.establecimientoId).toBe('B');
+    // La selección cambia recién cuando el servidor activó el campo.
+    expect(result.current.establecimientoId).toBe('A');
     expect(result.current.loading).toBe(true);
 
     await act(async () => {
@@ -102,6 +103,7 @@ describe('usePlanilla', () => {
       await cambio;
     });
 
+    expect(result.current.establecimientoId).toBe('B');
     expect(result.current.campanas.map((c) => c.id)).toEqual(['b25', 'b27']);
     expect(result.current.campanaId).toBe('b27');
     expect(result.current.campana?.id).toBe('b27');
@@ -132,6 +134,65 @@ describe('usePlanilla', () => {
     });
     expect(result.current.campana?.id).toBe('b26');
     expect(result.current.campanaId).toBe('b26');
+  });
+
+  it('si la activación falla, el campo sigue siendo A y el reintento muestra las campañas de A', async () => {
+    mPlanilla.listarCampanas.mockResolvedValue([resumen('a26', 2026)]);
+    mPlanilla.obtenerCampana.mockImplementation(async (id) => completa(id, 2026));
+    mFarms.activarEstablecimiento.mockRejectedValue(new Error('No sos miembro de ese establecimiento.'));
+
+    const { result } = renderHook(() => usePlanilla());
+    await waitFor(() => expect(result.current.campana?.id).toBe('a26'));
+
+    await act(async () => {
+      await result.current.cambiarEstablecimiento('B');
+    });
+
+    expect(mFarms.activarEstablecimiento).toHaveBeenCalledWith('B');
+    expect(result.current.establecimientoId).toBe('A');
+    expect(result.current.error).toBe('No sos miembro de ese establecimiento.');
+    expect(result.current.loading).toBe(false);
+
+    act(() => result.current.retry());
+
+    await waitFor(() => expect(result.current.campana?.id).toBe('a26'));
+    expect(result.current.establecimientoId).toBe('A');
+    expect(result.current.campanas.map((c) => c.id)).toEqual(['a26']);
+    expect(result.current.error).toBeNull();
+  });
+
+  it('elegir una campaña mientras carga la inicial no pierde la lista de establecimientos', async () => {
+    mPlanilla.listarCampanas.mockResolvedValue([resumen('c25', 2025), resumen('c26', 2026)]);
+    const inicial = diferido<CampanaCompleta>();
+    mPlanilla.obtenerCampana.mockImplementation((id) =>
+      id === 'c26' ? inicial.promesa : Promise.resolve(completa(id, 2025)),
+    );
+
+    const { result } = renderHook(() => usePlanilla());
+    await waitFor(() => expect(mPlanilla.obtenerCampana).toHaveBeenCalledWith('c26'));
+
+    await act(async () => {
+      await result.current.elegirCampana('c25');
+    });
+    await act(async () => {
+      inicial.resolver(completa('c26', 2026));
+      await inicial.promesa;
+    });
+
+    expect(result.current.campana?.id).toBe('c25');
+    expect(result.current.establecimientos.map((e) => e.id)).toEqual(['A', 'B']);
+    expect(result.current.establecimientoId).toBe('A');
+  });
+
+  it('si falla la carga de la campaña, la lista de establecimientos queda disponible', async () => {
+    mPlanilla.listarCampanas.mockResolvedValue([resumen('c26', 2026)]);
+    mPlanilla.obtenerCampana.mockRejectedValue(new Error('No se pudo cargar la campaña.'));
+
+    const { result } = renderHook(() => usePlanilla());
+
+    await waitFor(() => expect(result.current.error).toBe('No se pudo cargar la campaña.'));
+    await waitFor(() => expect(result.current.establecimientos).toHaveLength(2));
+    expect(result.current.establecimientoId).toBe('A');
   });
 
   it('crearCampanaDelAnio crea la del año actual y la elige', async () => {
