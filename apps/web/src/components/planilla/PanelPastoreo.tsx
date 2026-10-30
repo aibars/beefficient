@@ -12,6 +12,7 @@ import {
   calcularBorrador,
   avisosDeFila,
   conBorrador,
+  ERROR_CALCULO,
   TEXTO_AVISO,
   type Unidad,
 } from '@/lib/planilla/vista';
@@ -109,16 +110,23 @@ export function PanelPastoreo({ campana, pastoreo, unidad, onCerrar, onGuardado 
     [idEditado, datos],
   );
 
-  const fila = useMemo(() => calcularBorrador(campana, borrador), [campana, borrador]);
-  const indicadores = unidad === 'EV' ? fila.ev : fila.ms;
+  // Si el motor lanza, el panel queda sin resultados y con el mensaje.
+  const fila = useMemo(() => {
+    try {
+      return calcularBorrador(campana, borrador);
+    } catch {
+      return null;
+    }
+  }, [campana, borrador]);
+  const indicadores = fila ? (unidad === 'EV' ? fila.ev : fila.ms) : null;
   const cabezasOk = campoCabezas.ok;
   const evManualOk = campoEv.ok;
-  const avisos = avisosDeFila(fila, borrador, conBorrador(campana.pastoreos, borrador));
+  const avisos = fila ? avisosDeFila(fila, borrador, conBorrador(campana.pastoreos, borrador)) : [];
 
   const rodeo = campana.rodeos.find((r) => r.id === rodeoId);
   const mostrarTabla1 = rodeo !== undefined && !rodeo.usaCocimano;
   const opcionesTabla1 = campana.tabla1 ?? TABLA_1;
-  const fuente = fila.evEsManual ? 'Manual' : fila.fuenteEv ? FUENTE[fila.fuenteEv] : '—';
+  const fuente = fila?.evEsManual ? 'Manual' : fila?.fuenteEv ? FUENTE[fila.fuenteEv] : '—';
 
   async function ejecutar(accion: () => Promise<unknown>) {
     setEnCurso(true);
@@ -249,15 +257,15 @@ export function PanelPastoreo({ campana, pastoreo, unidad, onCerrar, onGuardado 
         <div className="panel-resultados">
           <div className="panel-tile destacado">
             <span className="panel-etiqueta">Raciones</span>
-            <b data-testid="raciones">{num(indicadores.raciones)}</b>
+            <b data-testid="raciones">{num(indicadores?.raciones ?? null)}</b>
           </div>
           <div className="panel-tile">
             <span className="panel-etiqueta">Días</span>
-            <b data-testid="dias">{num(fila.dias)}</b>
+            <b data-testid="dias">{num(fila?.dias ?? null)}</b>
           </div>
           <div className="panel-tile">
             <span className="panel-etiqueta">EV/cab</span>
-            <b>{num(fila.evPorCabeza, 2)}</b>
+            <b>{num(fila?.evPorCabeza ?? null, 2)}</b>
             <span className="panel-etiqueta" data-testid="fuente-ev">
               {fuente}
             </span>
@@ -265,14 +273,14 @@ export function PanelPastoreo({ campana, pastoreo, unidad, onCerrar, onGuardado 
           <div className="panel-tile">
             <span className="panel-etiqueta">Carga</span>
             <b data-testid="carga">
-              {num(indicadores.carga, 2)} {unidadCarga(unidad)}
+              {num(indicadores?.carga ?? null, 2)} {unidadCarga(unidad)}
             </b>
           </div>
         </div>
 
-        {error && (
+        {(error ?? (fila ? null : ERROR_CALCULO)) && (
           <p className="panel-error" role="alert">
-            {error}
+            {error ?? ERROR_CALCULO}
           </p>
         )}
 

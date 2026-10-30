@@ -75,7 +75,7 @@ export default function PlanillaPage() {
         </div>
       )}
 
-      {!loading && campana && calculo && resultados && (
+      {campana && calculo && resultados && (
         <>
           <TotalesCampana
             resultados={resultados}

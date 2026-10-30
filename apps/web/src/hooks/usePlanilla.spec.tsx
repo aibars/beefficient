@@ -226,6 +226,62 @@ describe('usePlanilla', () => {
     expect(result.current.loading).toBe(false);
   });
 
+  it('si el motor lanza, expone un error en lugar de romper y no hay cálculo', async () => {
+    mPlanilla.listarCampanas.mockResolvedValue([resumen('c26', 2026)]);
+    mPlanilla.obtenerCampana.mockImplementation(async (id) => ({
+      ...completa(id, 2026),
+      tabla1: [null as never],
+    }));
+
+    const { result } = renderHook(() => usePlanilla());
+
+    await waitFor(() => expect(result.current.campana?.id).toBe('c26'));
+    expect(result.current.calculo).toBeNull();
+    expect(result.current.error).toBe('No se pudo calcular la campaña.');
+  });
+
+  it('elegir otra campaña mantiene la anterior a la vista hasta que llega la nueva', async () => {
+    mPlanilla.listarCampanas.mockResolvedValue([resumen('c25', 2025), resumen('c26', 2026)]);
+    const nueva = diferido<CampanaCompleta>();
+    mPlanilla.obtenerCampana.mockImplementation((id) =>
+      id === 'c25' ? nueva.promesa : Promise.resolve(completa(id, 2026)),
+    );
+    const { result } = renderHook(() => usePlanilla());
+    await waitFor(() => expect(result.current.campana?.id).toBe('c26'));
+
+    let eleccion!: Promise<void>;
+    act(() => {
+      eleccion = result.current.elegirCampana('c25');
+    });
+    expect(result.current.campanaId).toBe('c25');
+    expect(result.current.campana?.id).toBe('c26');
+    expect(result.current.calculo).not.toBeNull();
+    expect(result.current.loading).toBe(true);
+
+    await act(async () => {
+      nueva.resolver(completa('c25', 2025));
+      await eleccion;
+    });
+    expect(result.current.campana?.id).toBe('c25');
+    expect(result.current.loading).toBe(false);
+  });
+
+  it('si falla elegir otra campaña, el selector vuelve a la que sigue a la vista', async () => {
+    mPlanilla.listarCampanas.mockResolvedValue([resumen('c25', 2025), resumen('c26', 2026)]);
+    mPlanilla.obtenerCampana.mockImplementation((id) =>
+      id === 'c25' ? Promise.reject(new Error('No se pudo cargar la campaña.')) : Promise.resolve(completa(id, 2026)),
+    );
+    const { result } = renderHook(() => usePlanilla());
+    await waitFor(() => expect(result.current.campana?.id).toBe('c26'));
+
+    await act(async () => {
+      await result.current.elegirCampana('c25');
+    });
+    expect(result.current.error).toBe('No se pudo cargar la campaña.');
+    expect(result.current.campanaId).toBe('c26');
+    expect(result.current.campana?.id).toBe('c26');
+  });
+
   it('recargar que falla deja el mensaje en error, sin rechazar y conservando la campaña', async () => {
     mPlanilla.listarCampanas.mockResolvedValue([resumen('c26', 2026)]);
     mPlanilla.obtenerCampana.mockResolvedValueOnce(completa('c26', 2026));

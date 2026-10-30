@@ -9,6 +9,7 @@ import {
   type CampanaCompleta,
   type CampanaResumen,
 } from '@/services/planilla.service';
+import { ERROR_CALCULO } from '@/lib/planilla/vista';
 import { mensajeDe as mensaje } from '@/lib/formularios';
 import {
   activarEstablecimiento,
@@ -127,9 +128,16 @@ export function usePlanilla(): Planilla {
   const elegirCampana = useCallback(
     (id: string) =>
       ejecutar(async (g) => {
+        // La campaña actual sigue a la vista hasta que llega la nueva.
+        const anterior = campanaIdRef.current;
         setCampanaId(id);
-        setCampana(null);
-        await cargarCampana(id, g);
+        try {
+          await cargarCampana(id, g);
+        } catch (err) {
+          // Sigue a la vista la campaña anterior: el selector vuelve a ella.
+          if (g === generacion.current) setCampanaId(anterior);
+          throw err;
+        }
       }),
     [ejecutar, cargarCampana],
   );
@@ -156,7 +164,15 @@ export function usePlanilla(): Planilla {
 
   const retry = useCallback(() => setIntento((n) => n + 1), []);
 
-  const calculo = useMemo(() => (campana ? calcularCampana(campana) : null), [campana]);
+  // Un dato que haga lanzar al motor (p. ej. una `tabla1` mal formada) no tumba la página.
+  const { calculo, errorCalculo } = useMemo(() => {
+    if (!campana) return { calculo: null, errorCalculo: null };
+    try {
+      return { calculo: calcularCampana(campana), errorCalculo: null };
+    } catch {
+      return { calculo: null, errorCalculo: ERROR_CALCULO };
+    }
+  }, [campana]);
 
   return {
     establecimientos,
@@ -168,7 +184,7 @@ export function usePlanilla(): Planilla {
     campana,
     calculo,
     loading,
-    error,
+    error: error ?? errorCalculo,
     retry,
     recargar,
     crearCampanaDelAnio,

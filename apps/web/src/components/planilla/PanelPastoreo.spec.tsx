@@ -218,6 +218,15 @@ describe('PanelPastoreo', () => {
     expect((actualizarPastoreo as jest.Mock).mock.calls[0][2].evManual).toBeNull();
   });
 
+  it('si el motor lanza muestra el mensaje y deja los resultados vacíos, sin romper', () => {
+    const rota = { ...campana, tabla1: [null as never] };
+    render(<PanelPastoreo {...props} campana={rota} pastoreo={existente} />);
+    expect(screen.getByText('No se pudo calcular la campaña.')).toBeTruthy();
+    expect(screen.getByTestId('raciones').textContent).toBe('—');
+    expect(screen.getByTestId('dias').textContent).toBe('—');
+    expect(screen.getByTestId('carga').textContent).toContain('—');
+  });
+
   it('Escape cierra el panel', () => {
     render(<PanelPastoreo {...props} pastoreo={existente} />);
     fireEvent.keyDown(document, { key: 'Escape' });

@@ -13,6 +13,9 @@ import {
 
 export type Unidad = 'EV' | 'MS';
 
+/** Mensaje cuando el motor no puede calcular la campaña. */
+export const ERROR_CALCULO = 'No se pudo calcular la campaña.';
+
 // Los nombres de mes son los del motor: la columna Mes y las etiquetas de la web dicen lo mismo.
 export { NOMBRES_MES, NOMBRES_MES_CORTOS };
 
