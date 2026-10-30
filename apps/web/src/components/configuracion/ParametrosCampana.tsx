@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { actualizarCampana, type CampanaCompleta } from '@/services/planilla.service';
 import { NOMBRES_MES } from '@/lib/planilla/vista';
-import { enRango, RANGOS } from '@/lib/planilla/rangos';
+import { RANGOS, useCampoNumerico } from '@/lib/planilla/rangos';
 
 interface Props {
   campana: CampanaCompleta;
@@ -12,10 +12,11 @@ interface Props {
 
 export function ParametrosCampana({ campana, onCambio }: Props) {
   const [mes, setMes] = useState(String(campana.mesServicio));
-  const [eficiencia, setEficiencia] = useState(String(campana.eficienciaCosecha));
+  const campoEficiencia = useCampoNumerico(String(campana.eficienciaCosecha), RANGOS.eficiencia);
+  const eficiencia = campoEficiencia.texto;
   const [error, setError] = useState<string | null>(null);
   const [enCurso, setEnCurso] = useState(false);
-  const eficienciaOk = enRango(eficiencia, RANGOS.eficiencia);
+  const eficienciaOk = campoEficiencia.ok;
 
   async function guardar() {
     setEnCurso(true);
@@ -50,11 +51,7 @@ export function ParametrosCampana({ campana, onCambio }: Props) {
           <span className="panel-etiqueta">Eficiencia de cosecha (%)</span>
           <input
             className="panel-input"
-            type="number"
-            {...RANGOS.eficiencia}
-            aria-invalid={!eficienciaOk}
-            value={eficiencia}
-            onChange={(e) => setEficiencia(e.target.value)}
+            {...campoEficiencia.props}
           />
         </label>
       </div>

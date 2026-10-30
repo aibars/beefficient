@@ -40,4 +40,18 @@ describe('FormRodeo', () => {
     fireEvent.change(screen.getByLabelText('Peso vivo (kg)'), { target: { value: '100000' } });
     expect(guardar().disabled).toBe(true);
   });
+
+  it('deshabilita Guardar con peso vivo ilegible (badInput) o con 3 decimales', () => {
+    render(<FormRodeo campanaId="c1" rodeo={null} onGuardado={jest.fn()} onCancelar={jest.fn()} />);
+    fireEvent.change(screen.getByLabelText('Nombre'), { target: { value: 'Vacas 1' } });
+    const guardar = () => screen.getByRole('button', { name: 'Guardar' }) as HTMLButtonElement;
+    const peso = screen.getByLabelText('Peso vivo (kg)');
+    fireEvent.change(peso, { target: { value: '420.123' } });
+    expect(guardar().disabled).toBe(true);
+    fireEvent.change(peso, { target: { value: '420.12' } });
+    expect(guardar().disabled).toBe(false);
+    Object.defineProperty(peso, 'validity', { value: { badInput: true }, configurable: true });
+    fireEvent.change(peso, { target: { value: '' } });
+    expect(guardar().disabled).toBe(true);
+  });
 });

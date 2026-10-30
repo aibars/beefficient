@@ -10,7 +10,7 @@ import {
 } from '@beefficient/domain';
 import { actualizarRodeo, crearRodeo } from '@/services/planilla.service';
 import { NOMBRES_MES } from '@/lib/planilla/vista';
-import { enRango, RANGOS } from '@/lib/planilla/rangos';
+import { RANGOS, useCampoNumerico } from '@/lib/planilla/rangos';
 
 interface Props {
   campanaId: string;
@@ -30,7 +30,8 @@ function mensajeDe(err: unknown): string {
 export function FormRodeo({ campanaId, rodeo, onGuardado, onCancelar }: Props) {
   const [nombre, setNombre] = useState(rodeo?.nombre ?? '');
   const [categoria, setCategoria] = useState<string>(rodeo?.categoria ?? '');
-  const [pesoVivo, setPesoVivo] = useState(aTexto(rodeo?.pesoVivo));
+  const campoPeso = useCampoNumerico(aTexto(rodeo?.pesoVivo), RANGOS.pesoVivo);
+  const pesoVivo = campoPeso.texto;
   const [ganancia, setGanancia] = useState<string[]>(
     Array.from({ length: 12 }, (_, i) => aTexto(rodeo?.ganancia[i])),
   );
@@ -40,7 +41,7 @@ export function FormRodeo({ campanaId, rodeo, onGuardado, onCancelar }: Props) {
   const [cocimano, setCocimano] = useState(rodeo?.usaCocimano ?? true);
   const [error, setError] = useState<string | null>(null);
   const [enCurso, setEnCurso] = useState(false);
-  const pesoVivoOk = enRango(pesoVivo, RANGOS.pesoVivo);
+  const pesoVivoOk = campoPeso.ok;
 
   async function guardar() {
     setEnCurso(true);
@@ -94,11 +95,7 @@ export function FormRodeo({ campanaId, rodeo, onGuardado, onCancelar }: Props) {
           <span className="panel-etiqueta">Peso vivo (kg)</span>
           <input
             className="panel-input"
-            type="number"
-            {...RANGOS.pesoVivo}
-            aria-invalid={!pesoVivoOk}
-            value={pesoVivo}
-            onChange={(e) => setPesoVivo(e.target.value)}
+            {...campoPeso.props}
           />
         </label>
         <label className="panel-campo">

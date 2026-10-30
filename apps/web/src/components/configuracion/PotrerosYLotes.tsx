@@ -15,7 +15,7 @@ import {
 } from '@/services/planilla.service';
 import { ha } from '@/components/planilla/formato';
 import { BotonBorrar } from '@/components/BotonBorrar';
-import { enRango, RANGOS } from '@/lib/planilla/rangos';
+import { RANGOS, useCampoNumerico } from '@/lib/planilla/rangos';
 
 interface Props {
   /** Avisa que cambiaron lotes o potreros (la campaña los usa). */
@@ -180,9 +180,9 @@ function FormLote({
   onGuardar: (d: { nombre: string; hectareas: number | null; potreroId: string | null }) => void;
 }) {
   const [nombre, setNombre] = useState(lote?.nombre ?? '');
-  const [hectareas, setHectareas] = useState(aTexto(lote?.hectareas));
+  const campoHa = useCampoNumerico(aTexto(lote?.hectareas), RANGOS.hectareas);
+  const { texto: hectareas, setTexto: setHectareas, ok: hectareasOk } = campoHa;
   const [potreroId, setPotreroId] = useState(lote?.potreroId ?? '');
-  const hectareasOk = enRango(hectareas, RANGOS.hectareas);
 
   function elegirPotrero(id: string) {
     const anterior = potreros.find((p) => p.id === potreroId);
@@ -223,11 +223,7 @@ function FormLote({
           <input
             className="panel-input"
             aria-label="Hectáreas del lote"
-            type="number"
-            {...RANGOS.hectareas}
-            aria-invalid={!hectareasOk}
-            value={hectareas}
-            onChange={(e) => setHectareas(e.target.value)}
+            {...campoHa.props}
           />
         </label>
       </div>
@@ -253,8 +249,8 @@ function FormPotrero({
   onGuardar: (d: { nombre: string; hectareas: number }) => void;
 }) {
   const [nombre, setNombre] = useState(potrero?.nombre ?? '');
-  const [hectareas, setHectareas] = useState(aTexto(potrero?.hectareas));
-  const hectareasOk = enRango(hectareas, RANGOS.hectareas);
+  const campoHa = useCampoNumerico(aTexto(potrero?.hectareas), RANGOS.hectareas);
+  const { texto: hectareas, ok: hectareasOk } = campoHa;
 
   return (
     <form
@@ -274,11 +270,7 @@ function FormPotrero({
           <input
             className="panel-input"
             aria-label="Hectáreas del potrero"
-            type="number"
-            {...RANGOS.hectareas}
-            aria-invalid={!hectareasOk}
-            value={hectareas}
-            onChange={(e) => setHectareas(e.target.value)}
+            {...campoHa.props}
           />
         </label>
       </div>

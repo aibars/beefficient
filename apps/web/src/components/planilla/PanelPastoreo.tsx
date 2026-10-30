@@ -15,7 +15,7 @@ import {
   TEXTO_AVISO,
   type Unidad,
 } from '@/lib/planilla/vista';
-import { enRango, RANGOS } from '@/lib/planilla/rangos';
+import { RANGOS, useCampoNumerico } from '@/lib/planilla/rangos';
 import { num, ha, unidadCarga } from '@/components/planilla/formato';
 import { BotonBorrar } from '@/components/BotonBorrar';
 
@@ -44,11 +44,13 @@ function mensajeDe(err: unknown): string {
 export function PanelPastoreo({ campana, pastoreo, unidad, onCerrar, onGuardado }: Props) {
   const [loteId, setLoteId] = useState(pastoreo?.loteId ?? '');
   const [rodeoId, setRodeoId] = useState(pastoreo?.rodeoId ?? '');
-  const [cabezas, setCabezas] = useState(aTexto(pastoreo?.cabezas));
+  const campoCabezas = useCampoNumerico(aTexto(pastoreo?.cabezas), RANGOS.cabezas);
+  const campoEv = useCampoNumerico(aTexto(pastoreo?.evManual), RANGOS.evManual);
+  const cabezas = campoCabezas.texto;
+  const evManual = campoEv.texto;
   const [entrada, setEntrada] = useState(pastoreo?.entrada ?? '');
   const [salida, setSalida] = useState(pastoreo?.salida ?? '');
   const [categoria, setCategoria] = useState(pastoreo?.categoriaTabla1Id ?? '');
-  const [evManual, setEvManual] = useState(aTexto(pastoreo?.evManual));
   const [error, setError] = useState<string | null>(null);
   const [enCurso, setEnCurso] = useState(false);
 
@@ -89,8 +91,8 @@ export function PanelPastoreo({ campana, pastoreo, unidad, onCerrar, onGuardado 
 
   const fila = useMemo(() => calcularBorrador(campana, borrador), [campana, borrador]);
   const indicadores = unidad === 'EV' ? fila.ev : fila.ms;
-  const cabezasOk = enRango(cabezas, RANGOS.cabezas);
-  const evManualOk = enRango(evManual, RANGOS.evManual);
+  const cabezasOk = campoCabezas.ok;
+  const evManualOk = campoEv.ok;
   const avisos = avisosDeFila(fila, borrador, conBorrador(campana.pastoreos, borrador));
 
   const rodeo = campana.rodeos.find((r) => r.id === rodeoId);
@@ -158,11 +160,7 @@ export function PanelPastoreo({ campana, pastoreo, unidad, onCerrar, onGuardado 
           <span className="panel-etiqueta">Cabezas</span>
           <input
             className="panel-input"
-            type="number"
-            {...RANGOS.cabezas}
-            aria-invalid={!cabezasOk}
-            value={cabezas}
-            onChange={(e) => setCabezas(e.target.value)}
+            {...campoCabezas.props}
           />
         </label>
 
@@ -209,11 +207,7 @@ export function PanelPastoreo({ campana, pastoreo, unidad, onCerrar, onGuardado 
           <span className="panel-etiqueta">EV manual</span>
           <input
             className="panel-input"
-            type="number"
-            {...RANGOS.evManual}
-            aria-invalid={!evManualOk}
-            value={evManual}
-            onChange={(e) => setEvManual(e.target.value)}
+            {...campoEv.props}
           />
         </label>
 

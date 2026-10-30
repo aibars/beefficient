@@ -145,6 +145,23 @@ describe('PanelPastoreo', () => {
     expect(screen.getByLabelText(campo).getAttribute('aria-invalid')).toBe('true');
   });
 
+  it('deshabilita Guardar con más decimales de los que admite el EV manual', () => {
+    render(<PanelPastoreo {...props} pastoreo={existente} />);
+    fireEvent.change(screen.getByLabelText('EV manual'), { target: { value: '0.1234' } });
+    expect((screen.getByRole('button', { name: 'Guardar' }) as HTMLButtonElement).disabled).toBe(true);
+    fireEvent.change(screen.getByLabelText('EV manual'), { target: { value: '0.123' } });
+    expect((screen.getByRole('button', { name: 'Guardar' }) as HTMLButtonElement).disabled).toBe(false);
+  });
+
+  it.each(['Cabezas', 'EV manual'])('deshabilita Guardar si %s tiene texto no parseable (badInput)', (campo) => {
+    render(<PanelPastoreo {...props} pastoreo={{ ...existente, evManual: 0.5 }} />);
+    const input = screen.getByLabelText(campo);
+    Object.defineProperty(input, 'validity', { value: { badInput: true }, configurable: true });
+    fireEvent.change(input, { target: { value: '' } });
+    expect((screen.getByRole('button', { name: 'Guardar' }) as HTMLButtonElement).disabled).toBe(true);
+    expect(input.getAttribute('aria-invalid')).toBe('true');
+  });
+
   it('Escape cierra el panel', () => {
     render(<PanelPastoreo {...props} pastoreo={existente} />);
     fireEvent.keyDown(document, { key: 'Escape' });

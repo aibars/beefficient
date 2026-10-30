@@ -109,6 +109,16 @@ describe('PotrerosYLotes', () => {
     expect(guardar().disabled).toBe(true);
   });
 
+  it('deshabilita Guardar del lote con hectáreas ilegibles (badInput)', async () => {
+    await abrirLoteNuevo();
+    fireEvent.change(screen.getByLabelText('Nombre del lote'), { target: { value: 'Bajo' } });
+    const input = screen.getByLabelText('Hectáreas del lote');
+    Object.defineProperty(input, 'validity', { value: { badInput: true }, configurable: true });
+    fireEvent.change(input, { target: { value: '5' } });
+    fireEvent.change(input, { target: { value: '' } });
+    expect((screen.getByRole('button', { name: 'Guardar lote' }) as HTMLButtonElement).disabled).toBe(true);
+  });
+
   const ha = () => (screen.getByLabelText('Hectáreas del lote') as HTMLInputElement).value;
   const potrero = (id: string) =>
     fireEvent.change(screen.getByLabelText('Potrero del lote'), { target: { value: id } });
