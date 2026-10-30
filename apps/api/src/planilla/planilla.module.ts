@@ -6,6 +6,10 @@ import { LoteEntity } from './entities/lote.entity';
 import { PastoreoEntity } from './entities/pastoreo.entity';
 import { PotreroEntity } from './entities/potrero.entity';
 import { RodeoEntity } from './entities/rodeo.entity';
+import { LotesController } from './lotes.controller';
+import { LotesService } from './lotes.service';
+import { PotrerosController } from './potreros.controller';
+import { PotrerosService } from './potreros.service';
 import { EstablecimientoActivoService } from './establecimiento-activo.service';
 
 @Module({
@@ -19,7 +23,8 @@ import { EstablecimientoActivoService } from './establecimiento-activo.service';
     ]),
     FarmsModule,
   ],
-  providers: [EstablecimientoActivoService],
+  controllers: [PotrerosController, LotesController],
+  providers: [EstablecimientoActivoService, PotrerosService, LotesService],
   exports: [EstablecimientoActivoService],
 })
 export class PlanillaModule {}
