@@ -17,8 +17,8 @@ export class CreateCampanasTable20261029000019 implements MigrationInterface {
           { name: 'created_at', type: 'timestamp', default: 'NOW()' },
           { name: 'updated_at', type: 'timestamp', default: 'NOW()' },
         ],
-        uniques: [
-          { name: 'uk_campanas_establishment_anio', columnNames: ['establishment_id', 'anio'] },
+        indices: [
+          { name: 'uk_campanas_establishment_anio', columnNames: ['establishment_id', 'anio'], isUnique: true },
         ],
         foreignKeys: [
           { name: 'fk_campanas_establishment_id', columnNames: ['establishment_id'], referencedTableName: 'establishments', referencedColumnNames: ['id'], onDelete: 'CASCADE' },

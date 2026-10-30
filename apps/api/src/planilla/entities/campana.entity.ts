@@ -1,8 +1,9 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import { Entity, Index, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, CreateDateColumn, UpdateDateColumn } from 'typeorm';
 import type { ConsumoGrupo, FilaTabla1, GrupoConsumo, Supuestos } from '@beefficient/domain';
 import { Establishment } from '../../establishments/establishments.entity';
 import { numericTransformer } from '../../common/transformers/numeric.transformer';
 
+@Index('uk_campanas_establishment_anio', ['establecimientoId', 'anio'], { unique: true })
 @Entity('campanas')
 export class CampanaEntity {
   @PrimaryGeneratedColumn('uuid')

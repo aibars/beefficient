@@ -1,8 +1,9 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import { Entity, Index, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, CreateDateColumn, UpdateDateColumn } from 'typeorm';
 import { Establishment } from '../../establishments/establishments.entity';
 import { numericTransformer } from '../../common/transformers/numeric.transformer';
 import { PotreroEntity } from './potrero.entity';
 
+@Index('uk_lotes_establishment_nombre', ['establecimientoId', 'nombre'], { unique: true })
 @Entity('lotes')
 export class LoteEntity {
   @PrimaryGeneratedColumn('uuid')

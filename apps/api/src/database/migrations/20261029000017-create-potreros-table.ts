@@ -13,8 +13,8 @@ export class CreatePotrerosTable20261029000017 implements MigrationInterface {
           { name: 'created_at', type: 'timestamp', default: 'NOW()' },
           { name: 'updated_at', type: 'timestamp', default: 'NOW()' },
         ],
-        uniques: [
-          { name: 'uk_potreros_establishment_nombre', columnNames: ['establishment_id', 'nombre'] },
+        indices: [
+          { name: 'uk_potreros_establishment_nombre', columnNames: ['establishment_id', 'nombre'], isUnique: true },
         ],
         foreignKeys: [
           { name: 'fk_potreros_establishment_id', columnNames: ['establishment_id'], referencedTableName: 'establishments', referencedColumnNames: ['id'], onDelete: 'CASCADE' },

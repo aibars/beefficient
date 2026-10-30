@@ -153,4 +153,10 @@ describe('Esquema de la planilla', () => {
     expect(await em.countBy(RodeoEntity, { campanaId: campana.id })).toBe(0);
     expect(await em.countBy(PastoreoEntity, { campanaId: campana.id })).toBe(0);
   });
+
+  it('las entidades declaran todo lo que crean las migraciones (synchronize no cambia nada)', async () => {
+    const { upQueries } = await dataSource.driver.createSchemaBuilder().log();
+    const tablas = /\b(potreros|lotes|campanas|rodeos|pastoreos)\b/;
+    expect(upQueries.map((q) => q.query).filter((q) => tablas.test(q))).toEqual([]);
+  });
 });

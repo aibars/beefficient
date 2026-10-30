@@ -25,7 +25,7 @@ export class RodeoEntity {
   pesoVivo: number | null;
 
   /** 12 valores, enero a diciembre; null = 0. */
-  @Column({ type: 'jsonb', default: () => `'[null,null,null,null,null,null,null,null,null,null,null,null]'` })
+  @Column({ type: 'jsonb', default: '[null, null, null, null, null, null, null, null, null, null, null, null]' })
   ganancia: (number | null)[];
 
   @Column({ name: 'inicio_servicio', type: 'date', nullable: true })

@@ -11,7 +11,7 @@ export class CreateRodeosTable20261029000020 implements MigrationInterface {
           { name: 'nombre', type: 'varchar', length: '100', isNullable: false },
           { name: 'categoria', type: 'varchar', length: '40', isNullable: true },
           { name: 'peso_vivo', type: 'numeric', precision: 7, scale: 2, isNullable: true },
-          { name: 'ganancia', type: 'jsonb', default: `'[null,null,null,null,null,null,null,null,null,null,null,null]'`, isNullable: false },
+          { name: 'ganancia', type: 'jsonb', default: `'[null, null, null, null, null, null, null, null, null, null, null, null]'`, isNullable: false },
           { name: 'inicio_servicio', type: 'date', isNullable: true },
           { name: 'duracion_servicio', type: 'int', default: 90, isNullable: false },
           { name: 'destete', type: 'date', isNullable: true },
