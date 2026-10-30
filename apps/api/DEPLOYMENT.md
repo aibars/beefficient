@@ -700,3 +700,13 @@ NEW_RELIC_LICENSE_KEY=<optional-newrelic-key>
 - [Authentication API Documentation](https://github.com/aibars/beefficient-workspace/blob/main/docs/AUTH.md) (workspace)
 - [Implementation Plan](docs/superpowers/plans/2026-10-08-bfc-auth1-implementation.md)
 - [NestJS Deployment Guide](https://docs.nestjs.com/deployment)
+
+## Datos de ejemplo
+
+`pnpm --filter @beefficient/api db:seed` (solo desarrollo; se niega con `NODE_ENV=production`) carga, además de los datos de `producers`, un usuario de desarrollo con un campo y una campaña 2026 de la Planilla de Pastoreo. Es idempotente: correrlo de nuevo actualiza las mismas filas.
+
+- Email: `dev@beefficient.local`
+- Contraseña: `Beefficient2026`
+- Establecimiento: La Esperanza (La Pampa), activo para ese usuario.
+
+Son datos de ejemplo: no usarlos fuera de desarrollo.

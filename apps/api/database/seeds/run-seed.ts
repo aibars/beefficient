@@ -7,6 +7,7 @@
  */
 import { AppDataSource } from '../../data-source';
 import { seedMockData } from './mock-data.seed';
+import { seedPlanilla } from './planilla.seed';
 
 async function main(): Promise<void> {
   if (process.env.NODE_ENV === 'production') {
@@ -16,6 +17,7 @@ async function main(): Promise<void> {
   await AppDataSource.initialize();
   try {
     await seedMockData(AppDataSource);
+    await seedPlanilla(AppDataSource);
 
     const counts = await AppDataSource.query(`
       SELECT
@@ -23,7 +25,12 @@ async function main(): Promise<void> {
         (SELECT COUNT(*) FROM technicians)::int AS technicians,
         (SELECT COUNT(*) FROM technician_producers)::int AS technician_producers,
         (SELECT COUNT(*) FROM prices)::int AS prices,
-        (SELECT COUNT(*) FROM kpis)::int AS kpis
+        (SELECT COUNT(*) FROM kpis)::int AS kpis,
+        (SELECT COUNT(*) FROM potreros)::int AS potreros,
+        (SELECT COUNT(*) FROM lotes)::int AS lotes,
+        (SELECT COUNT(*) FROM campanas)::int AS campanas,
+        (SELECT COUNT(*) FROM rodeos)::int AS rodeos,
+        (SELECT COUNT(*) FROM pastoreos)::int AS pastoreos
     `);
     console.log('Seed complete:', counts[0]);
   } finally {
