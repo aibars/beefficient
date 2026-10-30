@@ -5,6 +5,7 @@ import type { Campana, CalculoCampana } from './tipos';
 export * from './tipos';
 export * from './tablas';
 export { evCocimano } from './cocimano';
+export { buscarSuperposicionCampana } from './superposicion';
 export { etiquetaMes, mesDelCiclo } from './fechas';
 
 /** Calcula la campaña como la planilla CREA: filas y resultados en EV y en MS. */
