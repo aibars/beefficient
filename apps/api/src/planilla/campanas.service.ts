@@ -7,6 +7,7 @@ import { CampanaEntity } from './entities/campana.entity';
 import { LoteEntity } from './entities/lote.entity';
 import { PastoreoEntity } from './entities/pastoreo.entity';
 import { RodeoEntity } from './entities/rodeo.entity';
+import { aPastoreoDto, aRodeoDto } from './planilla.mappers';
 import type { CampanaCompletaDto, CampanaResumenDto } from './planilla.types';
 
 const aResumen = (c: CampanaEntity): CampanaResumenDto => ({
@@ -83,27 +84,8 @@ export class CampanasService {
       mesServicio: c.mesServicio,
       eficienciaCosecha: c.eficienciaCosecha,
       lotes: lotes.map((l) => ({ id: l.id, nombre: l.nombre, hectareas: l.hectareas })),
-      rodeos: rodeos.map((r) => ({
-        id: r.id,
-        nombre: r.nombre,
-        categoria: r.categoria,
-        pesoVivo: r.pesoVivo,
-        ganancia: r.ganancia,
-        inicioServicio: r.inicioServicio,
-        duracionServicio: r.duracionServicio,
-        destete: r.destete,
-        usaCocimano: r.usaCocimano,
-      })),
-      pastoreos: pastoreos.map((p) => ({
-        id: p.id,
-        loteId: p.loteId,
-        rodeoId: p.rodeoId,
-        cabezas: p.cabezas,
-        entrada: p.entrada,
-        salida: p.salida,
-        categoriaTabla1Id: p.categoriaTabla1Id,
-        evManual: p.evManual,
-      })),
+      rodeos: rodeos.map(aRodeoDto),
+      pastoreos: pastoreos.map(aPastoreoDto),
       ...(c.tabla1 !== null && { tabla1: c.tabla1 }),
       ...(c.consumo !== null && { consumo: c.consumo }),
       ...(c.supuestos !== null && { supuestos: c.supuestos }),

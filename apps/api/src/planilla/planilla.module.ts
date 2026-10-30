@@ -10,6 +10,10 @@ import { PotreroEntity } from './entities/potrero.entity';
 import { RodeoEntity } from './entities/rodeo.entity';
 import { LotesController } from './lotes.controller';
 import { LotesService } from './lotes.service';
+import { PastoreosController } from './pastoreos.controller';
+import { PastoreosService } from './pastoreos.service';
+import { RodeosController } from './rodeos.controller';
+import { RodeosService } from './rodeos.service';
 import { PotrerosController } from './potreros.controller';
 import { PotrerosService } from './potreros.service';
 import { EstablecimientoActivoService } from './establecimiento-activo.service';
@@ -25,8 +29,21 @@ import { EstablecimientoActivoService } from './establecimiento-activo.service';
     ]),
     FarmsModule,
   ],
-  controllers: [PotrerosController, LotesController, CampanasController],
-  providers: [EstablecimientoActivoService, PotrerosService, LotesService, CampanasService],
+  controllers: [
+    PotrerosController,
+    LotesController,
+    CampanasController,
+    RodeosController,
+    PastoreosController,
+  ],
+  providers: [
+    EstablecimientoActivoService,
+    PotrerosService,
+    LotesService,
+    CampanasService,
+    RodeosService,
+    PastoreosService,
+  ],
   exports: [EstablecimientoActivoService, CampanasService],
 })
 export class PlanillaModule {}
