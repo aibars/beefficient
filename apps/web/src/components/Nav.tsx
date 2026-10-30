@@ -37,6 +37,16 @@ export function Nav({ onRoleSelect }: NavProps) {
         <a href="/" className={role ? 'nav-link' : 'nav-link disabled'}>
           Inicio
         </a>
+        {role && (
+          <>
+            <a href="/planilla" className="nav-link">
+              Planilla
+            </a>
+            <a href="/configuracion" className="nav-link">
+              Configuración
+            </a>
+          </>
+        )}
         {role === 'productor' && (
           <>
             <a href="/precios" className="nav-link">

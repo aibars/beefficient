@@ -11,11 +11,14 @@
     "test:watch": "jest --watch"
   },
   "dependencies": {
+    "@beefficient/domain": "workspace:*",
     "next": "^14.0.0",
     "react": "^19.3.0",
     "react-dom": "^19.3.0"
   },
   "devDependencies": {
+    "@testing-library/dom": "^10.0.0",
+    "@testing-library/react": "^16.0.0",
     "typescript": "^5.0.0",
     "@types/react": "^19.3.0",
     "@types/node": "^20.0.0",
