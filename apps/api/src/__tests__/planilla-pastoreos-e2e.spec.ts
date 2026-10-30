@@ -1,6 +1,7 @@
 import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
 import { randomUUID } from 'crypto';
+import { DataSource } from 'typeorm';
 import { calcularCampana } from '@beefficient/domain';
 import { crearAppDePrueba, registrarConCampo } from './helpers/planilla-app';
 
@@ -149,9 +150,35 @@ describe('Planilla: rodeos y pastoreos (e2e)', () => {
     const { token, campId, loteId } = await preparar('past-400');
     const post = (b: object) =>
       http().post(`/campanas/${campId}/pastoreos`).set(auth(token)).send(b);
-    expect((await post({ loteId, cabezas: 0 })).status).toBe(400);
-    expect((await post({ loteId, entrada: '1/3/2026' })).status).toBe(400);
-    expect((await post({ loteId, evManual: 0 })).status).toBe(400);
+    const cab = await post({ loteId, cabezas: 0 });
+    expect(cab.status).toBe(400);
+    expect(cab.body.message).toEqual(['Cabezas tiene que ser un número entero mayor que 0.']);
+    const fecha = await post({ loteId, entrada: '1/3/2026' });
+    expect(fecha.status).toBe(400);
+    expect(fecha.body.message).toEqual(['La fecha de entrada no es válida (aaaa-mm-dd).']);
+    const ev = await post({ loteId, evManual: 0 });
+    expect(ev.status).toBe(400);
+    expect(ev.body.message).toEqual(['El EV manual tiene que estar entre 0,001 y 999,999.']);
+  });
+
+  it('A2: rodeos y pastoreos con el mismo createdAt salen ordenados por id', async () => {
+    const { token, campId, loteId } = await preparar('orden');
+    const ds = app.get(DataSource);
+    for (let i = 0; i < 4; i++) {
+      await http().post(`/campanas/${campId}/rodeos`).set(auth(token)).send({ nombre: `R${i}` });
+      await http().post(`/campanas/${campId}/pastoreos`).set(auth(token)).send({ loteId });
+    }
+    await ds.query(`UPDATE rodeos SET created_at = '2026-01-01' WHERE campana_id = $1`, [campId]);
+    await ds.query(`UPDATE pastoreos SET created_at = '2026-01-01' WHERE campana_id = $1`, [campId]);
+    const ids = (xs: { id: string }[]) => xs.map((x) => x.id);
+    const ordenados = (xs: string[]) => [...xs].sort();
+    const rod = await http().get(`/campanas/${campId}/rodeos`).set(auth(token));
+    const pas = await http().get(`/campanas/${campId}/pastoreos`).set(auth(token));
+    const camp = await http().get(`/campanas/${campId}`).set(auth(token));
+    expect(ids(rod.body.data)).toEqual(ordenados(ids(rod.body.data)));
+    expect(ids(pas.body.data)).toEqual(ordenados(ids(pas.body.data)));
+    expect(ids(camp.body.data.rodeos)).toEqual(ids(rod.body.data));
+    expect(ids(camp.body.data.pastoreos)).toEqual(ids(pas.body.data));
   });
 
   it('Review Focus 2: rodeo de otra campaña o lote de otro campo da 400 y no guarda', async () => {

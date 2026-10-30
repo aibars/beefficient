@@ -18,7 +18,11 @@ export class CreatePastoreosTable20261029000021 implements MigrationInterface {
           { name: 'created_at', type: 'timestamp', default: 'NOW()' },
           { name: 'updated_at', type: 'timestamp', default: 'NOW()' },
         ],
-        indices: [{ name: 'idx_pastoreos_campana_id', columnNames: ['campana_id'] }],
+        indices: [
+          { name: 'idx_pastoreos_campana_id', columnNames: ['campana_id'] },
+          { name: 'idx_pastoreos_lote_id', columnNames: ['lote_id'] },
+          { name: 'idx_pastoreos_rodeo_id', columnNames: ['rodeo_id'] },
+        ],
         foreignKeys: [
           { name: 'fk_pastoreos_campana_id', columnNames: ['campana_id'], referencedTableName: 'campanas', referencedColumnNames: ['id'], onDelete: 'CASCADE' },
           { name: 'fk_pastoreos_lote_id', columnNames: ['lote_id'], referencedTableName: 'lotes', referencedColumnNames: ['id'], onDelete: 'NO ACTION', deferrable: 'INITIALLY DEFERRED' },

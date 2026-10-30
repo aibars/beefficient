@@ -46,8 +46,10 @@ describe('Planilla: campañas (e2e)', () => {
     expect(dup.body.message).toBe('Ya existe la campaña 2026.');
     const mes = await http().post('/campanas').set(auth(token)).send({ anio: 2030, mesServicio: 13 });
     expect(mes.status).toBe(400);
+    expect(mes.body.message).toEqual(['El mes de servicio tiene que estar entre 1 y 12.']);
     const ef = await http().post('/campanas').set(auth(token)).send({ anio: 2030, eficienciaCosecha: 0 });
     expect(ef.status).toBe(400);
+    expect(ef.body.message).toEqual(['La eficiencia de cosecha tiene que estar entre 1 y 100.']);
   });
 
   it('PATCH cambia mesServicio y guarda supuestos; GET devuelve la forma del motor', async () => {

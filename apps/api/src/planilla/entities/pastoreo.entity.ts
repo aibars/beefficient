@@ -1,9 +1,11 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import { Entity, Index, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, CreateDateColumn, UpdateDateColumn } from 'typeorm';
 import { numericTransformer } from '../../common/transformers/numeric.transformer';
 import { CampanaEntity } from './campana.entity';
 import { LoteEntity } from './lote.entity';
 import { RodeoEntity } from './rodeo.entity';
 
+@Index('idx_pastoreos_lote_id', ['loteId'])
+@Index('idx_pastoreos_rodeo_id', ['rodeoId'])
 @Entity('pastoreos')
 export class PastoreoEntity {
   @PrimaryGeneratedColumn('uuid')

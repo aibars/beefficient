@@ -16,6 +16,7 @@ export class CreateLotesTable20261029000018 implements MigrationInterface {
         ],
         indices: [
           { name: 'uk_lotes_establishment_nombre', columnNames: ['establishment_id', 'nombre'], isUnique: true },
+          { name: 'idx_lotes_potrero_id', columnNames: ['potrero_id'] },
         ],
         foreignKeys: [
           { name: 'fk_lotes_establishment_id', columnNames: ['establishment_id'], referencedTableName: 'establishments', referencedColumnNames: ['id'], onDelete: 'CASCADE' },

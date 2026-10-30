@@ -22,7 +22,7 @@ export class RodeosService {
 
   async listar(establecimientoId: string, campanaId: string): Promise<RodeoDto[]> {
     await this.campanas.buscarDelEstablecimiento(establecimientoId, campanaId);
-    const filas = await this.repo.find({ where: { campanaId }, order: { createdAt: 'ASC' } });
+    const filas = await this.repo.find({ where: { campanaId }, order: { createdAt: 'ASC', id: 'ASC' } });
     return filas.map(aRodeoDto);
   }
 

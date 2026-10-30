@@ -112,6 +112,40 @@ describe('Planilla: potreros y lotes (e2e)', () => {
     ]);
   });
 
+  it('PATCH y DELETE /potreros/:id de otro campo del mismo usuario dan 404 y no cambian', async () => {
+    const { token, campoId: campoA } = await registrarConCampo(app, 'multi-pot');
+    const b = await http()
+      .post('/auth/farm/create')
+      .set(auth(token))
+      .send({ farm_name: 'Campo B', provincia: 'La Pampa' });
+    expect(b.body.active).toBe(true);
+    const potB = await http().post('/potreros').set(auth(token)).send({ nombre: 'DeB', hectareas: 7 });
+    expect(potB.status).toBe(201);
+    const volver = await http().patch(`/auth/farm/${campoA}/active`).set(auth(token));
+    expect(volver.status).toBe(200);
+
+    const r = await http()
+      .patch(`/potreros/${potB.body.data.id}`)
+      .set(auth(token))
+      .send({ nombre: 'Robado', hectareas: 1 });
+    expect(r.status).toBe(404);
+    const d = await http().delete(`/potreros/${potB.body.data.id}`).set(auth(token));
+    expect(d.status).toBe(404);
+
+    const lista = await http().get('/potreros').set(auth(token));
+    expect(lista.body.data).toEqual([]);
+    await http().patch(`/auth/farm/${b.body.farm_id}/active`).set(auth(token));
+    const listaB = await http().get('/potreros').set(auth(token));
+    expect(listaB.body.data).toEqual([{ id: potB.body.data.id, nombre: 'DeB', hectareas: 7 }]);
+  });
+
+  it('valida con mensajes en castellano', async () => {
+    const { token } = await registrarConCampo(app, 'msj');
+    const r = await http().post('/potreros').set(auth(token)).send({ nombre: 'P', hectareas: 0 });
+    expect(r.status).toBe(400);
+    expect(r.body.message).toEqual(['Las hectáreas tienen que estar entre 0,01 y 99.999.999,99.']);
+  });
+
   it('sin establecimiento activo: 409', async () => {
     const email = `sin-campo-${randomUUID().slice(0, 8)}@planilla.test`;
     const s = await http().post('/auth/signup').send({ email, password: 'SecurePass123' });

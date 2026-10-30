@@ -4,6 +4,7 @@ import { numericTransformer } from '../../common/transformers/numeric.transforme
 import { PotreroEntity } from './potrero.entity';
 
 @Index('uk_lotes_establishment_nombre', ['establecimientoId', 'nombre'], { unique: true })
+@Index('idx_lotes_potrero_id', ['potreroId'])
 @Entity('lotes')
 export class LoteEntity {
   @PrimaryGeneratedColumn('uuid')

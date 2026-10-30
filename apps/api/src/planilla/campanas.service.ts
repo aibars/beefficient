@@ -75,8 +75,8 @@ export class CampanasService {
     const c = await this.buscarDelEstablecimiento(establecimientoId, id);
     const [lotes, rodeos, pastoreos] = await Promise.all([
       this.lotes.find({ where: { establecimientoId }, order: { nombre: 'ASC' } }),
-      this.rodeos.find({ where: { campanaId: id }, order: { createdAt: 'ASC' } }),
-      this.pastoreos.find({ where: { campanaId: id }, order: { createdAt: 'ASC' } }),
+      this.rodeos.find({ where: { campanaId: id }, order: { createdAt: 'ASC', id: 'ASC' } }),
+      this.pastoreos.find({ where: { campanaId: id }, order: { createdAt: 'ASC', id: 'ASC' } }),
     ]);
     return {
       id: c.id,
