@@ -110,7 +110,10 @@ export function TablaPastoreos({ campana, calculo, unidad, onAbrir, seleccionado
                   tabIndex={0}
                   onClick={() => onAbrir(pastoreo.id)}
                   onKeyDown={(e) => {
-                    if (e.key === 'Enter') onAbrir(pastoreo.id);
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      onAbrir(pastoreo.id);
+                    }
                   }}
                 >
                   <td className="izq">{fila.mes ?? '—'}</td>

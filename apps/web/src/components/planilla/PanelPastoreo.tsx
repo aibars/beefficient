@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, type KeyboardEvent as TeclaReact } from 'react';
 import { TABLA_1, type PastoreoCampana } from '@beefficient/domain';
 import {
   actualizarPastoreo,
@@ -32,6 +32,8 @@ interface Props {
 
 const ID_BORRADOR = 'borrador';
 
+const FOCALIZABLES = 'button:not([disabled]), select:not([disabled]), input:not([disabled])';
+
 const FUENTE = { cocimano: 'Cocimano', tabla1: 'Tabla 1' } as const;
 
 const aFecha = (t: string): string | null => (t === '' ? null : t);
@@ -58,6 +60,29 @@ export function PanelPastoreo({ campana, pastoreo, unidad, onCerrar, onGuardado 
   useEffect(() => {
     if (desaparecio) onCerrar();
   }, [desaparecio, onCerrar]);
+
+  // Foco: entra al primer campo y, al cerrar, vuelve a quien abrió el panel.
+  const panel = useRef<HTMLElement>(null);
+  useEffect(() => {
+    const abridor = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    panel.current?.querySelector<HTMLElement>('select, input')?.focus();
+    return () => abridor?.focus();
+  }, []);
+
+  function mantenerFoco(e: TeclaReact<HTMLElement>) {
+    if (e.key !== 'Tab') return;
+    const lista = Array.from(panel.current?.querySelectorAll<HTMLElement>(FOCALIZABLES) ?? []);
+    const primero = lista[0];
+    const ultimo = lista[lista.length - 1];
+    if (!primero || !ultimo) return;
+    if (e.shiftKey && document.activeElement === primero) {
+      e.preventDefault();
+      ultimo.focus();
+    } else if (!e.shiftKey && document.activeElement === ultimo) {
+      e.preventDefault();
+      primero.focus();
+    }
+  }
 
   useEffect(() => {
     const alTeclear = (e: KeyboardEvent) => {
@@ -118,10 +143,19 @@ export function PanelPastoreo({ campana, pastoreo, unidad, onCerrar, onGuardado 
 
   return (
     <>
-      <div className="panel-scrim" onClick={onCerrar} />
-      <aside className="panel-pastoreo" role="dialog" aria-label="Pastoreo">
+      <div className="panel-scrim" aria-hidden="true" onClick={onCerrar} />
+      <aside
+        ref={panel}
+        className="panel-pastoreo"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="panel-pastoreo-titulo"
+        onKeyDown={mantenerFoco}
+      >
         <div className="panel-top">
-          <h2 className="panel-titulo">Pastoreo</h2>
+          <h2 id="panel-pastoreo-titulo" className="panel-titulo">
+            Pastoreo
+          </h2>
           <button type="button" className="panel-cerrar" aria-label="Cerrar" onClick={onCerrar}>
             ✕
           </button>
@@ -130,7 +164,7 @@ export function PanelPastoreo({ campana, pastoreo, unidad, onCerrar, onGuardado 
         <label className="panel-campo">
           <span className="panel-etiqueta">Lote</span>
           <select className="panel-input" value={loteId} onChange={(e) => setLoteId(e.target.value)}>
-            <option value="" />
+            <option value="">—</option>
             {campana.lotes.map((l) => (
               <option key={l.id} value={l.id}>
                 {l.nombre} — {ha(l.hectareas)} ha
@@ -142,7 +176,7 @@ export function PanelPastoreo({ campana, pastoreo, unidad, onCerrar, onGuardado 
         <label className="panel-campo">
           <span className="panel-etiqueta">Rodeo</span>
           <select className="panel-input" value={rodeoId} onChange={(e) => setRodeoId(e.target.value)}>
-            <option value="" />
+            <option value="">—</option>
             {campana.rodeos.map((r) => (
               <option key={r.id} value={r.id}>
                 {r.nombre}
@@ -188,7 +222,7 @@ export function PanelPastoreo({ campana, pastoreo, unidad, onCerrar, onGuardado 
               value={categoria}
               onChange={(e) => setCategoria(e.target.value)}
             >
-              <option value="" />
+              <option value="">—</option>
               {opcionesTabla1.map((c) => (
                 <option key={c.id} value={c.id}>
                   {c.nombre}

@@ -162,6 +162,62 @@ describe('PanelPastoreo', () => {
     expect(input.getAttribute('aria-invalid')).toBe('true');
   });
 
+  it('es un diálogo modal con el título como nombre', () => {
+    render(<PanelPastoreo {...props} pastoreo={existente} />);
+    const dialogo = screen.getByRole('dialog');
+    expect(dialogo.getAttribute('aria-modal')).toBe('true');
+    expect(screen.getByRole('dialog', { name: 'Pastoreo' })).toBe(dialogo);
+    expect(document.querySelector('.panel-scrim')!.getAttribute('aria-hidden')).toBe('true');
+  });
+
+  it('al abrir enfoca el primer campo', () => {
+    render(<PanelPastoreo {...props} pastoreo={existente} />);
+    expect(document.activeElement).toBe(screen.getByLabelText('Lote'));
+  });
+
+  it('al cerrar devuelve el foco a quien lo abrió', () => {
+    const abridor = document.createElement('button');
+    document.body.appendChild(abridor);
+    abridor.focus();
+    const { unmount } = render(<PanelPastoreo {...props} pastoreo={existente} />);
+    expect(document.activeElement).not.toBe(abridor);
+    unmount();
+    expect(document.activeElement).toBe(abridor);
+    abridor.remove();
+  });
+
+  it('Tab no sale del panel', () => {
+    render(<PanelPastoreo {...props} pastoreo={existente} />);
+    const dialogo = screen.getByRole('dialog');
+    const foco = Array.from(
+      dialogo.querySelectorAll<HTMLElement>('button:not([disabled]), select, input'),
+    );
+    const primero = foco[0]!;
+    const ultimo = foco[foco.length - 1]!;
+    ultimo.focus();
+    fireEvent.keyDown(ultimo, { key: 'Tab' });
+    expect(document.activeElement).toBe(primero);
+    primero.focus();
+    fireEvent.keyDown(primero, { key: 'Tab', shiftKey: true });
+    expect(document.activeElement).toBe(ultimo);
+  });
+
+  it('las opciones vacías de los selectores tienen texto', () => {
+    render(<PanelPastoreo {...props} pastoreo={existente} />);
+    const vacias = Array.from(document.querySelectorAll('option[value=""]'));
+    expect(vacias.length).toBeGreaterThan(0);
+    vacias.forEach((o) => expect(o.textContent).toBe('—'));
+  });
+
+  it('borrar el EV manual envía evManual: null', async () => {
+    (actualizarPastoreo as jest.Mock).mockResolvedValue({});
+    render(<PanelPastoreo {...props} pastoreo={{ ...existente, evManual: 0.9 }} />);
+    fireEvent.change(screen.getByLabelText('EV manual'), { target: { value: '' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Guardar' }));
+    await waitFor(() => expect(props.onGuardado).toHaveBeenCalled());
+    expect((actualizarPastoreo as jest.Mock).mock.calls[0][2].evManual).toBeNull();
+  });
+
   it('Escape cierra el panel', () => {
     render(<PanelPastoreo {...props} pastoreo={existente} />);
     fireEvent.keyDown(document, { key: 'Escape' });

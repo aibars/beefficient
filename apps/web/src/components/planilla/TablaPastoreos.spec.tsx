@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, within } from '@testing-library/react';
+import { createEvent, fireEvent, render, screen, within } from '@testing-library/react';
 import { calcularCampana, formatearNumero, type PastoreoCampana } from '@beefficient/domain';
 import type { CampanaCompleta } from '@/services/planilla.service';
 import { TEXTO_AVISO } from '@/lib/planilla/vista';
@@ -95,5 +95,19 @@ describe('TablaPastoreos', () => {
     fireEvent.click(filasDelCuerpo()[1]!);
 
     expect(onAbrir).toHaveBeenCalledWith('p2');
+  });
+
+  it('abre la fila con Enter y con Espacio, sin scrollear', () => {
+    const onAbrir = jest.fn();
+    render(<TablaPastoreos campana={campana} calculo={calculo} unidad="EV" onAbrir={onAbrir} />);
+
+    fireEvent.keyDown(filasDelCuerpo()[0]!, { key: 'Enter' });
+    expect(onAbrir).toHaveBeenLastCalledWith('p1');
+    const espacio = createEvent.keyDown(filasDelCuerpo()[1]!, { key: ' ' });
+    fireEvent(filasDelCuerpo()[1]!, espacio);
+    expect(onAbrir).toHaveBeenLastCalledWith('p2');
+    expect(espacio.defaultPrevented).toBe(true);
+    fireEvent.keyDown(filasDelCuerpo()[2]!, { key: 'a' });
+    expect(onAbrir).toHaveBeenCalledTimes(2);
   });
 });
